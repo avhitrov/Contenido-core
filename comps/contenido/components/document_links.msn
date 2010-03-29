@@ -1,0 +1,170 @@
+<fieldset>
+<legend>Связи этого документа<sup>1</sup></legend>
+<table height="400" border=0><tr valign="top"><td>
+<!-- Добавить новую связь -->
+<script language="JavaScript">
+<!--
+function focus_win()
+{
+	var newwin;
+	newwin = window.open('link_cookie.html', 'addlink');
+	newwin.window.focus();
+}
+//-->
+</script>
+% if (%source_links)
+% {
+<p><b>Добавить связь от данного объекта:</b>
+<table width="300" border="0" cellpadding="3" cellspacing="0" class="tform">
+%	foreach my $class (sort keys %source_links) {
+<tr><td nowrap width="100%">
+<a href="link_frame.html?class=<% $class %>&source_class=<% $document->class() %>&source_id=<% $document->id() %>" target="_top"><% $source_links{$class} %> (источник)</a><br>
+</td></tr>
+%	}
+</table>
+</p>
+% }
+% if (%dest_links)
+% {
+<p><b>Добавить связь к данному объекту:</b>
+<table width="300" border="0" cellpadding="3" cellspacing="0" class="tform">
+%       foreach my $class (sort keys %dest_links) {
+<tr><td nowrap width="100%">
+<a href="link_frame.html?class=<% $class %>&dest_class=<% $document->class() %>&dest_id=<% $document->id() %>" target="_top"><% $dest_links{$class} %> (цель)</a><br>
+</td></tr>
+%       }
+</table>
+</p>
+% }
+<!-- Связи идущие от этого документа -->
+%if (@links) {
+<p><b>Установленные связи:</b>
+<form name="links" action="store_document_links.html" method="GET">
+<table width="300" border="0" cellpadding="0" cellspacing="0" class="tform">
+%	my $last_class;
+%	foreach my $link (@links) {
+%		if ($link->class() ne $last_class) {
+<tr><td colspan="2"><b><% $link->class_name() %></b></td></tr>
+%			$last_class = $link->class();
+%		}
+%		my $ldocument = $keeper->__get_by_id__($link->dest_class,
+%			id=>$link->dest_id, class=>$link->dest_class, light=>1 );
+%		next unless ($ldocument);
+<tr><td width="25"><input type="checkbox" name="links" value="link_<% $link->id %>_<% $link->dest_id %>_<% $link->class %>"></td>
+<td><a href="document.html?id=<% $link->id %>&class=<% $link->class() %>" target=_top><% $ldocument->name || '[без имени]' %></a> (<a href="document.html?id=<% $ldocument->id %>&class=<% $ldocument->class() %>" target=_top><% $ldocument->class_name %></a>)</td></tr>
+%	}
+</table>
+<br>
+<input type="hidden" name="id" value="<% $document->id %>">
+<input type="hidden" name="class" value="<% $document->class %>">
+<input type="submit" value="Удалить выбранные связи документа" class="input_btn">
+</form>
+</p>
+%}
+<!-- Связи идущие к этому документу (readonly) -->
+%if (@source_links) {
+<br><b>Связи ведущие к этому документу</b></p>
+<table width="300" border="0" cellpadding="0" cellspacing="0" class="tform">
+%	my $last_class;
+%	foreach my $link (@source_links) {
+%		if ($link->class() ne $last_class) {
+<tr><td colspan="2"><b><% $link->class_name() %></b></td></tr>
+%			$last_class = $link->class();
+%		}
+%		my $rdocument = $keeper->__get_by_id__($link->source_class,
+%			id=>$link->source_id, class=>$link->source_class, light=>1 );
+%		next unless ($rdocument);
+<tr><td width="25">&nbsp;</td>
+<td><a href="document.html?id=<% $link->id() %>&class=<% $link->class() %>" target=_top><% $rdocument->name %></a> (<a href="document.html?id=<% $rdocument->id() %>&class=<% $rdocument->class() %>" target=_top><% $rdocument->class_name %></a>)</td></tr>
+%	}
+</table>
+%}
+</td></tr></table>
+<br>
+</fieldset>
+
+
+
+<!-- Примечания -->
+<fieldset>
+<legend>Примечания</legend>
+<table width="100%" cellspacing="5" cellpadding="0" class="tform" height="100">
+<tr valign="top">
+<th>1)</th>
+<td width="100%">Выделенные связи будут удалены. Если Вы хотите удалить какую-нибудь связь, установите
+галочку напротив нее и нажмите кнопку "удалить".
+</td></tr>
+</table>
+</fieldset>
+
+<%ARGS>
+	$document => undef
+</%ARGS>
+<%INIT>
+
+	return unless ref($document);
+	##  && $document->can('id');
+	my $options = $project->links();
+
+	my %source_links=();
+	my %dest_links=();
+	my @source_links;
+	my @links;
+
+	foreach my $class (@{ $state->{available_links} }) {
+		my $link = $class->new($keeper);
+		my $set  = $link->available_sources();
+		next unless ($set and ref($set) eq 'ARRAY' and @$set);
+		my @avaliable_sources = @$set;
+		my $found = 0;
+		foreach my $source (@avaliable_sources) {
+			if ($source eq $document->class()) {
+				$found=1;
+				last;
+			}
+		}
+		next unless $found;
+		$source_links{$class}=$link->class_name();
+		push @links, $document->links($class);
+	}
+
+	foreach my $class (@{ $state->{available_links} }) {
+		my $link = $class->new($keeper);
+		my $set  = $link->available_destinations();
+		next unless ($set and ref($set) eq 'ARRAY' and @$set);
+		my @avaliable_dest = @$set;
+		my $found = 0;
+		foreach my $source (@avaliable_dest) {
+			if ($source eq $document->class()) {
+				$found=1;
+				last;
+			}
+		}
+		next unless $found;
+		$dest_links{$class}=$link->class_name();
+		push @source_links, $document->links($class,'reverse');
+	}
+
+</%INIT>
+<%DOC>
+        foreach my $class (@{ $state->{available_links} }) {
+                if (ref( $options->{$class}->{source_id} )) {
+                        my @avaliable_sources = @{$options->{$class}->{source_id}};
+                        shift @avaliable_sources;
+                        my $found = 0;
+                        foreach my $source (@avaliable_sources) {
+                                if ($source eq $document->class()) {
+                                        $found=1;
+                                        last;
+                                }
+                        }
+                        next unless $found;
+                        my $link = $class->new($keeper);
+                        $allowed_links{$class}=$link->class_name();
+                } else {
+                        my $link = $class->new($keeper);
+                        $allowed_links{$class}=$link->class_name();
+                }
+        }
+</%DOC>
+

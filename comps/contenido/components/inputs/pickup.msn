@@ -1,0 +1,98 @@
+% unless ($error) {
+<style>
+.td { font:11px Verdana; padding:2px 4px; }
+</style>
+<a name="<% $name %>_anc"></a>
+<table width="100%" cellspacing="1" cellpadding="0" border="0">
+<tr><td width="5%">
+<input type="text" name="<% $name %>" id="<% $name %>_value"
+ value="<% $check %>" style="width:100px;" onkeyup="<% $name %>_changed();">
+</td><td width="94%" class="td">
+<input type="text" name="<% $name %>_docname" id="<% $name %>_docname"
+ value="<% ref $doc ? $doc->name : '' | h %>" onclick="lookfor_<% $name %>()"
+ style="width:100%; color:blue; text-decoration:underline;" readonly>
+</td><td width="1%" class="td"><a href="#top"
+ onclick="search_<% $name %>();">
+<img src="/contenido/i/lookup-19x19.gif" width="19" height="19" class="bb gb"></a>
+</td></tr>
+<tr id="<% $name %>_prev_table" style="display: none;">
+<td id="<% $name %>_prev_value" class="bb undo" style="padding:3px;"><% $check || '&nbsp;' %></td>
+<td id="<% $name %>_prev_docname" class="bb undo" style="padding:3px;"><% ref $doc ? $doc->name : '&nbsp;' | h %></td>
+<td style="padding-left: 3px; vertical-align: top;"><a href="#"
+ onclick="return <% $name %>_undo();" title="Отменить изменения"><img
+ src="/contenido/i/undo-19x19.gif" width="19" height="19" class="bb gb"></a></td>
+</tr>
+</table>
+% } else {
+<font color="red"><% $error %></font>
+% $m->comp('/contenido/components/inputs/integer.msn', %ARGS);
+% }
+
+<script type="text/javascript">
+  var key_flag_<% $name %> = 1;
+  var <% $name %>_prev_value = document.getElementById('<% $name %>_value').value;
+  var <% $name %>_prev_docname = document.getElementById('<% $name %>_docname').value;
+%#  document.getElementById('<% $name %>_prev_value').innerHTML = <% $name %>_prev_value || '&nbsp;';
+%#  document.getElementById('<% $name %>_prev_docname').innerHTML = <% $name %>_prev_docname || '&nbsp;';
+
+  function search_<% $name %>() {
+	document.getElementById('DocFinder').style.height = 470;
+	document.getElementById('DocFinder').src = '<% $lookup_string %>';
+  }
+
+  function lookfor_<% $name %>() {
+	var id = document.getElementById('<% $name %>_value').value;
+	if (id) {
+		var Class = '<% $prop->{lookup_opts}->{class} %>';
+		var Uri = 'document.html?id=' + id + '&class=' + Class;
+		var Width = screen.width;
+		var Height = screen.height;
+		window.open(Uri,'Interface','width='+Width+',height='+Height+',top=0,left=0,location=1,menubar=1,resizable=0,scrollbars=1,status=1,titlebar=1,toolbar=1,directories=1,hotkeys=1');
+	}
+  }
+
+  function <% $name %>_changed() {
+	var t = document.getElementById('<% $name %>_prev_table');
+	var v = document.getElementById('<% $name %>_value');
+	if (v.value == <% $name %>_prev_value) {
+		if (t.style.display!='none') {
+			t.style.display = 'none';
+		}
+		return;
+	}
+	if (t.style.display=='none') {
+		t.style.display = '';
+	}
+  }
+
+  function <% $name %>_undo() {
+	document.getElementById('<% $name %>_value').value = <% $name %>_prev_value;
+	document.getElementById('<% $name %>_docname').value = <% $name %>_prev_docname;
+	<% $name %>_changed();
+	return false;
+  }
+
+</script>
+<%args>
+	$object
+	$name => undef
+	$check => undef
+	$prop => {}
+</%args>
+<%init>
+
+  my ($error, $doc, $lookup_string);
+
+  if ($prop && ref($prop) && ref($prop->{lookup_opts}) eq 'HASH' && exists $prop->{lookup_opts}->{class}) {
+	if ( $check ) {
+		$doc = $keeper->get_document_by_id ( $check, %{$prop->{lookup_opts}} );
+	}
+	$lookup_string = '/contenido/find_document.html?nf='.$name.'_docname&vf='.$name.'_value';
+	$lookup_string .= '&class='.$prop->{lookup_opts}->{class}		if exists $prop->{lookup_opts}->{class};
+	$lookup_string .= '&s='.$prop->{lookup_opts}->{s}			if exists $prop->{lookup_opts}->{s};
+	$lookup_string .= '&search_by='.$prop->{lookup_opts}->{search_by}	if exists $prop->{lookup_opts}->{search_by};
+  } else {
+	$error = 'Похоже неверное описание lookup_opts в документе';
+  }
+
+</%init>

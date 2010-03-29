@@ -1,0 +1,60 @@
+<select name="<% $name %>" id="<% $name %>_select" style="width: 37%;" onchange="<% $name %>_changed();">
+% if ($prop->{allow_null}) {
+	<option value="" <% defined $check ? '' : 'selected' %>>--- не указано ---</option>
+% }
+% for my $sm (@{ $status_map }) {
+	<option value="<% $sm->[0] %>" <% (defined($check) && ($check eq $sm->[0])) ? 'selected' : '' %>><% defined $sm->[1] ? $sm->[1] : "$sm->[0] [unknown value]" %></option>
+% }
+</select>
+
+<table id="<% $name %>_prev_table" style="width: 37%; display: none;" cellspacing="0" cellpadding="0" border="0">
+	<tr>
+		<td width="100%" id="<% $name %>_prev_text" class="bb undo" style="padding: 3px;"></td>
+		<td style="padding-left: 3px; vertical-align: top;"><a href="#" onclick="return <% $name %>_undo();" title="Отменить изменения"><img src="/contenido/i/undo-19x19.gif" width="19" height="19" class="bb gb"></a></td>
+	</tr>
+</table>
+
+<script type="text/javascript">
+	var <% $name %>_prev_value = document.getElementById('<% $name %>_select').selectedIndex;
+
+	function <% $name %>_changed() {
+		var t = document.getElementById('<% $name %>_prev_table');
+		if (document.getElementById('<% $name %>_select').selectedIndex==<% $name %>_prev_value) {
+			if (t.style.display!='none') {
+				t.style.display = 'none';
+			}
+			return;
+		}
+		if (t.style.display=='none') {
+			t.style.display = '';
+		}
+	}
+
+	function <% $name %>_undo() {
+		document.getElementById('<% $name %>_select').selectedIndex = <% $name %>_prev_value;
+		<% $name %>_changed();
+		return false;
+	}
+
+	var s = document.getElementById('<% $name %>_select');
+	document.getElementById('<% $name %>_prev_text').innerHTML = s.options.item(s.selectedIndex).innerHTML || '&nbsp;';
+</script>
+
+<%ARGS>
+	$name  => undef
+	$check => undef
+	$mode  => 'view'
+	$prop  => {}
+</%ARGS>
+<%INIT>
+    # тут надо копию массива... иначе push @{$status_map} ломает default значения в $prop->{cases} или в $keeper->default_status() 
+    my $status_map = [ @{ref $prop->{cases} eq 'ARRAY' ? $prop->{cases} : $keeper->default_status()} ];
+	if ($mode eq 'get') {
+		return $status_map;
+	}
+	if (defined $check) {
+		unless (grep {$_->[0] eq $check} @{$status_map}) {
+			push @{$status_map}, [$check, "$check [unknown value]"];
+		}
+	}
+</%INIT>

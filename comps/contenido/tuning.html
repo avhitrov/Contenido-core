@@ -1,0 +1,168 @@
+<& "/contenido/components/header.msn", title => 'Настройка '.$PROTOS->{$proto}->[0] &>
+
+<br>
+<table border="0" style="font-size:85%;" width="80%">
+<tr>
+<td width="10"></td>
+<td>
+<div style="font-size:130%;">Настройка <% $PROTOS->{$proto}->[0] %></div>
+<br>
+Ниже приведены все поля, которые вы можете настроить в классе <% $PROTOS->{$proto}->[1] %> "<% $class %>".
+Заполните нижеследующие поля и нажмите кнопку [сохранить].<br><br>
+
+При редактировании значений селектов действует следующее правило - одна строка содержит в себе один вариант для выбора. 
+Каждый список объектов характеризуется двумя полями - начальной секцией и набором классов для оборажения.
+</td>
+</tr>
+
+<tr><td height="20"></td></tr>
+
+%	if (($class) && (ref($object)))
+%	{
+
+<tr><td></td>
+<td>
+<div style="font-size:130%;">Настройка <% $PROTOS->{$proto}->[1] %> "<% $object->class_name %>" (<% $class %>)</div>
+<% $object->class_description() %>
+</td>
+</tr>
+
+<form action="./tuning.html" method="post">
+<input type="hidden" name="control_charset" value="Контроль">
+<input type="hidden" name="proto" value="<% $proto %>">
+<input type="hidden" name="class" value="<% $class %>">
+
+<tr><td height="20"></td></tr>
+<tr>
+<td></td><td>
+<& "/contenido/components/selects.msn", object=>$object, options=>$options &>
+</td>
+</tr>
+
+% if ($proto eq 'links') {
+<tr><td height="20"></td></tr>
+<tr>
+<td></td><td>
+<& "/contenido/components/link_source_id.msn", object=>$object, options=>$options &>
+</td>
+</tr>
+% }
+
+<tr><td height="20"></td></tr>
+<tr>
+<td></td><td>
+<& "/contenido/components/obj_lists.msn", object=>$object, options=>$options &>
+</td>
+</tr>
+
+<tr><td></td><td>
+<input type="submit" value="Сохранить изменения" style="font-size:13pt;font-weight:bold; height:40px;margin-bottom: 5px; background-color:#930300;color:#FFFFFF;">
+<input type="hidden" name="save" value="1">
+</td></tr>
+</form>
+
+%	}
+
+</table>
+</body>
+</html>
+<%ARGS>
+
+	$proto => undef
+	$class => undef
+	$save => undef
+
+</%ARGS>
+<%INIT>
+
+	use vars qw($keeper $request);
+
+	my $PROTOS = {
+		'documents' => ['документов','документа'],
+		'sections' => ['секций','секции'],
+		'links' => ['связей','связи'],
+		'users' => ['пользователей','пользователя'],
+		'locals' => ['локальных модулей', 'локального модуля'],
+	};
+	if (! exists($PROTOS->{$proto}))
+	{
+		$proto = 'documents';
+	}
+
+	# Проверка корректности класса...
+	my @correct_classes = @{ $state->{'available_'.$proto} };
+	if (! (grep { $_ eq $class } @correct_classes))
+	{
+		# Класс задан, но он не корректный
+		$class = undef;
+	}
+	my $options;
+	my $object;
+
+
+	# Сохранение изменений!!!
+	if (($save == 1) && ($class))
+	{
+		my $toopi = $project->$proto();
+		if ((ref($toopi) eq 'HASH') && (exists($toopi->{$class})) )
+		{
+			$options = $toopi->{ $class };
+		} else {
+			$options = {};
+		}
+
+        $request->{local_codepage} = 'UTF8';
+        $request->{local_codepage} = 'WIN' if Convert::Cyrillic::cstocs('WIN', 'UTF8', $ARGS{control_charset}) eq 'Контроль';
+        $request->{local_codepage} = 'KOI8' if Convert::Cyrillic::cstocs('KOI8', 'UTF8', $ARGS{control_charset}) eq 'Контроль';
+		warn "Contenido Debug: Форма для редактирования описания объекта пришла в кодировке ".$request->{local_codepage}."\n"		if ($state->debug());
+
+		foreach my $attr (keys(%ARGS))
+		{
+			if ($attr =~ /^(.+)\.selectdata$/)
+			{
+				my $local_select = $1;
+				my @local_values = split(/\n/, $m->comp('/contenido/components/filter.msn', str => $ARGS{$attr} ));
+				$options->{$local_select} = \@local_values;
+			}
+		}
+
+		foreach my $attr (keys(%ARGS))
+		{
+			if ($attr =~ /^(.+)\.obj_list_root$/)
+			{
+				my $local_obj_list = $1;
+				my $local_value = $ARGS{$attr};
+				$options->{$local_obj_list}->[0] = $local_value;
+			}
+			elsif ($attr =~ /^(.+)\.obj_list_classes$/)
+			{
+				my $local_obj_list = $1;
+				my @local_values = ();
+				if (ref($ARGS{$attr}) eq 'ARRAY')
+				{
+					@local_values = @{ $ARGS{$attr} };
+				} else {
+					@local_values = ( $ARGS{$attr} );
+				}
+				$options->{ $local_obj_list }->[1] = join(',',@local_values);
+			}
+		}
+		$toopi->{ $class } = $options;
+		$project->$proto($toopi);
+		$project->store($keeper);
+	}
+
+
+	if ($class)
+	{
+		$object = new $class ($keeper);
+		my $toopi = $project->$proto();
+		if ((ref($toopi) eq 'HASH') && (exists($toopi->{$class})) )
+		{
+			$options = $toopi->{ $class };
+		} else {
+			$options = {};
+		}
+	}
+
+</%INIT>

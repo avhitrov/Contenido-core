@@ -1,0 +1,51 @@
+<%init>
+	use POSIX qw(strftime);
+
+        #force refresh state... todo add ->refresh method to Project.pm
+        $project->restore($keeper, 1);
+
+	my $context = $m->comp('/contenido/components/context.msn');
+
+	my $set_context_name = 'set_context';
+	if ($ARGS{$set_context_name} eq 'profile-admin' && !$user->check_group(1))
+	{
+		$m->clear_buffer;
+		$m->abort(403);
+	}
+
+	if (exists $ARGS{$set_context_name})
+	{
+		map {
+			my ($n, $v) = split /-/;
+			$m->comp('/contenido/components/context.msn', name => $n, value => $v);
+		} split('/', $ARGS{$set_context_name});
+	}
+	my $unset_context_name = 'unset_context';
+	if (exists $ARGS{$unset_context_name})
+	{
+		map {
+			$m->comp('/contenido/components/context.msn', name => $_, delete => 1);
+		} split('/', $ARGS{$unset_context_name});
+	}
+
+	## Selected profile, actually
+	$request->{tab} = {};
+
+	## Default for 'profile'
+	if (! (exists($context->{profile}) && (length($context->{profile}) > 0)))
+	{
+		$m->comp('/contenido/components/context.msn', name => 'profile', value => 'rubricator');
+	}
+	my $profile = $context->{profile} if exists $context->{profile};
+
+	if (length $profile > 0)
+	{
+		my $toopi = $project->tabs();
+		if (ref($toopi) && exists($toopi->{$profile}))
+		{
+			$request->{tab} = $toopi->{$profile};
+		}
+	}
+	$m->call_next();
+
+</%init>

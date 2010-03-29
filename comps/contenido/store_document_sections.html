@@ -1,0 +1,36 @@
+<%ARGS>
+	$id => undef
+	$class => undef
+</%ARGS>
+
+<%INIT>
+	if ($id)
+	{
+		my $document = $keeper->get_document_by_id($id, class=>$class);
+
+		my %sections = ();
+		foreach my $name (keys %ARGS)
+		{
+			if ($name =~ /^section_(\d+)$/)
+			{
+				$sections{$1} = 1;
+			}
+		}
+		my @sections_in_order = ();
+		if ($ARGS{main_section} > 0)
+		{
+			delete $sections{ $ARGS{main_section} };
+			push (@sections_in_order, $ARGS{main_section});
+		}
+		push (@sections_in_order, keys(%sections));
+
+		$document->sections(@sections_in_order);
+		$document->store();
+
+		$r->header_out("Location", "document.html?id=$id&class=$class");
+                $r->status(302);
+                $r->send_http_header();
+                $m->abort();
+	}
+
+</%init>

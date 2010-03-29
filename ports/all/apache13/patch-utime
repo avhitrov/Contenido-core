@@ -1,0 +1,47 @@
+--- src/include/httpd.h.orig	2008-11-13 18:34:02.000000000 +0300
++++ src/include/httpd.h	2008-11-13 18:34:30.000000000 +0300
+@@ -668,6 +668,7 @@
+     const char *hostname;	/* Host, as set by full URI or Host: */
+ 
+     time_t request_time;	/* When the request started */
++    struct timeval request_utime; /* When the request started (usec) */
+ 
+     const char *status_line;	/* Status line, if set by script */
+     int status;			/* In any case */
+--- src/main/http_main.c.orig	2008-11-13 18:32:38.000000000 +0300
++++ src/main/http_main.c	2008-11-13 18:33:06.000000000 +0300
+@@ -1589,6 +1589,7 @@
+ 	    /* in some cases we come here before setting the time */
+ 	    if (log_req->request_time == 0) {
+                 log_req->request_time = time(NULL);
++                gettimeofday(&log_req->request_utime,NULL);
+ 	    }
+ 	    ap_log_transaction(log_req);
+ 	}
+--- src/main/http_protocol.c.orig	2008-11-13 18:33:21.000000000 +0300
++++ src/main/http_protocol.c	2008-11-13 18:33:48.000000000 +0300
+@@ -1007,6 +1007,7 @@
+     ap_bsetflag(conn->client, B_SAFEREAD, 0);
+ 
+     r->request_time = time(NULL);
++    gettimeofday(&r->request_utime,NULL);
+     r->the_request = ap_pstrdup(r->pool, l);
+     r->method = ap_getword_white(r->pool, &ll);
+     uri = ap_getword_white(r->pool, &ll);
+--- src/modules/standard/mod_log_config.c.orig	2008-11-13 18:27:40.000000000 +0300
++++ src/modules/standard/mod_log_config.c	2008-11-13 18:35:02.000000000 +0300
+@@ -405,7 +405,13 @@
+ 
+ static const char *log_request_duration(request_rec *r, char *a)
+ {
+-    return ap_psprintf(r->pool, "%ld", time(NULL) - r->request_time);
++    struct timeval tp;
++    double tv1,tv2;
++
++    tv1 = r->request_utime.tv_sec + (double)r->request_utime.tv_usec/1000000;
++    gettimeofday(&tp, NULL);
++    tv2 = tp.tv_sec + (double)tp.tv_usec/1000000;
++    return ap_psprintf(r->pool, "%.3f", tv2 - tv1);
+ }
+ 
+ /* These next two routines use the canonical name:port so that log

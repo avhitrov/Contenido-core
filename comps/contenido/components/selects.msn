@@ -1,0 +1,61 @@
+
+<table border="0" width="100%">
+<tr>
+<td colspan="3" style="font-family:Tahoma;background-color:#dcdcdc;color:#000000;font-size:95%;padding: 5px;"><center>Настройка селектов</center></td>
+</tr>
+
+<tr>
+<th>Идентификатор</th>
+<th>Русское название</th>
+<th>Варианты выбора</th>
+</tr>
+
+%	for my $select (@totals)
+%	{
+
+<tr>
+
+<td width="20%" valign="top" style="font-size:80%; font-family:Tahoma;">
+<% $select->{attr} %>
+</td>
+
+<td width="30%" valign="top" style="font-size:80%; font-family:Tahoma;">
+<% $select->{rusname} %>
+</td>
+
+<td>
+<textarea style="font-size:8pt;font-family:Tahoma;" rows=4 cols=30 name="<% $select->{attr} %>.selectdata">\
+%		if (exists($options->{ $select->{attr} }))
+%		{
+<% join("\n", @{ $options->{ $select->{attr} } } ) %>\
+%		}
+</textarea>
+</td>
+</tr>
+
+%	}
+</table>
+
+<%ARGS>
+
+	$object => undef
+	$options => undef
+
+</%ARGS>
+<%INIT>
+	return		if (! ref($object));
+
+	my @totals = ();
+	my @properties = $object->structure();
+	for (0..$#properties)
+	{
+		my $prop = $properties[$_];
+		if ($prop->{type} eq 'select' or $prop->{type} eq 'color' or $prop->{type} eq 'colorset')
+		{
+			push (@totals, $prop );
+		}
+	}
+
+	return		if (scalar(@totals) == 0);
+
+</%INIT>

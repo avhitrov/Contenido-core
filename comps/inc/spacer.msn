@@ -1,0 +1,11 @@
+%	if(!$w && !$h){
+<spacer type="block" width="1" height="1" border="0">\
+%	}else{
+<div style="<% $w?'width:'.$w.'px;':'' %><% $h?'height:'.$h.'px;':'' %>">\
+<spacer type="block" width="<% $w?$w:1 %>" height="<% $h?$h:1 %>" border="0">\
+</div>\
+%	}
+<%args>
+	$w => undef
+	$h => undef
+</%args>

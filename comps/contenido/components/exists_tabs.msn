@@ -1,0 +1,24 @@
+
+<table border="0" width="80%" class="tform">
+<tr>
+<td width="40%">Редактирование существующих профилей</td>
+<td>
+%	for my $tab_id (keys(%{ $toopi }))
+%	{
+%		my $tab = $toopi->{$tab_id};
+<a href="tabs.html?id=<% $tab->{id} %>"><% $tab->{name} %> (<% $tab->{id} %>)</a><br>
+%	}
+</td>
+</tr>
+
+<tr><td height="20"></td></tr>
+
+</table>
+<%init>
+
+	use vars qw($keeper $request);
+	my $toopi = $project->tabs();
+
+	return undef	if ( (! ref($toopi)) || (scalar(keys(%{ $toopi })) <= 0) );
+
+</%init>

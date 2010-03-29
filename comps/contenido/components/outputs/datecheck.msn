@@ -1,0 +1,19 @@
+<%ARGS>
+	$object => undef
+	$name => undef
+	$SETS => undef
+</%ARGS>
+<%INIT>
+	return 	undef	if (! ref($SETS));
+	return 	undef	if (! $name);
+
+	my $string;
+	if (($SETS->{$name.'_year'} > 0) and ($SETS->{$name.'_month'} > 0) and ($SETS->{$name.'_day'} > 0))
+	{
+	        $string = $SETS->{$name.'_year'}.'-'.$SETS->{$name.'_month'}.'-'.$SETS->{$name.'_day'};
+		undef $string if (length($string) < 6);
+
+		$object->{$name} = $string;
+	}
+	return $string;
+</%INIT>

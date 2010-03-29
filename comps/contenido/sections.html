@@ -1,0 +1,345 @@
+<& "/contenido/components/header.msn" &>
+<& "/contenido/components/naviline.msn", sect_id => $owner->id &>
+
+<table width="100%" cellspacing="0" cellpadding="0" border="0">
+<tr valign="top">
+<td width="35%">
+
+<& "/contenido/components/subsection.msn", section => $owner &>
+<& "/contenido/components/class_filter.msn", class=> $class, section => $owner &>
+
+%	if (( $owner->id ) && ($owner->id > 0) )
+%	{
+<& "/contenido/components/section_info.msn", section => $owner &>
+%	}
+
+%	my @LEFT = $m->comp('components/tasks.msn');
+%	my %LEFTh = map { $_->{attr} => $_ } (@LEFT);
+%	if (ref($request->{tab}->{lefts}))
+%	{
+%		for my $left (@{ $request->{tab}->{lefts} })
+%		{
+%			next	if (! exists($LEFTh{$left}));
+<& '/contenido/components/'.$LEFTh{$left}->{component}, %ARGS &>
+%		}
+%	}
+
+<!-- Примечания -->
+	<fieldset>
+	<legend>Примечания</legend>
+	<table width="100%" cellspacing="5" cellpadding="0" class="tform">
+
+	<tr>
+	<th valign=top>1)</th>
+	<td width="100%">
+	Дата и время документа - поле, которое Вы можете редактировать.<br><br>
+	Кроме этого	у каждого документа существует еще две временные отметки - дата создания (ctime) и дата модификации (mtime).
+	Это служебные поля и Вы не можете их изменять (они доступны только для чтения).
+	</td>
+	</tr>
+
+	</table>
+	</fieldset>
+
+</td>
+<td width="2%">&nbsp;</td>
+<td width="65%">
+
+% if($owner->id) {
+
+	<fieldset>
+	<legend>Документы\
+%	if ($class) {
+ класса <% $class %>\
+%		if ($use_section) {
+ c учетом текущей секции\
+%		}
+%	} else {
+ в разделе\
+%	}
+%	if ($total > 0)	{
+ (всего: <% $total %>, показано с <% $first + 1 %> по <% ($first + $n > $total) ? $total : $first + $n %>)
+%	}
+	</legend>
+
+%	if ($total or defined($alpha) or defined($search) ) {
+%		if ($section_access == 2) {
+<& "/contenido/components/new_objects_form.msn", proto => 'documents',
+	sect_id => $owner->id,
+	default => ($owner->default_document_class ? $owner->default_document_class : undef) &>
+%		}
+<div style="font-size:75%; font-family:Arial;">
+<table border="0" cellspacing="0" cellpadding="2" width="100%" style="margin:4px 0 0; border:1px solid gray;">
+<tr bgcolor="#e0e0e0"><th colspan="4">Поиск по букве:&nbsp;&nbsp;[<a href="?id=<% $id %>" style="font-weight:normal;">сброс фильтра</a>]</th></tr>
+<tr><td style="font-size:75%; font-family:Arial; padding:2px 4px;">
+<& /inc/alpha.msn, alpha=>$alpha, params=>\%ARGS, &>
+</td></tr></table>
+%		## Форма поиска. Работает при включенном фильтре класса
+%		## и описанной для класса функции search_fields
+%		########################################################
+%		if ( $filter{class} ) {
+%			my $document = $filter{class}->new ($keeper);
+%			my @fields = $document->search_fields;
+%			if ( @fields ) {
+%				my @props = $document->required_properties;
+<form action="sections.html">
+<table border="0" cellspacing="0" cellpadding="2" width="100%" style="margin:4px 0; border:1px solid gray;">
+<tr bgcolor="#e0e0e0"><th colspan="4">Поиск по полю:&nbsp;&nbsp;[<a href="?id=<% $id %>" style="font-weight:normal;">сброс фильтра</a>]</th></tr><tr>
+<td width="1%" nowrap style="padding:2px 0 2px 4px;"><select name="search_by">
+%				foreach my $field ( @fields ) {
+%					my ($prop) = grep { $_->{'attr'} eq $field } @props;
+%					my $selected = $field eq $search_by ? ' selected' : '';
+<option value="<% $field %>"<% $selected %>><% ref $prop ? $prop->{'shortname'} || $prop->{'rusname'} : $field %>
+%				}
+</td><td width="0">:</td>
+<td width="98%"><input type="text" name="search" value="<% $search %>" style="width:100%"></td>
+<td width="1%" style="padding:2px 4px 2px 0;"><input type="submit" value=" &raquo; " style="border:1px solid gray;"></td>
+</tr></table>
+%				if ( $id ) {
+<input type="hidden" name="id" value="<% $id %>">
+%				}
+%				if ( $class ) {
+<input type="hidden" name="class" value="<% $class %>">
+%				}
+%				if ( $use_section ) {
+<input type="hidden" name="use_section" value="<% $use_section %>">
+%				}
+</form>
+%			}
+%		}
+
+<div style="height:5px"><spacer type="block" height="5"></div>
+<& /inc/pages_.msn, p=>$p, n=>$n, total=>$total, href=>'sections.html', params=>\%ARGS, &>
+</div>
+
+<& /contenido/components/section_browse.msn, documents => \@documents, columns => \@columns, section => $owner, filter => \%filter_params, %ARGS &>
+
+<div style="font-size:75%; font-family:Arial;">
+<& /inc/pages_.msn, p=>$p, n=>$n, total=>$total, href=>'sections.html', params=>\%ARGS, &>
+<div style="height:5px"><spacer type="block" height="5"></div>
+</div>
+
+%	} else {
+<h4 align="center"><i>---- Нет документов -----</i></h4>
+%	}
+%
+%	if ($section_access == 2) {
+<& "/contenido/components/new_objects_form.msn", proto => 'documents',
+	sect_id => $owner->id,
+	default => ($owner->default_document_class ? $owner->default_document_class : undef) &>
+%	}
+
+</fieldset>
+</td>
+</tr>
+</table>
+
+% }
+
+</body>
+</html>
+<%args>
+
+	$id		=> undef
+	$p		=> 1
+	$class		=> undef
+	$use_section	=> undef
+	$alpha		=> undef
+	$alpha_search	=> undef
+	$search_by	=> undef
+	$search		=> undef
+	$update		=> undef
+	$delete		=> undef
+
+</%args>
+<%init>
+
+	$id = 0 if $id =~ /\D/;
+	my $owner;
+
+	# Операции...
+	if ($id && ($id > 0))
+	{
+		$owner = $keeper->get_section_by_id($id);
+	}
+	if (! ref($owner))
+	{
+		return undef;
+	}
+
+	my %filter_params;
+	$filter_params{use_section} = $use_section	if $use_section;
+	$filter_params{class} = $class			if $class;
+	$filter_params{alpha} = $alpha			if $alpha;
+	$filter_params{alpha_search} = $alpha_search	if $alpha_search;
+	$filter_params{search_by} = $search_by		if $search_by;
+	$filter_params{search} = $search		if $search;
+	$filter_params{p} = $p				if $p > 1;
+	$filter_params{s} = $id				if $id;
+
+	# ������� �������� � ����� ������...
+	my $filter = $m->comp('/contenido/components/context.msn', name => 'filter');
+	my $profile = $m->comp('/contenido/components/context.msn', name => 'profile');
+
+	unless (defined $request->{section_accesses}->{$id})
+	{
+		$request->{section_accesses}->{$id} = $user->get_section_access($id);
+	}
+	my $section_access = $request->{section_accesses}->{$id};
+
+	my (@documents, $total);
+
+	my $s = $owner->id;
+	my $sorted = $owner->_sorted();
+	$s .= ",$filter"	if ($filter > 0);
+
+	if ($update) {
+		my $return_params = join ('&', map { $_.'='.$filter_params{$_} } grep { $_ ne 's' } keys %filter_params );
+		my %updated;
+		while ( my ($field, $value) = each %ARGS ) {
+			if ( $field =~ /^update_(\d+)_(\w+)$/ ) {
+				my $oid = $1;
+				my $attr = $2;
+				$updated{$oid}{$attr} = $value;
+			}
+		}
+		my %classes = map { $_->{class} => 1 } values %updated;
+		foreach my $update_class ( keys %classes ) {
+			my @ids;
+			while ( my ($oid, $attr) = each %updated) {
+				push @ids, $oid		if $attr->{class} eq $update_class;
+			}
+			my @objects = $keeper->get_documents (
+					id      => \@ids,
+					class	=> $update_class
+				)			if @ids;
+			foreach my $object ( @objects ) {
+				my $document_access = $user->section_accesses($user, $object->section);
+				next	unless $document_access == 2;
+				my $fields = $updated{$object->id};
+				my @props = grep { exists $_->{inline} && $_->{inline} } $object->structure;
+				if ( ref $fields eq 'HASH' ) {
+					foreach my $prop ( @props ) {
+						my $attr = $prop->{attr};
+						my $value = ref $fields && exists $fields->{$attr} ? $fields->{$attr} : undef;
+						if ( $prop->{db_type} eq 'float' ) {
+							for ( $value ) {
+								s/\,/\./;
+								s/^\s+//;
+								s/\s+$//;
+							}
+						}
+						if ( $prop->{type} eq 'checkbox' ) {
+							$value = $value ? 1 : undef;
+						}
+
+						$object->$attr($value);
+					}
+					$object->store;
+				}
+			}
+		}
+		$m->redirect("sections.html?id=".$id.($return_params ? '&'.$return_params : ''));
+	}
+	if ( $delete ) {
+		my $return_params = join ('&', map { $_.'='.$filter_params{$_} } grep { $_ ne 's' } keys %filter_params );
+		my %deleted;
+		while ( my ($field, $value) = each %ARGS ) {
+			if ( $field =~ /^delete_(\d+)_(\w+)$/ ) {
+				my $oid = $1;
+				my $attr = $2;
+				$deleted{$oid}{$attr} = $value;
+			}
+		}
+		my %classes = map { $_->{class} => 1 } values %deleted;
+		foreach my $delete_class ( keys %classes ) {
+			my @ids;
+			while ( my ($oid, $attr) = each %deleted) {
+				push @ids, $oid		if exists $attr->{id} && $attr->{id} && ($attr->{class} eq $delete_class);
+			}
+			my @objects = $keeper->get_documents (
+					id      => \@ids,
+					class	=> $delete_class
+				)			if @ids;
+			foreach my $object ( @objects ) {
+				my $document_access = $user->section_accesses($user, $object->section);
+				next	unless $document_access == 2;
+				$object->delete;
+			}
+		}
+		$m->redirect("sections.html?id=".$id.($return_params ? '&'.$return_params : ''));
+	}
+
+	my %filter=();
+	my %order = (not $class and $owner->order_by) ? (order_by => $owner->order_by) : (order => ['date','direct']);
+	if (defined $alpha and $alpha ne '') {
+		$filter{ilike}=1;
+		$filter{ $alpha_search || 'name' }="$alpha%";
+		$order{order}=['name','reverse'];
+		delete $order{order_by};
+	}
+	if ( $class ) {
+		$filter{class} = $class;
+	} elsif ( $owner->default_document_class ) {
+		$filter{class} = $owner->default_document_class;
+	} elsif ( $owner->default_table_class ) {
+		$filter{table} = $owner->default_table_class;
+	}
+	$filter{s}=$s unless ($class && !$use_section);
+	if ( $search_by && defined $search ) {
+		my $doc_class = $class || $owner->default_document_class;
+		if ( $doc_class ) {
+			my @props = $doc_class->new( $keeper )->structure();
+			my ($prop) = grep { $_->{attr} eq $search_by } @props	if @props;
+			if ( ref $prop && $prop->{type} eq 'integer' ) {
+				$filter{$search_by} = int($search);
+			} else {
+				$filter{$search_by}='%'.$search.'%';
+				$filter{ilike} = 1;
+			}
+		} else {
+			$filter{$search_by}='%'.$search.'%';
+			$filter{ilike} = 1;
+		}
+	}
+
+    # Дополнительные фильтры раздела
+    if ($owner->filters) {
+        no strict 'vars';
+        my $filters = eval($owner->filters);
+        if ($@) {
+            warn "Bad filter: " . $owner->filters . " in section " . $owner->id;
+        } elsif (ref $filters eq 'HASH') {
+            map { $filter{$_} = $filters->{$_} } keys %$filters;
+        }
+    }
+
+	$total = $keeper->get_documents(%filter, count=>1);
+
+	my $n = 40;
+	my $first = $n * ($p - 1);
+	($first,$p)=(0,0) if ($first>$total);
+
+	if ($class && !$use_section) {
+		@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first);
+	} elsif ($sorted) {
+		@documents = $keeper->get_sorted_documents(%filter, limit=>$n, offset=>$first);
+	} else {
+		@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first);
+	}
+
+	# набор колонок таблицы документов...
+    my @columns = $sorted ? ({attr => '_sort_', name => 'N'}) : ();
+
+    # пытаемся найти колонки, которые документ сам пожелал показать (required_properties -> column)...
+    if ($filter{class} or @documents and $documents[0]) {
+        push @columns,
+            sort {$a->{column} <=> $b->{column}}
+            grep {$_->{column}} ($filter{class} ? $filter{class}->new($keeper)->structure : $documents[0]->structure);
+    }
+
+    # стандартная жопка таблицы...
+    @columns = (@columns,
+            {attr => '_act_',       rusname => 'Действия'},
+    );
+</%init>

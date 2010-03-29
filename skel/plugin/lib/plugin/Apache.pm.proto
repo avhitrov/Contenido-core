@@ -1,0 +1,21 @@
+package @NAME@::Apache;
+
+use strict;
+use warnings 'all';
+
+use @NAME@::State;
+use Contenido::Globals;
+
+
+sub child_init {
+	# встраиваем keeper плагина в keeper проекта
+	$keeper->{@NAME@} = @NAME@::Keeper->new($state->@NAME@);
+}
+
+sub request_init {
+}
+
+sub child_exit {
+}
+
+1;

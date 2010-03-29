@@ -1,0 +1,10 @@
+<!-- /<% $location %>?pg=<% $page %>&ifr=5 -->
+<!--# include virtual="/<% $location %>?rip=$remote_addr&pg=<% $page %>&ifr=5<% $divclass ? '&divclass='.$divclass : '' %>" -->\
+<%ARGS>
+	$page => undef
+	$location => 'iban'
+	$divclass => undef
+</%ARGS>
+<%INIT>
+	return unless $page;
+</%INIT>

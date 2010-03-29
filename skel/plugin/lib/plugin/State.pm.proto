@@ -1,0 +1,68 @@
+package @NAME@::State;
+
+use strict;
+use warnings 'all';
+use vars qw($AUTOLOAD);
+
+
+sub new {
+	my ($proto) = @_;
+	my $class = ref($proto) || $proto;
+	my $self = {};
+	bless $self, $class;
+
+	# зашитая конфигурация плагина
+#	$self->{db_type} =		'remote';
+#	$self->{db_keepalive} =	0;
+#	$self->{db_host} =		'';
+#	$self->{db_name} =		'';
+#	$self->{db_user} =		'';
+#	$self->{db_password} =	'';
+#	$self->{db_port} =		'';
+
+	$self->_init_();
+	$self;	
+}
+
+sub info {
+	my $self = shift;
+	return unless ref $self;
+
+	for (sort keys %{$self->{attributes}}) {
+		my $la = length $_;
+		warn "\t$_".("\t" x (2-int($la/8))).": $self->{$_}\n";
+	}
+}
+
+sub _init_ {
+	my $self = shift;
+
+	# зашитая конфигурация плагина
+	$self->{attributes}->{$_} = 'SCALAR' for qw(
+#		db_type
+#		db_keepalive
+#		db_host
+#		db_port
+#		db_name
+#		db_user
+#		db_password
+	);
+}
+
+sub AUTOLOAD {
+	my $self = shift;
+	my $attribute = $AUTOLOAD;
+
+	$attribute =~ s/.*:://;
+	return unless $attribute =~ /[^A-Z]/;  # Отключаем методы типа DESTROY
+
+	if (!exists $self->{attributes}->{$attribute}) {
+		warn "Contenido Error (@NAME@::State): Вызов метода, для которого не существует обрабатываемого свойства: ->$attribute()\n";
+		return;
+	}
+
+	$self->{$attribute} = shift @_ if $#_>=0;
+	$self->{$attribute};
+}
+
+1;

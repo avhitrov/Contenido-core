@@ -1,0 +1,60 @@
+
+%	if ($filter)
+%	{
+%		my $section = $keeper->get_section_by_id($filter);
+%		if (ref ($section))
+%		{
+<style>
+<!--
+div.ftr {font-size:70%; font-family:Tahoma; padding:15px 0;}
+div.ftr h3 a {color:#000000;}
+div.ftr h3 {font-size:130%; color:#FFFFFF; margin:0px; padding:8px; background-color:#8093B0;}
+div.ftr i {font-style:normal;color:#777777;}
+div.ftr div.descr {padding:0px 10px;}
+-->
+</style>
+
+<div class="ftr">
+<h3>Фильтр: <% $section->name() %> &nbsp; <a href="/contenido/?unset_context=filter">(x) снять фильтр</a> </h3>
+<div class="descr"><i>В качестве фильтра может выступать любая секция. Если фильтр установлен, то во всех списках и результатах поисков будут показаны только те документы, которые входят, в том числе, и в секцию фильтра</div>
+</div>
+%		}
+%	}
+
+<!-- Навигация -->
+<div class="npath">
+<b>Вы находитесь:</b>&nbsp;
+<%perl>
+
+	my @path = $sect->trace();
+
+	my $i = 0;
+	foreach my $p (@path)
+	{
+		my $step = $keeper->get_section_by_id($p);
+
+		$m->out("<a href=\"sections.html?id=$step->{id}\">$step->{name}</a>");
+		if ($i < scalar(@path) - 1)
+		{
+			$m->out(" &gt;&gt; ");
+		}
+		$i++;
+	}
+
+</%perl>
+</div>
+
+<%ARGS>
+
+	$sect_id => 1
+
+</%ARGS>
+<%INIT>
+
+	use vars qw($keeper $state $project);
+	my $sect = $keeper->get_section_by_id($sect_id);
+
+	my $filter = $m->comp('/contenido/components/context.msn', name => 'filter');
+	my $profile = $m->comp('/contenido/components/context.msn', name => 'profile');
+
+</%INIT>

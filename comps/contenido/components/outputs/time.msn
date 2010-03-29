@@ -1,0 +1,13 @@
+<%args>
+	$name => undef
+	$SETS => undef
+</%args>
+<%init>
+	return undef unless ref $SETS;
+	return undef unless $name;
+	return undef unless $SETS->{$name.'_hour'}   =~ /^\d+$/;
+	return undef unless $SETS->{$name.'_minute'} =~ /^\d+$/;
+	return undef unless $SETS->{$name.'_second'} =~ /^\d*$/;
+
+	return sprintf '%02d:%02d:%02d', $SETS->{$name.'_hour'}, $SETS->{$name.'_minute'}, $SETS->{$name.'_second'} || 0;
+</%init>

@@ -1,0 +1,195 @@
+<& "/contenido/components/header.msn", title => $PROTOS->{$proto}->[0] &>
+
+
+
+<br>
+<table border="0" style="font-size:85%;" width="80%">
+<tr>
+<td width="10"></td>
+<td>
+<div style="font-size:130%;"><% $PROTOS->{$proto}->[0] %></div>
+После каждого нажатия кнопки "Сохранить" в таблицу добавляются 5-ть пустых полей. Будьте внимательны! Изменения тут же отображаются на сайте. Для удаления какого-либо ключа просто сотрите или установите пустым его значение.
+<p>В качестве ключа используйте любые допустимые для ключей perl-хэшей символы. По этим ключам Вы потом можете достать эти данные из объекта <a href="dump.html?proto=project" onclick="openWin('dump.html?proto=project','proto',800,600);return false">$project</a>, существующего на каждой странице.
+<p><% $PROTOS->{$proto}->[1] %>
+</td>
+</tr>
+
+<tr><td height="20"></td></tr>
+
+<form action="./options.html" method="post">
+<input type="hidden" name="control_charset" value="Контроль">
+<input type="hidden" name="proto" value="<% $proto %>">
+<tr>
+<td></td><td>
+
+%# ### SECTION ALIAS ###############################
+%	if ($proto eq 's_alias') {
+
+<table border="0" width="60%">
+<tr>
+<th>Параметр</th>
+<th>Значение</th>
+</tr>
+%		if (ref($toopi) eq 'HASH')
+%		{
+%			for my $p (sort { $a cmp $b } (keys(%{ $toopi })))
+%			{
+<tr>
+<td width="40%"><% $p %></td> 
+<td>
+<select style="width:100%;" name="option_<% $p %>">
+<option></option>
+<& "/contenido/components/select_index_tree.msn", selected => $toopi->{$p} &>
+</select>
+</td>
+</tr>
+%			}
+%		}
+%		for (1..5)
+%		{
+<tr>
+<td width="40%"><input type="text" name="newoption_id_<% $_ %>" value=""></td> 
+<td>
+<select style="width:100%;" name="newoption_value_<% $_ %>">
+<option></option>
+<& "/contenido/components/select_index_tree.msn" &>
+</select>
+</tr>
+%		}
+</table>
+
+%# ### DOCUMENTS ALIAS ###############################
+<%DOC>
+%	} elsif( $proto eq 'd_alias' ) {
+
+
+	В БУДУЮЩЕМ
+
+<& "/contenido/components/obj_list_js.msn" &>
+<table border="0" width="80%">
+<tr>
+<th>Параметр</th>
+<th>Значение</th>
+</tr>
+%		if (ref($toopi) eq 'HASH')
+%		{
+%			for my $p (sort { $a cmp $b } (keys(%{ $toopi })))
+%			{
+<tr valign="top">
+<td width="25%"><% $p %></td> 
+<td><& 
+	"/contenido/components/_show_obj_list.msn",
+		name  => 'newoption_value_'.$_,
+		check => $toopi->{$p},
+	
+&></td>
+</tr>
+%			}
+%		}
+%		for (1..5)
+%		{
+<tr valign="top">
+<td width="25%"><input type="text" name="newoption_id_<% $_ %>" value=""></td> 
+<td><& "/contenido/components/_show_obj_list.msn" &></td>
+</tr>
+%		}
+</table>
+</%DOC>
+%	} else {
+
+
+<table border="0" width="60%">
+<tr>
+<th>Параметр</th>
+<th>Значение</th>
+</tr>
+%		if (ref($toopi) eq 'HASH')
+%		{
+%			for my $p (sort { $a cmp $b } (keys(%{ $toopi })))
+%			{
+<tr>
+<td width="40%"><% $p %></td> 
+<td><input type="text" style="width:100%;" name="option_<% $p %>" value="<% $toopi->{$p} %>"></td>
+</tr>
+%			}
+%		}
+%		for (1..5)
+%		{
+<tr>
+<td width="40%"><input type="text" name="newoption_id_<% $_ %>" value=""></td> 
+<td><input type="text" style="width:100%;" name="newoption_value_<% $_ %>" value=""></td>
+</tr>
+%		}
+</table>
+
+%	}
+
+</td>
+</tr>
+
+<tr><td height="20"></td></tr>
+<tr><td></td><td>
+<input type="submit" value="Сохранить изменения" style="font-size:13pt;font-weight:bold; height:40px;margin-bottom: 5px; background-color:#930300;color:#FFFFFF;">
+<input type="hidden" name="save" value="1">
+</td></tr>
+</form>
+
+</table>
+</body>
+</html>
+
+<%ARGS>
+
+	$proto => undef
+	$save => undef
+
+</%ARGS>
+<%INIT>
+
+	use vars qw($keeper $request $sect);
+	my $PROTOS = {
+		'colors' => ['Редактирование цветовых параметров','В этот блок значений заносятся все возможные константы оформления, цветовые константы, элементы стилей и т.д.'],
+		'widths' => ['Ширины','В этот блок значений занятосятся все управляющие размерами элементов значения. Все ширины, отступы, сепараторы и т.д.'],
+		'params' => ['Дополнительные параметры','В этот блок значений заносятся произвольные параметры, не попадающие в другие группы.'],
+		's_alias' => ['Идентификаторы секций','Здесь значениям СЕКЦИЙ (рубрик) присваиваются специальные строковые идентификаторы-ключи. Это делается для того, чтобы привязать секции редакторского интерфейса с программной пользовательской частью'],
+		'd_alias' => ['Идентификаторы документов','Здесь значениям ДОКУМЕНТОВ присваиваются специальные строковые идентификаторы-ключи. Это делается для того, чтобы привязать ДОКУМЕНТЫ с программной пользовательской частью'],
+		'redirects' => ['Короткие имена','Здесь определяются редиректы (то есть псевдоимена и их значения). В качестве параметра выступает короткое имя, а в качестве значения - его URI (<b>включая начальный слеш /</b>, index.html указывать не надо).'],
+	};
+
+	my $toopi = $project->$proto();
+	if ( ($save) && (exists($PROTOS->{$proto})) )
+	{
+		my $N = {};
+		my $V = {};
+		foreach my $p (keys(%ARGS))
+		{
+			if ($p =~ /^option_(.+)$/)
+			{
+				if ( (length($ARGS{'option_'.$1})<1) && (exists($toopi->{$1})) )
+				{
+					delete $toopi->{$1};
+				} else {
+					$toopi->{$1} = $ARGS{'option_'.$1};
+				}
+			} elsif ($p =~ /^newoption_id_(.+)$/)
+			{
+				$N->{$1} = $ARGS{'newoption_id_'.$1};
+			} elsif ($p =~ /^newoption_value_(.+)$/)
+			{
+				$V->{$1} = $ARGS{'newoption_value_'.$1};
+			}
+		}
+		foreach my $n (keys(%{ $N }))
+		{
+			next	if (length($N->{$n}) < 1);
+			$toopi->{$N->{$n}} = $V->{$n};
+		}
+
+		$project->$proto($toopi);
+		$project->store($keeper);
+
+	} elsif ( $proto eq 's_alias' && not defined $save) {
+		#warn Data::Dumper::Dumper($sect)."\n";
+	}
+
+</%INIT>

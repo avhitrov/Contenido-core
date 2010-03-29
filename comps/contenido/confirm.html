@@ -1,0 +1,59 @@
+<& "/contenido/components/header.msn" &>
+
+<blockquote>
+	<font  face="arial" size="-1">
+		<form name="form" action="<% $proto->{$action}->[1] %>" method="GET">
+			<input type="hidden" name="id" value="<% $id %>">
+			<input type="hidden" name="delete" value="1">
+			<input type="hidden" name="sure" value="1">
+			<input type="hidden" name="from" value="<% $from %>">
+			<input type="hidden" name="class" value="<% $class %>">
+%	while ( my ($key, $value) = each %filter_params ) {
+			<input type="hidden" name="<% $key %>" value="<% $value |h %>">
+%	}
+		</form>
+		<center>
+			<b>Вы в самом деле хотите удалить <% $proto->{$action}->[2] %> "<% $obj->name() %>"?</b><br><br>
+			<input type="button" value="   Да   " onclick="javascript:document.form.submit()">&nbsp;&nbsp;&nbsp;&nbsp;
+			<input type="button" value="  Нет  " onclick="javascript:history.back(-1)">
+		</center>
+	</font>
+</blockquote>
+
+</body>
+</html>
+
+<%args>
+	$action => undef
+	$id => undef
+	$from => undef
+	$class => undef
+</%args>
+<%ONCE>
+	my $proto = {
+		'documents_deletion'    => ['get_document_by_id($id, class=>$class)',	'document.html','документ'],
+		'sections_deletion'     => ['get_section_by_id($id)',			'section.html',	'раздел'],
+		'users_deletion'	=> ['get_user_by_id($id)',			'users.html',	'пользователя'],
+	};
+</%ONCE>
+<%init>
+	unless ( exists $proto->{$action} ) {
+		$m->clear_buffer;
+		$m->abort(403);
+	}
+
+	my %filter_params;
+	$filter_params{s} = $from				if $action eq 'documents_deletion';
+	$filter_params{use_section} = $ARGS{use_section}	if $ARGS{use_section};
+	$filter_params{alpha} = $ARGS{alpha}			if $ARGS{alpha};
+	$filter_params{alpha_search} = $ARGS{alpha_search}	if $ARGS{alpha_search};
+	$filter_params{search_by} = $ARGS{search_by}		if $ARGS{search_by};
+	$filter_params{search} = $ARGS{search}			if $ARGS{search};
+	$filter_params{p} = $ARGS{p}				if $ARGS{p} && $ARGS{p} > 1;
+	my $return_params = join ('&', map { $_.'='.$filter_params{$_} } grep { $_ ne 's' } keys %filter_params );
+
+
+	my $obj;
+	eval '$obj = $keeper->'.$proto->{$action}->[0];
+	warn $@ if $@;
+</%init>

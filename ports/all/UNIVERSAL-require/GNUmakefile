@@ -1,0 +1,11 @@
+##############################################################################
+# $HeadURL: 
+# $Id: GNUmakefile
+###############################################################################
+
+PORTVERSION =		0.11
+PERL_MAKEMAKER =	yes
+MASTER_CPAN_SUBDIR =	../../authors/id/M/MS/MSCHWERN
+
+
+include ../../etc/ports.mk

@@ -1,0 +1,65 @@
+<html>
+<style>
+	body, td { font-size:85%; }
+</style>
+<body text="#000000" link="#0000FF" vlink="#0000FF" leftmargin="0" topmargin="0" rightmargin="0" bottommargin="0" marginwidth="0" marginheight="0">
+% if ($id)
+% {
+[<a href="objects_view.html?classes=<% $classes %>" style="color:#000000;">root</a>] /\
+%	my $node_id = $keeper->get_section_by_id( $id );
+%	my @path = $node_id->trace();
+%	my ($cur) = splice( @path, -1 );
+%	my $node_cur = $keeper->get_section_by_id( $cur );
+% 	map {
+%		my $child = $keeper->get_section_by_id ($_);
+%		$m->out( '<a href="objects_view.html?classes='.$classes.'&id='.$child->id.'" title="'.$child->name.'" style="color:#000000;">..</a> /' )
+%	} @path;
+<% $node_cur->name %>:
+% } else {
+<b>[root]</b>
+% }
+<table width="98%" border="0" cellspacing="0" cellpadding="0">
+<tr><td height="2"><form name="form"></td></tr>
+% foreach my $kid (@kids)
+% {
+%	my $child = $keeper->get_section_by_id($kid);
+<tr valign="top"><td width="10">&nbsp;</td><td><a href="objects_view.html?classes=<% $classes %>&id=<% $child->id %>"><% $child->name %></a></td></tr>
+% }
+% foreach my $object (@objects)
+% {
+%	my $obj_name_escaped = $object->name;
+%	$obj_name_escaped =~ s/"/&quot;/g;
+<tr valign="top"><td width="10"><input type="checkbox" name="<% $object->id %>" value="<% $obj_name_escaped %>">&nbsp;</td><td><b><% $object->name %></b></td></tr>
+% }
+<tr><td height="6"></td></tr>
+</table>
+</form>
+
+</body>
+</html>
+
+<%args>
+
+	$id => 0
+	$classes => undef
+
+</%args>
+<%init>
+
+	warn "$id -> $classes\n";
+
+	use vars qw($keeper);
+	my $node = $keeper->get_section_by_id( $id || $Contenido::Section::ROOT || 1 );
+	my @kids = $node->childs();
+
+	my %opts = (
+		's' => $id || $Contenido::Section::ROOT || 1,
+		'order' => ['date','direct'],
+	);
+	if (length($classes) > 0)
+	{
+		$opts{class} = $classes;
+	}
+	my @objects = $keeper->get_documents(%opts);
+
+</%init>

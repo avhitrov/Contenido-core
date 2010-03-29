@@ -1,0 +1,69 @@
+<& "/contenido/components/title.msn", %ARGS &>
+<table width="100%" cellspacing="10" cellpadding="0" border="0" style="background-color:#445D82;" class="tatop">
+<tr>
+<td><b>Редакторский интерфейс\
+% if( $style ne 'index' ) {
+:&nbsp; <a href="/contenido/">На главную</a>
+% }
+</b></td>
+<td align="right"><b><a href="/" style="text-decoration:none;"><% $pn_name %><span style="background-color:#efefef;color:#000000;margin:2px;"> <% uc($pn_domen) %> </span></a></b></td>
+</tr>
+<tr>
+<td>
+%	my @TABS = ();
+%	my @plugins = ($state->project, split(/\s+/, $state->plugins));
+%	my %plugins = map { lc($_) => 1 } @plugins;
+%	for my $tab_id (keys(%{ $toopi })) {
+%		my ($b1, $b2) = $tab_id eq $profile ? ('<b>', '</b>') : ('', '');
+%		if ($r->uri() =~ /keywords\.html$/ || ($r->uri =~ /^\/contenido\/(\w+)\//i && exists $plugins{lc($1)} ) ) {
+%			($b1, $b2) = ('', '');
+%		}
+%		next if $tab_id eq 'admin' && !$user->check_group(1);
+%		push (@TABS, $b1.'<a href="/contenido/?set_context=profile-'.$tab_id.'">'.$toopi->{$tab_id}->{name}.'</a>'.$b2);
+%	}
+<% join('&nbsp;|&nbsp', @TABS) %>\
+%	for my $plugin ($state->project, split(/\s+/, $state->plugins)) {
+%		my $l_plugin = lc($plugin);
+%		next if $state->{$l_plugin}->{contenido_notab};
+%		my $uri = "$plugin/";
+%		if ($plugin eq $state->project)
+%		{
+%			$plugin = $state->project_name;
+%		}
+%		my ($b1, $b2) = $r->uri =~ /^\/contenido\/(\w+)\//i && lc($1) eq $l_plugin ? ('<b>','</b>') : ('','');
+&nbsp;|&nbsp;<a href="/contenido/<% $uri %>"><% $b1.$plugin.$b2 %></a>
+%	}
+</td>
+<td align="right">
+<b>Пользователь:</b> <% $user->name() %> (<% $user->login() %>)
+</td>
+</tr>
+</table>
+
+<script>
+<!--
+function openWin(wUri, wName, wWidth, wHeight, wScroll, wMenu) {
+	var scrollBars = (wScroll!=0) ? 1 : 0;
+	var menuBars = (wMenu) ? 1 : 0;
+	var positionLeft = (screen.width - wWidth)/2;
+	var positionTop = (screen.height - wHeight)/2;
+	var myW = window.open(wUri,wName,'width='+wWidth+',height='+wHeight+',top='+positionTop+',left='+positionLeft+',location=0,menubar='+menuBars+',resizable=0,scrollbars='+scrollBars+',status=0,titlebar=0,toolbar=0,directories=0,hotkeys=0')
+	myW.focus();
+}
+-->
+</script>
+<%args>
+
+	$style => undef
+	$title => undef
+
+</%args>
+<%init>
+	my $pn = $state->project_name();
+	my ($pn_name, $pn_domen) = split(/\./, $pn);
+
+	my $toopi = $project->tabs();
+
+	my $profile = $m->comp('/contenido/components/context.msn', name => 'profile');
+
+</%init>

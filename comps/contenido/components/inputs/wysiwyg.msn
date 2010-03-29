@@ -1,0 +1,25 @@
+% if ($prop->{support_images}) {
+<& /contenido/components/images_selector.msn, object => $object, name => $name, attrs => $prop->{support_images} &>
+% }
+
+<script type="text/javascript">
+<!--
+  WYSIWYGControls[WYSIWYGControls.length] = '<% $name %>';
+//-->
+</script>
+
+<textarea id="<% $name %>" \
+% if ($request->{images_staff_printed}) {
+onclick="storeCaret(this)" onkeyup="storeCaret(this)" onselect="storeCaret(this)" \
+% }
+<% $prop->{readonly} ? 'readonly ' : '' %> name="<% $name %>" rows="<% $prop->{rows} || 8 %>" cols="<% $prop->{cols} || 8 %>" style="width: 95%;"><% $check %></textarea>
+
+<%args>
+	$name	=> undef
+	$check	=> undef
+	$prop	=> {}
+	$object	=> undef
+</%args>
+<%init>
+	$check = html_escape($check) unless $prop->{no_escape};
+</%init>

@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings "all";
+use locale;
+
+use FindBin;
+BEGIN {
+	require "$FindBin::RealBin/../lib/Modules.pm";
+}
+
+use Contenido::Globals;
+use Contenido::Init;
+use ErrorTee;
+use PidFile;
+
+
+# begin
+Contenido::Init->init();
+
+my $keeper_module = $state->project.'::Keeper';
+$keeper = $keeper_module->new($state);
+
+#PidFile->new($keeper, compat=>1);                # db-based locking (run only on one host)
+#PidFile->new($keeper, compat=>1, per_host=>1);   # db-based locking (run on whole cluster)
+
+############################################
+# please use:
+#     $state->{log_dir} for logging
+#     $state->{tmp_dir} for temporary files
+###########################################

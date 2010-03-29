@@ -1,0 +1,157 @@
+<& "/contenido/components/header.msn" &>
+
+<& "/contenido/components/naviline.msn", sect_id => $owner->id &>
+
+% if ( (length($class)<=0) && (! ref($section)) )
+% {
+
+%	if ($id)
+%	{
+<div align="center" style="font-size:110%; color:red;">
+Секция с идентификатором <% $id %> не найдена
+</div>
+<br><br>
+%	}
+
+<!-- Блок с выбором новой секции для создания -->
+<table width="50%" border="0"><tr><td>
+<fieldset>
+<legend>Выберите тип секции для создания</legend>
+<& "/contenido/components/new_objects_form.msn", proto => 'sections', sect_id => $owner->id &>
+</fieldset>
+</td></tr></table>
+
+% } else {
+
+<& "/contenido/components/obj_list_js.msn", object => $section &>
+<& "/contenido/components/object_form.msn", object => $section, proto => 'sections', sect_id => $owner->id &>
+
+% }
+
+</body>
+</html>
+<%ARGS>
+
+	$class => undef
+	$sect_id => undef
+	$pid => undef
+	$id => undef
+	$ret => undef
+
+	$delete => undef
+	$save => undef
+	$move => undef
+
+</%ARGS>
+<%INIT>
+	# Проверка заданности класса - он должен быть задан явно...
+	if ($class)
+	{
+		my @correct_classes = @{ $state->{available_sections} };
+		if (! (grep { $_ eq $class } @correct_classes))
+		{
+			# Класс задан, но он не корректный
+			$class = undef;
+		}
+	}
+
+	my $section;
+	if ($id && ($id !~ /\D/) && ($id > 0))
+	{
+		# Проверяем право редактирования секции
+		if ($user->section_accesses($user, $id) != 2)
+		{
+			$m->clear_buffer;
+			$m->abort(403);
+		}
+
+		$section = $keeper->get_section_by_id($id);
+	}
+
+	if ( ($class) && (length($class) > 0) && (! ref($section)) )
+	{
+		$section = new $class ($keeper);
+	}
+
+	if ( (! $sect_id) && ref($section) && $section->id )
+	{
+		$sect_id = $section->pid;
+	}
+	if ( $pid > 0 )
+	{
+		if (ref($section) && $section->id)
+		{
+			$sect_id = $pid			if ($section->id != $pid);
+		} else {
+			$sect_id = $pid;
+		}
+	}
+
+	my $owner = $keeper->get_section_by_id ($sect_id || $Contenido::Section::ROOT || 1);
+	if (! ref($owner))
+	{
+		$owner = $keeper->get_section_by_id ($Contenido::Section::ROOT || 1);
+	}
+	if (! ref($owner))
+	{
+		warn "Contenido Die: Не могу найти корневую секцию\n";
+		return undef;
+	}
+
+
+	# Удаление...
+	if ( defined($id) && ($id > 0) && ($delete == 1) )
+	{
+		$section = $keeper->get_section_by_id($id);
+		$section->delete();
+
+		$r->header_out("Location", "sections.html?id=".$owner->id);
+		$r->status(302);
+		$r->send_http_header();
+		$m->abort();
+	}
+
+	# Сохранение связи...
+	elsif ( $save == 1 )
+	{
+		if ($m->comp('/contenido/components/set_properties.msn', object => $section, SETS => \%ARGS) != 1)
+		{
+			# Ошибка, надо бы обработать...
+		}
+		$section->pid($sect_id);
+		$section->store();
+
+		if ($ARGS{_save_and_leave})
+		{
+			$r->header_out("Location", "sections.html?id=".$owner->id);
+			$r->status(302);
+			$r->send_http_header();
+			$m->abort();
+		}
+		elsif ($ARGS{_save_and_again})
+		{
+			$r->header_out("Location", "section.html?class=".$section->class()."&sect_id=".$owner->id());
+			$r->status(302);
+			$r->send_http_header();
+			$m->abort();
+		}
+
+
+		$r->header_out("Location", "section.html?id=".$section->id);
+		$r->status(302);
+		$r->send_http_header();
+		$m->abort();
+	}
+
+	# Перемещение...
+	elsif ($move) {
+		warn "MOVING to $move";
+		$section->move($move);
+		$r->header_out("Location", $ret ? "sections.html?id=".$ret : 'index.html');
+		$r->status(302);
+		$r->send_http_header();
+		$m->abort();
+	}
+
+</%INIT>
+

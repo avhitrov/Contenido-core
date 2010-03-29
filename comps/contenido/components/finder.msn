@@ -1,0 +1,110 @@
+	<script type="text/javascript">
+	<!--
+%# массив статусов (соответствует типам документов)
+	var statusval = new Array("<% join('", "', @ST_IDS) %>");
+%# названия статусов
+	var statusname = new Array("<% join('", "', @ST_NAMES) %>");
+%# ф-ция, возвращающая массив статусов выбранного документа
+function getStatus(index,n){
+    var statusvalues = n[index];
+    return statusvalues.split("|");
+}
+%# ф-ция, выводящая список статусов
+	function ch(index){
+		var CurStatVal = getStatus(index,statusval);
+		var CurStatLng = CurStatVal.length;
+		var CurStatName = getStatus(index,statusname);
+		var StatList = document.forms["searchdoc"].elements["status"];
+		StatList.length = 0; // удаляем все элементы из списка статусов
+%# добавляем новые статусы в список
+		for (i = 0; i < CurStatLng; i++){
+			var newStatListOption = document.createElement("OPTION");
+			newStatListOption.text = CurStatName[i];
+			newStatListOption.value = CurStatVal[i];
+			(StatList.options.add) ? StatList.options.add(newStatListOption) : StatList.add(newStatListOption, null);
+		}
+	}
+	//-->
+	</script>
+	<fieldset>
+	<legend>Отбор документов</legend>
+	<form name="searchdoc" action="search.html" method="GET" target="select">
+	<table width="100%" border="0" cellpadding="0" cellspacing="6" class="tform">
+	<tr><td><b>Выберите тип:</b></td></tr>
+	<tr><td><& "/contenido/components/select.msn", name=>'class', values => $classes, start => '', style=>'width:100%;font-size:8pt;', onChange => 'ch(this.selectedIndex);' &></td>
+	<tr><td><b>Выберите статус:</b></td></tr>
+	<tr><td><& "/contenido/components/select.msn", name=>'status', values => $states, start => '', style=>'width:100%;font-size:8pt;' &></td>
+	<tr><td height="5"></td></tr>
+	<tr><td><b>По дате:</b></td></tr>
+	<tr><td><& "/contenido/components/inputs/date.msn", name => 'from' &></td></tr>
+	<tr><td><& "/contenido/components/inputs/date.msn", name => 'to' &></td></tr>
+	<tr><td><input type="checkbox" name="dive" value="1">Включая подразделы</td></tr>
+	<tr><td><input type="hidden" name="sect_id" value="<% $sect_id %>"><input type="submit" value="Отобрать" class="btn"></td></tr>
+	</table>
+	</form>
+	</fieldset>
+
+<%once>
+	use locale;
+</%once>
+<%args>
+
+	$sect_id => 1
+	$id => undef
+
+</%args>
+<%init>
+
+	use vars qw($state $project $keeper $request);
+	if ($id > 0)
+	{
+		$sect_id = $id;
+	}
+
+	my ($DATA, @ST_IDS, @ST_NAMES);
+	my @default_status = ();
+	if (ref($keeper->default_status())) {
+		@default_status = @{$keeper->default_status()};
+	}
+
+	unshift @default_status, ['9999', '--- Любой ---'];
+	push @$DATA, { id => '', name => '--- Любой ---', states => \@default_status };
+
+	foreach my $class (@ { $state->{available_documents} })
+	{
+		my $object = $class->new($keeper);
+		my @properties = $object->structure();
+		my @states = @{$keeper->default_status()};
+		foreach my $attr (@properties)
+		{
+			if ( ($attr->{attr} eq 'status') and ($attr->{type} eq 'status') )
+			{
+				@states = @{$attr->{cases}} if (exists($attr->{cases}) and (ref($attr->{cases}) eq 'ARRAY'));
+			}
+		}
+		unshift @states, ['9999', '--- Любой ---'];
+		push (@$DATA, {id => $class, name => "".$object->class_name()." ($class)", states => \@states});
+	}
+
+	my $classes;
+	foreach my $C (sort {$a->{name} cmp $b->{name}} @$DATA)
+	{
+		push @$classes, $C->{id}, $C->{name};
+		my @st_ids;
+		my @st_names;
+		foreach my $st (@{$C->{states}})
+		{
+			push @st_ids,	$st->[0];
+			push @st_names,	$st->[1];
+		}
+		push @ST_IDS,	join('|', @st_ids);
+		push @ST_NAMES,	join('|', @st_names);
+	}
+
+	my $states;
+	foreach my $S (sort {$a->[1] cmp $b->[1]} @default_status)
+	{
+		push @$states, $S->[0], $S->[1];
+	}
+
+</%init>

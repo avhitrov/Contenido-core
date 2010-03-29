@@ -1,0 +1,201 @@
+<%once>
+
+   my %translit = (
+	'а'	=> 'a',
+	'б'	=> 'b',
+	'в'	=> 'v',
+	'г'	=> 'g',
+	'д'	=> 'd',
+	'е'	=> 'e',
+	'ё'	=> 'e',
+	'ж'	=> 'zh',
+	'з'	=> 'z',
+	'и'	=> 'i',
+	'й'	=> 'y',
+	'к'	=> 'k',
+	'л'	=> 'l',
+	'м'	=> 'm',
+	'н'	=> 'n',
+	'о'	=> 'o',
+	'п'	=> 'p',
+	'р'	=> 'r',
+	'с'	=> 's',
+	'т'	=> 't',
+	'у'	=> 'u',
+	'ф'	=> 'f',
+	'х'	=> 'h',
+	'ц'	=> 'ts',
+	'ч'	=> '4',
+	'ш'	=> 'sh',
+	'щ'	=> 'sch',
+	'ъ'	=> 'y',
+	'ы'	=> 'i',
+	'ь'	=> 'y',
+	'э'	=> 'e',
+	'ю'	=> 'u',
+	'я'	=> 'a',
+	'А'	=> 'A',
+	'Б'	=> 'B',
+	'В'	=> 'V',
+	'Г'	=> 'G',
+	'Д'	=> 'D',
+	'Е'	=> 'E',
+	'Ё'	=> 'E',
+	'Ж'	=> 'ZH',
+	'З'	=> 'Z',
+	'И'	=> 'I',
+	'Й'	=> 'Y',
+	'К'	=> 'K',
+	'Л'	=> 'L',
+	'М'	=> 'M',
+	'Н'	=> 'N',
+	'О'	=> 'O',
+	'П'	=> 'P',
+	'Р'	=> 'R',
+	'С'	=> 'S',
+	'Т'	=> 'T',
+	'У'	=> 'U',
+	'Ф'	=> 'F',
+	'Х'	=> 'H',
+	'Ц'	=> 'TS',
+	'Ч'	=> '4',
+	'Ш'	=> 'SH',
+	'Щ'	=> 'SCH',
+	'Ъ'	=> 'Y',
+	'Ы'	=> 'I',
+	'Ь'	=> 'Y',
+	'Э'	=> 'E',
+	'Ю'	=> 'U',
+	'Я'	=> 'YA',
+   );
+
+</%once>
+<%args>
+
+	$SETS	=> undef
+	$field	=> undef
+	$default=> undef
+	$object	=> undef
+	$prop	=> undef
+
+</%args>
+<%init>
+
+use IO::File;
+
+return undef unless defined $SETS and defined $field;
+#use vars qw($keeper);
+
+# --------------------------------------------------------------------------------------
+# Добавление одной картинки
+
+my $BINARY = $default;
+
+if ($SETS->{$field}) {
+    my $filename = "/binary/".$object->get_file_name() || return;
+    my $upload = $r->upload($field);
+    if ( $prop->{softrename} ) {
+	my $oid = $object->id || int(rand(10000));
+	my $orig_name = $upload->filename();
+	if ( $orig_name =~ /\\([^\\]+)$/ ) {
+		$orig_name = $1;
+	} elsif ( $orig_name =~ /\/([^\/]+)$/ ) {
+		$orig_name = $1;
+	}
+	$orig_name =~ s/[\ \t]/_/g;
+	$orig_name = $oid.'_'.$orig_name;
+	$filename =~ s/\/([^\/]+)$//;
+	my $fname = $1;
+	unless ( $orig_name =~ /^[a-zA-Z_\d\.\-\,]+$/ ) {
+		$orig_name = $m->comp('.translit', str => $orig_name);
+	}
+	warn "\n\n\n\n\nNew Name: [$orig_name]\n\n\n\n\n";
+	unless ( $orig_name =~ /^[a-zA-Z_\d\.\-\,]+$/ ) {
+		$orig_name = $fname;
+	}
+	$filename .= '/'.$orig_name;
+	$filename =~ s/\.([^\.]+)$//;
+    }
+    my $filename_tmp = $state->{"tmp_dir"}."/".join("_", split("/", $filename));
+
+    my $suffix = $upload->filename() =~ /\.([^\.]+)$/ ? lc($1) : 'bin';
+    my $fh = $upload->fh();
+    my $size = (stat $fh)[7];
+
+    my $fh_tmp = IO::File->new(">".$filename_tmp.".".$suffix) || die "Can't open temporary file";
+
+    my $buffer;
+
+    $size = sysread $fh, $buffer, $size;
+    syswrite $fh_tmp, $buffer, $size;
+
+    undef $fh_tmp;
+
+    if (Contenido::File::store($filename.".".$suffix, $filename_tmp.".".$suffix)) {
+        if (ref $BINARY eq "HASH" and $BINARY->{"filename"}) {
+            Contenido::File::remove($BINARY->{"filename"});
+        }
+
+        @{$BINARY}{"filename", "ext", "size"} = (
+            $filename.".".$suffix,
+        $suffix,
+        $size
+        );
+    }
+
+    unlink $filename_tmp.".".$suffix if -e $filename_tmp.".".$suffix;
+    if ( $suffix =~ /(rar|7z|zip|arc|lha|arj|cab)/ ) {
+	$BINARY->{type} = 'archive';
+    } elsif ( $suffix =~ /(doc|rtf)/ ) {
+	$BINARY->{type} = 'doc';
+    } elsif ( $suffix eq 'xls' ) {
+	$BINARY->{type} = 'xls';
+    } elsif ( $suffix =~ /(mdb|ppt)/ ) {
+	$BINARY->{type} = 'msoffice';
+    } elsif ( $suffix =~ /(pdf)/ ) {
+	$BINARY->{type} = 'ebook';
+    } elsif ( $suffix eq 'psd' ) {
+	$BINARY->{type} = 'psd';
+    } elsif ( $suffix =~ /(exe|msi|cab)/ ) {
+	$BINARY->{type} = 'executable';
+    } else {
+	$BINARY->{type} = 'unknown';
+    }
+}
+
+# Дополнительные поля - берем все, что найдем...
+
+my $pattern = "^".$field.q|\.(.*)$|;
+
+foreach my $localfield (keys(%{ $SETS })) {
+    if ($localfield =~ /$pattern/) {
+        my $imagefield = $1;
+        $BINARY->{$imagefield} = $m->comp("/contenido/components/filter.msn", str => $SETS->{$localfield});
+    }
+}
+
+return $BINARY;
+
+</%init>
+
+
+<%def .translit>
+<%args>
+	$str	=> undef
+</%args>
+<%init>
+
+   my @str = split (//, $str);
+   my $res = '';
+   while ( scalar @str ) {
+	my $alpha = shift @str;
+	if ( exists $translit{$alpha} ) {
+		$res .= $translit{$alpha};
+	} else {
+		$res .= $alpha;
+	}
+   }
+   return $res;
+
+</%init>
+</%def>

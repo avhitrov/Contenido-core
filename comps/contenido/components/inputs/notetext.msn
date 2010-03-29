@@ -1,0 +1,54 @@
+<script LANGUAGE="JavaScript"><!--
+
+function li()
+{
+	document.form.<% $name %>.focus();
+	sel = document.selection.createRange();
+	s= "<ul>\n"+sel.text;
+	re = /\n/g;
+	s = s.replace(re, "\n<li>");
+	s=s+"\n</ul>"
+	sel.text= s;
+}
+
+
+function insertTags( TagOpen, TagClose )
+{
+	document.form.<% $name %>.focus();
+	selectArea = document.selection.createRange();
+	selectArea.text= TagOpen + selectArea.text + TagClose;
+}
+
+// --->
+</script>
+
+<table border="0" width="95%" style="font-size:70%; font-weight:; font-family:Tahoma;background-color:#dcdcdc;color:#000000;">
+<tr><td>
+Вставка тегов:<br>
+&nbsp;&nbsp;<a style="color:#000000" href="javascript: insertTags('<br>','')" title="перевод строки">&lt;br&gt;</a>&nbsp;&nbsp;
+<a style="color:#000000" href="javascript: insertTags('<p>','')" title="абзац">&lt;p&gt;</a>&nbsp;&nbsp;
+
+<a style="color:#000000" href="javascript: insertTags('<b>','</b>')" title="полужирный текст">&lt;b&gt;</a>&nbsp;&nbsp;
+<a style="color:#000000" href="javascript: insertTags('<i>','</i>')" title="курсив">&lt;i&gt;</a>&nbsp;&nbsp;
+<a style="color:#000000" href="javascript: insertTags('<u>','</u>')" title="подчеркивание">&lt;u&gt;</a>&nbsp;&nbsp;
+
+<a style="color:#000000" href="javascript: insertTags('<h2>','</h2>')" title="заголовок h2">&lt;h2&gt;</a>&nbsp;&nbsp;
+<a style="color:#000000" href="javascript: insertTags('<h3>','</h3>')" title="заголовок h2">&lt;h3&gt;</a>&nbsp;&nbsp;
+<a style="color:#000000" href="javascript: insertTags('<h4>','</h4>')" title="заголовок h2">&lt;h4&gt;</a>&nbsp;&nbsp;
+
+<a style="color:#000000" href="javascript: insertTags('<a href=>','</a>')" title="ссылка">&lt;a href&gt;</a>&nbsp;&nbsp;
+<a style="color:#000000" href="javascript: insertTags('<div align=center>','</div>')" title="">&lt;div center&gt;</a>&nbsp;&nbsp;
+<a style="color:#000000" href="javascript: insertTags('<ul>','</ul>')" title="список">&lt;ul&gt;</a>&nbsp;&nbsp;
+<a style="color:#000000" href="javascript: insertTags('<li>','')" title="элемент списка">&lt;li&gt;</a>&nbsp;&nbsp;
+<a style="color:#000000" href="javascript: insertTags('<blockquote>','</blockquote>')" title="цитата">&lt;blockquote&gt;</a>&nbsp;&nbsp;
+<a style="color:#000000" href="javascript: insertTags('<code>','</code>')" title="пример кода">&lt;code&gt;</a>
+</td><td align="right" valign="bottom">
+<a style="color:#000000" href="javascript: li()" title="вставить список(ul-li)">Вставить список</a>&nbsp;&nbsp;
+</td></tr></table>
+<textarea name="<% $name %>" rows="30" cols="60" style="width:95%;font-family:arial;font-size:9pt;"><% $check %></textarea>
+<%args>
+
+	$name => undef
+	$check => undef
+
+</%args>

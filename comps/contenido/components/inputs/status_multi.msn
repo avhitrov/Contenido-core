@@ -1,0 +1,36 @@
+% if ( $error ) {
+	<font color="red"><% $error %></font>
+% } else {
+%	foreach my $id ( @values ) {
+%		if ( ref $id eq 'ARRAY' && scalar @$id == 2 ) {
+%			my $checked = exists $ids{$id->[0]} ? ' checked' : ''; 
+<input <% $prop->{readonly} ? 'readonly ' : '' %>type="checkbox" name="<% $name %>_<% $id->[0] %>" value="<% $value %>" <% $checked %>><% $id->[1] %><br>
+%		} else {
+%			my $checked = exists $ids{$id} ? ' checked' : ''; 
+<input <% $prop->{readonly} ? 'readonly ' : '' %>type="checkbox" name="<% $name %>_<% $id %>" value="<% $value %>" <% $checked %>><% $id %><br>
+%		}
+%	}
+% }
+<%args>
+
+	$object
+	$name	=> undef
+	$value	=> 1
+	$check	=> undef
+	$prop	=> {}
+
+</%args>
+<%init>
+
+  my ($objects, $error);
+
+  # Если оно хранится в поле типа integer[] то нам вернется массив, если в data, то ссылка на массив.
+  # Просекаем фишку
+  my @ids = ref($object->$name) eq 'ARRAY' ? @{ $object->$name } : $object->$name;
+  my %ids = map { $_ => 1 } @ids;
+  my @values = exists $prop->{values} && ref $prop->{values} eq 'ARRAY' ? @{ $prop->{values} } :
+		exists $prop->{cases} && ref $prop->{cases} eq 'ARRAY' ? @{ $prop->{cases} } : ();
+
+  $error = 'Не определен набор значений для поля'	unless @values;
+
+</%init>

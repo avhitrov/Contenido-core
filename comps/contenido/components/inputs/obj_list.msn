@@ -1,0 +1,54 @@
+<table width="95%" cellspacing="0" cellpadding="0" border="0">
+<tr valign="top">
+<td width="40%"><b>[ <a href="javascript:show_layer('<% $name %>', 1, 16)">редактировать</a> ]</b>
+<table><tr><td></td></tr></table>
+<& /contenido/components/select.msn, name => 'obj_list_'.$name, height=>170, width=>'100%', values => \@start, multiple => 1, size => 10 &></td>
+<td width="10" nowrap>&nbsp;</td>
+<td width="60%">
+	<img src="/contenido/i/_.gif" width="1" height="1" id="pos_<% $name %>"><br><span id="span_<% $name %>" style="position: absolute; left:0px; top:0px; visibility: hidden; width:100%; z-index:1000;">
+	<fieldset style="padding: 0 1 1 0;">
+	<legend style="font-size:85%; padding: 0 0 5 0;">[<a href="javascript:hide_layer('<% $name %>')">закрыть</a>]</legend>
+	<table width="100%" border="0" celspacing="0" cellpadding="5" bgcolor="#efefef">
+	<tr>
+	<td>
+		<input style="font-size:9pt;width:70px;" type="button" value="&lt;&lt; Доб." onClick="sel_wo_del(iobjs_<% $name %>.document.form, document.form.obj_list_<% $name %>)"><br><br>
+		<input style="font-size:9pt;width:70px;" type="button" value="Удал. &gt;&gt;" onClick="del(document.form.obj_list_<% $name %>)">
+	</td>
+	<td width="100%"><fieldset style="margin: 4 0 4 0"><iframe id="iobjs_<% $name %>" src="obj_list/objects_view.html?id=<% $start_id %>&classes=<% $classes %>" height="120" width="100%" frameborder="1" ></iframe></fieldset></td>
+	</tr>
+	</table>
+	</span>
+	</fieldset>
+</td>
+</tr>
+</table>
+<input type="hidden" name="<% $name %>" value="<% $check %>">
+<%args>
+
+	$name => undef
+	$params => {}
+	$check => undef
+	$options => undef
+
+</%args>
+<%init>
+
+	use vars qw( $project );
+
+	my @ids = split(',', $check);
+	my @start = ();
+	foreach my $id (@ids)
+	{
+		my $local_object = $keeper->get_document_by_id($id);
+		push @start, $id, $local_object->name if $local_object;
+	}
+
+	my $start_id = 1;
+	my $classes = '';
+	if ( ref($options) && (exists($options->{$name})) && (ref($options->{$name})))
+	{
+		$start_id = $options->{$name}->[0];
+		$classes = $options->{$name}->[1];
+	}
+
+</%init>

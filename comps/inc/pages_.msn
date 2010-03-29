@@ -1,0 +1,118 @@
+<% $LINE %>
+<%args>
+
+	$p => 1
+	$n => 10
+	$size => 8
+	$total => undef
+	$href => undef
+	$params => {}
+	$pname => 'p'
+	$delimiter => ' | '
+
+</%args>
+<%init>
+
+    # хер знает, мож и хватит...
+    $p = 1 if $p > 10000;
+
+	# если !$href и файл страницы не является DirectoryIndex, напр: 
+	# .../../gallery.html. а ссылка в нем относительная, напр: <a href="?param=1">, 
+	# то IE перейдет на .../../gallery.html?param=1., а NN (4.x) перейдет на 
+	# .../../?param=1.., следующий блок вытащит и подставит нужное имя файла.
+	#
+	if (!$href)
+	{
+		$href = $r->uri();
+		$href =~ s/\/([\w]{1,}(\.[sp]?html?))//;
+		$href = $1;
+		if ($href =~ /(index|default|main)$2/ ){
+			$href = '';
+		}
+	}
+	my @params;
+	while ( my ($key, $value) = each %$params ) {
+		next	if $key eq $pname;
+		if ( ref $value eq 'ARRAY' ) {
+			push @params, ( map { "$key=$_" } @$value );
+		} else {
+			push @params, "$key=$value";
+		}
+	}
+
+	my $parts = int($total/$n) + ($total % $n ? 1 : 0);
+	return undef	if ($parts <= 1);
+
+	my @parts;
+
+	my $mid_position = int($size/2);
+
+	my $left_pushed_border = $mid_position;
+	my $right_pushed_border = $parts - $mid_position;
+
+	my $LINE = '';
+	my $left_border;
+	my $right_border;
+
+	if ($p >= $left_pushed_border)
+	{
+		$left_border = $p-$mid_position+1;
+		$right_border = $left_border+$size-1;
+	} else {
+		$left_border = 1;
+		$right_border = $size;
+	}
+	if ($right_border > $parts)
+	{
+		$left_border = $left_border-($right_border-$parts);
+		$right_border = $parts;
+	}
+	$left_border = 1	if ($left_border < 1);
+
+
+	# А не надо ли вставить [В начало]...
+	if ($left_border > 1) {
+		$params->{$pname} = 1;
+		$LINE .= "[<a href=\"$href?$pname=1".(@params ? '&'.join('&', @params) : '')."\">В начало</a>] ";
+	}
+
+	# А надо ли вставить [Пред.]...
+	if ($p > 1)
+	{
+		$params->{$pname} = $p-1;
+		push(@parts, "<a title=\"Предыдущая страница\" href=\"$href?".join('&', map { "$_=$params->{$_}" } keys %$params)."\">&lt;&lt;</a>");
+		push(@parts, "<a title=\"Предыдущая страница\" href=\"$href?$pname=".($p-1).(@params ? '&'.join('&', @params) : '')."\">&lt;&lt;</a>");
+	}
+
+
+	foreach my $pn ($left_border .. $right_border)
+	{
+		
+		$params->{$pname} = $pn;
+		push @parts, ($pn == $p) ? "<b>$pn</b>" : "<a href=\"$href?$pname=$pn".(@params ? '&'.join('&', @params) : '')."\">$pn</a>";
+	}
+
+	# А надо ли вставить [След.]...
+	if ($p < $parts)
+	{
+		$params->{$pname} = $p+1;
+		push(@parts, "<a title=\"Следующая страница\" href=\"$href?$pname=".($p+1).(@params ? '&'.join('&', @params) : '')."\">&gt;&gt;</a>");
+	}
+	$LINE .= join($delimiter, @parts);
+
+
+	# А не надо ли вставить [В конец]...
+	if ($right_border < $parts)
+	{
+		$params->{$pname} = $parts;
+		$LINE .= " [<a href=\"$href?$pname=$parts".(@params ? '&'.join('&', @params) : '')."\">В конец</a>]";
+	}
+
+	
+
+</%init>
+<%doc>
+
+	Стандартная линеечка
+
+</%doc>

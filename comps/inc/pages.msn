@@ -1,0 +1,37 @@
+<% join($delimiter, @parts) %>
+<%args>
+	$p => 1
+	$n => 10
+	$total => undef
+	$href => undef
+	$params => {}
+	$pname => 'p'
+	$delimiter => ' | '
+
+</%args>
+<%init>
+	
+	# если !$href и файл страницы не является DirectoryIndex, напр: 
+	# .../../gallery.html. а ссылка в нем относительная, напр: <a href="?param=1">, 
+	# то IE перейдет на .../../gallery.html?param=1., а NN (4.x) перейдет на 
+	# .../../?param=1.., следующий блок вытащит и подставит нужное имя файла.
+	#
+	if (!$href)
+	{
+		$href = $r->uri();
+		$href =~ s/\/([\w]{1,}(\.[sp]?html?))//;
+		$href = $1;
+		if ($href =~ /(index|default|main)$2/ ){
+			$href = '';
+		}
+	}
+
+	my $parts = int($total/$n) + ($total % $n ? 1 : 0);
+	my @parts;
+	foreach my $pn (1 .. $parts)
+	{
+		$params->{$pname} = $pn;
+		push @parts, ($pn == $p) ? "<b>$pn</b>" : "<a href=\"$href?".join('&', map { "$_=$params->{$_}" } keys %$params)."\">$pn</a>";
+	}
+
+</%init>

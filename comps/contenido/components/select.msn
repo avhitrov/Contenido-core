@@ -1,0 +1,43 @@
+<select <% $multiple %> <% $size %> <% $onChange %> name="<% $name %>" class="selects" style="<% $width %><% $height %><% $style %>">
+
+% while (my ($key, $value) = splice(@local_values, 0, 2))
+% {
+%	my $selected = (scalar grep { $_ eq $key } @local_checks ) ? ' selected' : '';
+%	next unless defined $key;
+<option value="<% $key %>"<% $selected %>><% $value %></option>
+% }
+
+</select>
+<%args>
+
+	$name => undef
+	$values => []
+	$check => undef
+	$multiple => undef
+	$size => undef
+	$onChange => undef
+
+	$width => undef
+	$height => undef
+
+	$style => undef
+
+</%args>
+<%init>
+
+	my @local_values = @{ $values };			# Копируем, чтобы не облажаться...
+	my @local_checks = ();
+	if (ref($check) eq 'ARRAY')
+	{
+		@local_checks = @{ $check };
+	} elsif (defined($check)) {
+		@local_checks = ($check);
+	}
+
+	$size = ($size) ? " size=\"$size\"" : '';
+	$width = ($width) ? "width:$width;" : '';
+	$height = ($height) ? "height:$height;" : '';
+	$multiple = ($multiple) ? ' multiple' : '';
+	$onChange = ($onChange) ? " onChange=\"$onChange\"" : '';
+
+</%init>

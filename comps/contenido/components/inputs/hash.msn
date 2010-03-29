@@ -1,0 +1,46 @@
+<table border="0" width="60%">
+<tr>
+<th>Параметр</th>
+<th>Значение</th>
+</tr>
+%	foreach my $p (sort { $a cmp $b } keys %$set) {
+%	$start++;
+<tr>
+<td width="40%"><% $p %></td>
+<td>\
+<input type="text" style="width:100%;" name="<% $name %>_value_<% $start %>" value="<% $set->{$p} %>">\
+<input type="hidden" name="<% $name %>_key_<% $start %>" value="<% $p %>">\
+</td>
+</tr>
+%	}
+%	for (1..3) {
+%       $start++;
+<tr>
+<td width="40%">\
+<input type="text" style="width:100%;" name="<% $name %>_key_<% $start %>">\
+</td>
+<td>\
+<input type="text" style="width:100%;" name="<% $name %>_value_<% $start %>">\
+</td>
+</tr>
+%	}
+</table>
+
+<%args>
+	$name => undef
+	$check => undef
+</%args>
+
+<%INIT>
+        use vars qw($VAR1);
+        my $set={};
+        if ($check) {
+        	eval ($check);
+       		if ($@) {
+          		warn "cannot eval $name with value '$check'";
+        	} else {
+          		$set=$VAR1;
+        	}
+        }
+	my $start=0;
+</%INIT>

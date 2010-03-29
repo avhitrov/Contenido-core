@@ -1,0 +1,50 @@
+<input <% $prop->{readonly} ? 'readonly ' : '' %> type="text" name="<% $name %>" id="<% $name%>_text" size="60" value="<% html_escape($check) || $prop->{default} %>"
+ style="width: 95%;color:blue;text-decoration:underline;" onkeyup="<% $name %>_changed();" onclick="lookfor_<% $name %>()">
+
+<table id="<% $name %>_prev_table" style="width: 95%; display: none;" cellspacing="0" cellpadding="0" border="0">
+	<tr>
+		<td width="100%" class="bb undo" style="padding: 3px;"><% $check || '&nbsp;' %></td>
+		<td style="padding-left: 3px; vertical-align: top;"><a href="#" onclick="return <% $name %>_undo();" title="Отменить изменения"><img src="/contenido/i/undo-19x19.gif" width="19" height="19" class="bb gb"></a></td>
+	</tr>
+</table>
+% if ( exists $prop->{rem} && $prop->{rem} ) {
+<div style="color:gray; font-size:85%; padding:4px">&raquo; <% $prop->{rem} %></div>
+% }
+<textarea id="<% $name %>_prev_value" style="display: none;"><% $check %></textarea>
+
+<script type="text/javascript">
+	function <% $name %>_changed() {
+		var t = document.getElementById('<% $name %>_prev_table');
+		if (document.getElementById('<% $name %>_text').value==document.getElementById('<% $name %>_prev_value').value) {
+			if (t.style.display!='none') {
+				t.style.display = 'none';
+			}
+			return;
+		}
+		if (t.style.display=='none') {
+			t.style.display = '';
+		}
+	}
+
+	function lookfor_<% $name %>() {
+		var id = document.getElementById('<% $name %>').value;
+		if (id) {
+			var Uri = id;
+			var Width = screen.width;
+			var Height = screen.height;
+			window.open(Uri,'Interface','width='+Width+',height='+Height+',top=0,left=0,location=1,menubar=1,resizable=0,scrollbars=1,status=1,titlebar=1,toolbar=1,directories=1,hotkeys=1');
+		}
+	}
+
+	function <% $name %>_undo() {
+		document.getElementById('<% $name %>_text').value = document.getElementById('<% $name %>_prev_value').value;
+		<% $name %>_changed();
+		return false;
+	}
+</script>
+
+<%args>
+	$name	=> undef
+	$check	=> undef
+	$prop	=> {}
+</%args>

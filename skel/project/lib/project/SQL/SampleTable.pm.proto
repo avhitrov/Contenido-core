@@ -1,0 +1,146 @@
+package @NAME@::SQL::SampleTable;
+
+use base 'SQL::ProtoTable';
+
+sub db_table
+{
+	return 'sample';
+}
+
+sub available_filters {
+	my @available_filters = qw(	
+					_class_filter
+					_status_filter
+					_in_id_filter
+					_id_filter
+					_class_excludes_filter
+
+					_excludes_filter
+				);
+	return \@available_filters; 
+}
+
+# ----------------------------------------------------------------------------
+# Свойства храним в массивах, потому что порядок важен!
+# Это общие свойства - одинаковые для всех документов.
+#
+#   attr - обязательный параметр, название атрибута;
+#   type - тип аттрибута, требуется для отображдения;
+#   rusname - русское название, опять же требуется для отображения;
+#   hidden - равен 1, когда 
+#   readonly - инициализации при записи только без изменения в дальнейшем
+#   db_field - поле в таблице
+#   default  - значение по умолчанию (поле всегда имеет это значение)
+# ----------------------------------------------------------------------------
+sub required_properties
+{
+	return (
+		{							# Идентификатор документа, сквозной по всем типам...
+			'attr'		=> 'id',
+			'type'		=> 'integer',
+			'rusname'	=> 'Идентификатор документа',
+			'hidden'	=> 1,
+			'auto'		=> 1,
+			'readonly'	=> 1,
+			'db_field'	=> 'id',
+			'db_type'	=> 'integer',
+			'db_opts'	=> "not null default nextval('public.documents_id_seq'::text)", 
+		},
+		{							# Класс документа...
+			'attr'		=> 'class',
+			'type'		=> 'string',
+			'rusname'	=> 'Класс документа',
+			'hidden'	=> 1,
+			'readonly'	=> 1,
+			'db_field'	=> 'class',
+			'db_type'	=> 'varchar(48)',
+			'db_opts'	=> 'not null',
+		},
+		{							# Время создания документа, служебное поле...
+			'attr'		=> 'start',
+			'type'		=> 'datetime',
+			'rusname'	=> 'Дата/время начала',
+			'db_field'	=> 'start',
+			'db_type'	=> 'timestamp',
+			'db_opts'	=> 'not null',
+		},
+		{							# Время модификации документа, служебное поле...
+			'attr'		=> 'finish',
+			'type'		=> 'datetime',
+			'rusname'	=> 'Дата/время окончания',
+			'db_field'	=> 'finish',
+			'db_type'	=> 'timestamp',
+			'db_opts'	=> 'not null',
+		},
+		{							# Одно поле статуса является встроенным...
+			'attr'		=> 'external_id',
+			'type'		=> 'integer',
+			'rusname'	=> 'Внешний id',
+			'db_field'	=> 'external_id',
+			'db_type'       => 'integer',
+		},
+		{						       # Одно поле статуса является встроенным...
+			'attr'	  => 'event_id',
+			'type'	  => 'integer',
+			'rusname'       => 'Событие',
+			'db_field'      => 'event_id',
+			'db_type'       => 'integer',
+		},
+		{						       # Одно поле статуса является встроенным...
+			'attr'	  => 'place_id',
+			'type'	  => 'integer',
+			'rusname'       => 'Место проведения',
+			'db_field'      => 'place_id',
+			'db_type'       => 'integer',
+		},
+	);
+}
+
+
+########### FILTERS DESCRIPTION ####################################################################################
+sub _excludes_filter {
+	my ($self,%opts)=@_;
+	if (exists $opts{excludes}) {
+		# - исключение из отбора
+		my @eids = ();
+		if (ref($opts{excludes}) eq 'ARRAY') {
+			@eids = @{ $opts{excludes} };
+		} elsif ($opts{excludes} =~ /[^\d\,]/) {
+			warn "Contenido Warning: В списке идентификаторов для исключения встречаются нечисловые элементы. Параметр excludes игнорируется (".$opts{excludes}.").\n";
+		} else {
+			@eids = split(',', $opts{excludes});
+		}
+
+		my $excludes = join(',', @eids);
+
+		# Меняется логика запроса, если это join-запрос.
+		# Потому что в этом случае гораздо лучше ограничить выборку по таблице links,
+		#  чем производить полную склейку таблиц.
+		if (@eids) {
+			if (exists($opts{ldest}) || exists($opts{lsource})) {
+				if (exists($opts{ldest})) {
+					return " (l.source_id not in ($excludes)) ";
+				} elsif (exists($opts{lsource})) {
+					return " (l.dest_id   not in ($excludes)) ";
+				}
+			} else {
+				return  " (d.id not in ($excludes)) ";
+			}
+		}
+	}
+	return undef;
+}
+
+
+sub _get_orders {
+	my ($self, %opts) = @_;
+
+	if ($opts{order_by}) {
+		return ' order by '.$opts{order_by};
+	} else {
+		return ' order by start desc,finish desc';
+	}
+	return undef;
+}
+
+1;

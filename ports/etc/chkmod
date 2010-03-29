@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+
+use strict;
+
+my ($module, $version) = @ARGV;
+$module =~ s/-/::/g;
+my $installed;
+
+unless ($module && $version) {
+	print "export PERL_CHECKED=cancel";
+	exit;
+}
+
+eval "require $module;";
+if ($@) {
+	print "export PERL_CHECKED=install";
+	exit;
+}
+
+
+my @parts = split /\./, $module->VERSION();
+$installed->{version} = join(".", $parts[0], join("", @parts[1 .. $#parts]) || ());
+(my $path=$module)    =~ s/::/\//g;
+$installed->{path}    = $INC{$path.".pm"};
+
+if ($installed->{version} >= $version) {
+	unless ($ENV{DRY_RUN}||'' eq 'yes') {
+		print STDERR "##############################################################################\n";
+		print STDERR "# Found installed module: $module\n";
+		print STDERR "# Version:  $installed->{version}\n";
+		print STDERR "# Location: $installed->{path}\n";
+		print STDERR "#\n";
+		print STDERR "# Skipped version:  $version\n";
+		print STDERR "##############################################################################\n";
+		sleep 2;
+	}
+	print "export PERL_CHECKED=skip";
+	exit;
+}
+
+print STDERR "##############################################################################\n";
+print STDERR "# Found installed module: $module\n";
+print STDERR "# Version:  $installed->{version}\n";
+print STDERR "# Location: $installed->{path}\n";
+print STDERR "#\n";
+print STDERR "# Would you like continue to install version: $version ?\n";
+print STDERR "##############################################################################\n";
+
+my $a;
+while (1) {
+	print STDERR "[I]nstall, [S]kip, [C]ancel ? ";
+	$a = lc(scalar(<STDIN>));
+	chomp $a;
+	last if $a eq 'i' || $a eq 's' || $a eq 'c';
+}
+print "export PERL_CHECKED=install" if $a eq 'i';
+print "export PERL_CHECKED=skip"    if $a eq 's';
+print "export PERL_CHECKED=cancel"  if $a eq 'c';

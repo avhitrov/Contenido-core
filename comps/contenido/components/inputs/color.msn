@@ -1,0 +1,49 @@
+%# vim:syn=mason
+<select name="<% $name %>"<% $already_set && "style='background-color: $already_set'" %>onChange="javascript: this.style.backgroundColor = this.options[this.selectedIndex].value;"<% $prop->{multiple} && ' multiple' %><% $prop->{size} && ' size="'.$prop->{size}.'"' %>>
+%
+%	if ($prop->{allow_null}) {
+%
+<option value="" <% defined $check ? '' : 'selected' %>>--- не указано ---</option>
+%
+%	}
+%
+%	for my $chain (@chains) {
+%
+%		my $selected = defined $chain && ( ref $check eq 'ARRAY' ? grep { $_ eq $chain } @$check : $check eq $chain ? 1 : 0 );
+%		$found++ if $selected;
+%
+<option value="<% $chain %>" style="background-color: <% $chain %>"<% $selected && ' selected' %>><% $chain %></option>
+%
+%	}
+%
+%	#if used not allowed value
+%	if ( $check and not $found ) {
+%
+<option value="<% $check %>" selected style="color:red;"><% $check %></option>
+%
+%	}
+%
+</select>
+<%args>
+
+	$prop    => undef
+	$name    => undef
+	$values  => []
+	$check   => undef
+	$options => undef
+
+</%args>
+<%init>
+
+	my $found = 0;
+	my @chains = ();
+	my $already_set;
+
+	if ( ref $options && exists $options->{$name} ) {
+		@chains = @{ $options->{$name} };
+
+		($already_set) = grep { defined } (ref $check eq 'ARRAY' ? @$check : $check);
+	}
+
+</%init>
+

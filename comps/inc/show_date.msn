@@ -1,0 +1,65 @@
+% if( $showdate ) {
+<% $sdate %>\
+% }
+% if( $showdate && $showtime ) {
+, \
+% }
+% if( $showtime ) {
+<% $stime %>\
+% }
+<%args>
+
+	$datetime => undef
+
+	$showyear => 1
+	$showdate => 1
+	$showtime => 0
+
+	$digital  => 0
+
+</%args>
+<%doc>
+
+	Принимает дату в формате yyyy-mm-dd[ mm:ss], или в виде числа секунд с начала компьютерной эры.
+
+	Показывает ее в виде
+
+		dd название_месяца yyyy [hh:mm[:ss]]
+
+	или в виде 
+
+		dd.mm.yyyy [hh:mm[:ss]]
+
+	если задан параметр digital = 1
+
+	Также в возвращаемой строке может отсутствовать год, 
+	если параметр $showyear = undef.
+
+	Если параметр $showdate = undef, то значение параметра $showyear не имеет значение
+
+</%doc>
+<%init>
+
+	my ($y, $mon, $d, $hr, $mn); 
+
+	if ($datetime)
+	{
+		$datetime =~ /(\d{4})-0?(\d{1,2})-0?(\d{1,2})\s*(\d{0,2}):*(\d{0,2})/;
+		($y, $mon, $d, $hr, $mn) = ($1, $2, $3, $4, $5);
+	}
+	else
+	{
+		($mn, $hr, $d, $mon, $y) = (localtime())[1 .. 5];
+		$mon++; $y += 1900;
+	}
+
+	my $stime = sprintf( "%2.2d:%2.2d", $hr, $mn );
+	my $smon = (qw(января февраля марта апреля мая июня июля августа сентября октября ноября декабря))[$mon-1];
+
+	my $sdate = ($digital ? sprintf( "%2.2d.%2.2d", $d, $mon ) : sprintf( "%2.2d %s", $d, $smon ) );
+	if( $showyear )
+	{
+		$sdate .= ($digital ? '.' : ' ').$y;
+	}
+
+</%init>

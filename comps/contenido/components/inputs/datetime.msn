@@ -1,0 +1,43 @@
+<& '/contenido/components/select.msn', name => $name.'_day',    values => \@days,    check => $day    &>
+<& '/contenido/components/select.msn', name => $name.'_month',  values => \@months,  check => $month  &>
+<& '/contenido/components/select.msn', name => $name.'_year',   values => \@years,   check => $year   &>
+&nbsp;&nbsp;
+<& '/contenido/components/select.msn', name => $name.'_hour',   values => \@hours,   check => $hour   &>
+<& '/contenido/components/select.msn', name => $name.'_minute', values => \@minutes, check => $minute &>
+<& '/contenido/components/select.msn', name => $name.'_second', values => \@seconds, check => $second &>
+
+<%args>
+	$prop
+	$name  => undef
+	$check => undef
+</%args>
+
+<%init>
+
+	my @localtime = localtime(); $localtime[4]++; $localtime[5] += 1900;
+
+	# Формируем данные для select'а...
+	my @days    = map { $_ => $_ } (1..31);
+	my @months  = @{ $m->comp('/contenido/components/get_months.msn') };
+	my @years   = map { $_ => $_ } ( $localtime[5] - 5 .. $localtime[5] + 5);
+	my @hours   = map { $_ => sprintf('%02d', $_) } (0 .. 23);
+	my @minutes = map { $_ => sprintf('%02d', $_) } (0 ..59);
+	my @seconds = map { $_ => sprintf('%02d', $_) } (0 ..59);
+
+	if ($prop->{allow_null}) {
+		unshift @days,    '', '';
+		unshift @months,  '', '';
+		unshift @years,   '', '';
+		unshift @hours,   '', '';
+		unshift @minutes, '', '';
+		unshift @seconds, '', '';
+	}
+
+	my ($year,$month,$day,$hour,$minute, $second);
+	if ($check) {
+		$check =~ /(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})/;
+		($year, $month, $day, $hour, $minute, $second) = ($1 + 0, $2 + 0, $3 + 0, $4 + 0, $5 + 0, $6 + 0);
+	} elsif(!$prop->{allow_null}) {
+		($second,$minute,$hour,$day,$month,$year) = @localtime[0 .. 5];
+	}
+</%init>

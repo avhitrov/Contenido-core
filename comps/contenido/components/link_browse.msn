@@ -1,0 +1,319 @@
+<fieldset>
+<legend>Документы\
+%	if ( ref $link_class eq 'ARRAY' ) {
+ разрешенных классов
+%	} elsif ( $link_class ) {
+ класс <% $link_class %>\
+%		if ($use_section) {
+ c учетом текущей секции\
+%		}
+%	} else {
+ в разделе\
+%	}
+%	if ($total > 0)	{
+ (всего: <% $total %>, показано с <% $first + 1 %> по <% ($first + $n > $total) ? $total : $first + $n %>)
+%	}
+	</legend>
+%	if ( ref $link_class eq 'ARRAY' && @$link_class ) {
+<div class="textnorm"><b>Разрешены классы:</b><br>
+%		if ( scalar @desired_class == 1 ) {
+<b style="color:olive;"><% $desired_class[0] %></b>
+%		} else {
+%			my $i = 0;
+%			foreach my $dclass ( @desired_class ) {
+%				$m->out (', ')	if $i++;
+%				if ( $restrict_class eq $dclass ) {
+<b style="color:olive;"><% $desired_class[0] %></b>
+%				} else {
+<a href="?class=<% $class %>&restrict_class=<% $dclass %>"><% $dclass %></a>
+%				}
+%			}
+%		}
+</div>
+%	}
+%	if ( $total or defined $alpha or defined $search  ) {
+<div style="font-size:75%; font-family:Arial;">
+<table border="0" cellspacing="0" cellpadding="2" width="100%" style="margin:4px 0 0; border:1px solid gray;">
+<tr bgcolor="#e0e0e0"><th colspan="4">Поиск по букве:&nbsp;&nbsp;[<a href="?class=<% $class %>" style="font-weight:normal;">сброс фильтра</a>]</th></tr>
+<tr><td style="font-size:75%; font-family:Arial; padding:2px 4px;">
+<& /inc/alpha.msn, alpha=>$alpha, params=>\%ARGS, &>
+</td></tr></table>
+
+%		## Форма поиска. Работает при включенном фильтре класса
+%		## и описанной для класса функции search_fields
+%		########################################################
+%		if ( $filter{class} && (!ref $filter{class} || ( ref $filter{class} eq 'ARRAY' && scalar @{ $filter{class} } == 1 ) ) ) {
+%			my $search_class = ref $filter{class} eq 'ARRAY' ? $filter{class}->[0] : $filter{class};
+%			my $document = $search_class->new ($keeper);
+%			my @fields = $document->search_fields;
+%			if ( @fields ) {
+%				my @props = $document->required_properties;
+<form action="<% $dest_class ? 'destination' : 'source' %>.html">
+<table border="0" cellspacing="0" cellpadding="2" width="100%" style="margin:4px 0; border:1px solid gray;">
+<tr bgcolor="#e0e0e0"><th colspan="4">Поиск по полю:&nbsp;&nbsp;[<a href="?class=<% $class %>" style="font-weight:normal;">сброс фильтра</a>]</th></tr><tr>
+<td width="1%" nowrap style="padding:2px 0 2px 4px;"><select name="search_by">
+%				foreach my $field ( @fields ) {
+%					my ($prop) = grep { $_->{'attr'} eq $field } @props;
+%					my $selected = $field eq $search_by ? ' selected' : '';
+<option value="<% $field %>"<% $selected %>><% $prop->{'rusname'} %>
+%				}
+</td><td width="0">:</td>
+<td width="98%"><input type="text" name="search" value="<% $search %>" style="width:100%"></td>
+<td width="1%" style="padding:2px 4px 2px 0;"><input type="submit" value=" &raquo; " style="border:1px solid gray;"></td>
+</tr></table>
+%				if ( $id ) {
+<input type="hidden" name="id" value="<% $id %>">
+%				}
+%				if ( $class ) {
+<input type="hidden" name="class" value="<% $class %>">
+%				}
+%				if ( $use_section ) {
+<input type="hidden" name="use_section" value="<% $use_section %>">
+%				}
+</form>
+%			}
+%		}
+
+<div style="height:5px"><spacer type="block" height="5"></div>
+<& /inc/pages_.msn, p=>$p, n=>$n, total=>$total, params=>\%ARGS, &>
+</div>
+
+<table width="100%" border="0" cellpadding="4" cellspacing="0" class="tlistdocs">
+<tr bgcolor="#efefef">
+%
+%			foreach (@columns) {
+%
+<th><% $_->{rusname} %></th>
+%
+%			}
+%
+</tr>
+%
+%			foreach my $document (@documents) {
+%
+%				next unless ref($document);
+%				my $document_access = $user->section_accesses($user, $document->section);
+%
+<tr valign="top">
+%
+%				for my $col (@columns) {
+%
+%					if ($col->{attr} eq '_sort_') {
+%
+<td width="20px"><% $document->{sorder} %>&nbsp;<a href="document_move.html?id=<% $document->{id} %>&move=up&s=<% $id %>&p=<% $p %>"><img src="/contenido/i/ico-up-9x10.gif" border=0 alt="Переместить документ на шаг вверх"></a>&nbsp;<a href="document_move.html?id=<% $document->{id} %>&move=down&s=<% $id %>&p=<% $p %>"><img src="/contenido/i/ico-down-9x10.gif" border=0 alt="Переместить документ на шаг вниз"></a>\
+%
+%					} elsif ($col->{attr} eq 'dtime') {
+%
+<td nowrap><& "/contenido/components/show_dtime.msn", dtime=>$document->{dtime} &>\
+%
+%						if ($document->{ctime} ne $document->{mtime}) {
+%
+%							my $colortime = '#c66';
+%
+<div style="color:<% $colortime %>;"><& "/contenido/components/show_dtime.msn", dtime=>$document->{mtime} &></div>\
+%
+%						}
+%
+%					} elsif ($col->{attr} eq 'name') {
+%
+<td><span class="<% $document->status ? '':'hiddensect' %>">\
+%
+%						my $name=$document->name ? $document->name : 'Безымянный документ N'.$document->id;
+%						$name =~ s/'/\\'/g;
+%						$name =~ s/"/&quot;/g;
+%						if ($document_access == 2) {
+%
+<a href="#" onclick="<% $dest_class ? 'AppendDest' : 'AppendSource' %>(<% $document->id %>, '<% $document->class %>','<% $name %>');"><% $name %>&nbsp;</a>\
+%
+%						} else {
+%
+<% $name %>&nbsp;\
+%
+%						}
+%
+</span>\
+%
+%                                       } elsif ($col->{attr} eq 'id') {
+%
+<td><span class="<% $document->status ? '':'hiddensect' %>">\
+%
+%                                               if ($document_access == 2) {
+%
+<a href="document.html?id=<% $document->id %>&class=<% $document->class %>"><% $document->id %>&nbsp;</a>\
+%
+%                                               } else {
+%
+<% $document->id %>&nbsp;\
+%
+%                                               }
+%
+</span>\
+%
+%					} elsif ($col->{attr} eq 'class') {
+%
+<td><% $document->class_name %>&nbsp;<font color="#999999">(<% $document->class %>)</font>\
+%
+%                                       } elsif ($col->{type} eq 'datetime') {
+%
+<td nowrap><& "/contenido/components/show_dtime.msn", dtime=>$document->{$col->{attr}} &>\
+%
+%					} elsif ($col->{attr} eq '_act_') {
+%
+<td>\
+%						if ($document_access == 2) {
+%							my $name=$document->name ? $document->name : 'Безымянный документ N'.$document->id;
+%							$name =~ s/'/\\'/g;
+%							$name =~ s/"/&quot;/g;
+%
+<a href="#" onclick="<% $dest_class ? 'AppendDest' : 'AppendSource' %>(<% $document->id %>, '<% $document->class %>', '<% $name %>');">связать</a>\
+%
+%						} else {
+&nbsp;\
+%						}
+%
+%					} else {
+%
+%	if ($col->{type} eq 'date') {
+%	my $date=$document->{$col->{attr}};
+%	$date=~/(\d{4}-\d{2}-\d{2})/;
+<td nowrap align="right"><% $1 || '&nbsp;' %>\
+%	} elsif ($col->{type} eq 'datetime') {
+<td nowrap align="right"><% $document->{$col->{attr}} || '&nbsp;' %>\
+%       } elsif ($col->{type} eq 'integer') {
+<td align="right"><% $document->{$col->{attr}} %>&nbsp;\
+%	} elsif ($col->{type} eq 'lookup') {
+<td align="left">\
+%		my $id = $document->{$col->{attr}};
+%		if ($id) {
+%			my ($doc)=$keeper->get_documents( ( ref($col->{lookup_opts}) ? %{$col->{lookup_opts}} : () ), id=>$id);
+%			if ($doc) {
+<a href="document.html?id=<% $doc->id %>&class=<% $doc->class %>"><% $doc->name || $doc->id %></a>&nbsp;\
+%			} else {
+<span class="hiddensect"><% $document->{$col->{attr}} %>???</span>\
+%			}
+%		} else {
+<span class="hiddensect">NULL</span>\
+%		}
+%       } elsif ($col->{type} eq 'status') {
+%		my $status_map = ref $col->{cases} eq 'ARRAY' ? $col->{cases} : $keeper->default_status();
+%		my ($doc_status) = grep { $_->[0] == $document->{$col->{attr}} } @$status_map; 
+%		$doc_status ||= [$document->{$col->{attr}}, 'Неизвестный'];
+		<td nowrap><% $doc_status->[1].'('.$doc_status->[0].')' %>\
+%	} else {
+<td><% defined($document->{$col->{attr}}) ? $document->{$col->{attr}} : '&nbsp;' %>\
+%	}
+%					}
+%
+</td>
+%
+%				} #- for @columns
+%
+</tr>
+%			} #- foreach @documents
+</table>
+
+<div style="font-size:75%; font-family:Arial;">
+<& /inc/pages_.msn, p=>$p, n=>$n, total=>$total, params=>\%ARGS, &>
+<div style="height:5px"><spacer type="block" height="5"></div>
+</div>
+
+%		} else {
+<h4 align="center"><i>---- Нет документов -----</i></h4>
+%		}
+%
+
+</fieldset>
+<%args>
+
+	$id		=> 1
+	$p		=> 1
+	$class		=> undef
+	$source_class	=> undef
+	$dest_class	=> undef
+	$use_section	=> undef
+	$alpha		=> undef
+	$alpha_search	=> undef
+	$search_by	=> undef
+	$search		=> undef
+	$restrict_class	=> undef
+
+</%args>
+<%init>
+
+  my @desired_class =  @{ $source_class || $dest_class };
+  my $link_class = []; @$link_class = map { $_ } @desired_class;
+  if ( ref $link_class eq 'ARRAY' && scalar @$link_class > 1 && $restrict_class ) {
+	@$link_class = grep { $_ eq $restrict_class } @$link_class;
+  }
+  my $owner;
+  # Операции...
+  if ($id && ($id > 0)) {
+	$owner = $keeper->get_section_by_id($id);
+  }
+  if (! ref($owner)) {
+	return undef;
+  }
+  # Фильтры работают в любом случае...
+  my $filter = $m->comp('/contenido/components/context.msn', name => 'filter');
+  my $profile = $m->comp('/contenido/components/context.msn', name => 'profile');
+
+  unless (defined $request->{section_accesses}->{$id}) {
+	$request->{section_accesses}->{$id} = $user->get_section_access($id);
+  }
+  my $section_access = $request->{section_accesses}->{$id};
+  my (@documents, $total);
+
+  my $s = $owner->id;
+  my $sorted = $owner->_sorted();
+  $s .= ",$filter"        if ($filter > 0);
+
+  my %filter=();
+  my %order = (not $link_class and $owner->order_by) ? (order_by => $owner->order_by) : (order => ['date','direct']);
+  if ($alpha) {
+	$filter{ilike}=1;
+	$filter{ $alpha_search || 'name' }="$alpha%";
+	$order{order}=['name','reverse'];
+	delete $order{order_by};
+  }
+
+  $filter{class} = $owner->default_document_class if $owner->default_document_class;
+  $filter{class}=$link_class if ($link_class || (ref $link_class eq 'ARRAY' && @$link_class) );
+  $filter{s}=$s unless ($link_class && !$use_section);
+  if ( $search_by && $search ) {
+	$filter{$search_by}='%'.$search.'%';
+	$filter{ilike} = 1;
+  }
+
+  $total = $keeper->get_documents(%filter, count=>1);
+
+  my $n = 40;
+  my $first = $n * ($p - 1);
+  ($first,$p)=(0,0) if ($first>$total);
+
+  if ($link_class && !$use_section) {
+	@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first, light=>1);
+  } elsif ($sorted) {
+	@documents = $keeper->get_sorted_documents(%filter, limit=>$n, offset=>$first, light=>1);
+  } else {
+	@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first, light=>1);
+  }
+
+  # набор колонок таблицы документов...
+  my @columns;
+
+  #работаем по 1 полученному документу (если таковой есть в наличии)
+  if (@documents and (ref $documents[0])) {
+	@columns = $sorted ? ({attr => '_sort_', name => 'N'}) : ();
+
+	# пытаемся найти колонки, которые документ сам пожелал показать (required_properties -> column)...
+	push @columns,
+		sort {$a->{column} <=> $b->{column}}
+		grep {$_->{column}} $documents[0]->structure;
+
+	# стандартная жопка таблицы...
+	@columns = (@columns,
+		{attr => '_act_',       rusname => 'Действия'},
+	);
+  }
+
+</%init>

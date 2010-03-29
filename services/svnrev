@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings 'all';
+use locale;
+
+use FindBin;
+use Getopt::Std;
+
+
+my %opts;
+getopts('hir', \%opts);
+
+&usage if $opts{h};
+&usage unless $#ARGV==1;
+
+my @revs = grep {$_} map {/^r(\d+)/; $1} `svn log -q $ARGV[0]`;
+@revs = reverse @revs unless $opts{r};
+exit unless @revs;
+
+$|=1;
+for my $r (0..$#revs-1) {
+	my @out = map {
+		"$revs[$r]:$revs[$r+1] : $_"
+	} `svn di -r$revs[$r]:$revs[$r+1] $ARGV[0] | egrep '^[\+\-]' | egrep -v [\+\-]{3}`;
+	if ($opts{i}) {
+		@out = grep {/$ARGV[1]/i} @out;
+	} else {
+		@out = grep {/$ARGV[1]/} @out;
+	}
+	print join '', @out;
+}
+
+
+sub usage {
+	print <<EOM;
+Usage: 
+    $FindBin::RealScript [options] {file|URL} pattern
+
+Options:
+    -h    Print this help message
+    -i    Ignore case
+    -r    Reverse search
+EOM
+	exit;
+}

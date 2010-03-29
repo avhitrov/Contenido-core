@@ -1,0 +1,43 @@
+<% $strtime %>
+<%ONCE>
+
+	my @smonth = (
+		'янв',
+		'фев',
+		'мар',
+		'апр',
+		'май',
+		'июн',
+		'июл',
+		'авг',
+		'сен',
+		'окт',
+		'ноя',
+		'дек',
+	);
+
+</%ONCE>
+<%ARGS>
+
+	$dtime
+	$digital_month => undef
+
+</%ARGS>
+<%INIT>
+
+	return unless $dtime;
+
+	use locale;
+
+	my @cur_time = localtime();
+	my ($sdate, $stime) = split( ' ', $dtime );
+	my @time = split( ':', $stime );
+	@time = ($time[0], $time[1]);
+	my @date = split( '-', $sdate );
+
+	my $strtime = $date[2]; # День
+	$strtime .= ( $digital_month ? '.'.$date[1] : ' '.$smonth[$date[1]-1] );
+	$strtime .= ( $cur_time[5]+1900 == $date[0] ? '' : ($digital_month?'.':' ').$date[0] );
+	$strtime .= ' ['.join( ':', @time ).']';
+
+</%INIT>

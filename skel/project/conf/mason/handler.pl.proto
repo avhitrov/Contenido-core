@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+########################################################
+# Here you can place project specific mason directives.
+# This file will be required by core handler.pl.
+########################################################
+
+1;

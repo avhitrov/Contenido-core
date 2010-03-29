@@ -1,0 +1,21 @@
+package @NAME@::Init;
+
+use strict;
+use warnings 'all';
+
+use Contenido::Globals;
+use @NAME@::Apache;
+use @NAME@::Keeper;
+
+
+# загрузка всех необходимых плагину классов
+# @NAME@::SQL::SomeTable
+# @NAME@::SomeClass
+Contenido::Init::load_classes(qw(
+	));
+
+sub init {
+	0;
+}
+
+1;

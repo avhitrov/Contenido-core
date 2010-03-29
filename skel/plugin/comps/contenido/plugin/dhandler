@@ -1,0 +1,11 @@
+<& $call, %ARGS &>
+<%init>
+
+  my $call;
+  if ( $r->uri eq '/contenido/@NAME@/' ) {
+        $call = 'index.html';
+  } else {
+        &abort404;
+  }
+
+</%init>

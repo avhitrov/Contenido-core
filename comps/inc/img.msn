@@ -1,0 +1,11 @@
+<% $src %>\
+<%ARGS>
+
+	$src => undef
+
+</%ARGS>
+<%INIT>
+
+	$src = '/images/'.$src		if $src !~ /^\//;
+
+</%INIT>

@@ -1,0 +1,65 @@
+<!-- Один объект мультимедиа -->
+<table cellpadding="0" cellspacing="2" border="0" width="100%">
+<tr><td><b><% $rusname %></b> / <font size="-1" color="#888888">name="<% $attr %>"</font> </td></tr>
+<tr><td><input type="file" name="<% $attr %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+%	if ( exists($MULTI->{filename}) )
+%	{
+%		my $TYPE = 'unknown';
+%		if (length($MULTI->{ext}) > 0)
+%		{
+%			if (-e $keeper->{state}->{mason_comp}.'/contenido/i/icons/'.$MULTI->{ext}.'.gif')
+%			{
+%				$TYPE = $MULTI->{ext};
+%			}
+%		}
+<tr><td style="font-size:95%;"><% $MULTI->{filename} %></td></tr>
+<tr><td>
+
+<table border="0" width="100%"><tr>
+<td align="right"><a href="<% $state->{binary_dir} %><% $MULTI->{filename} %>"><img src="/contenido/i/icons/<% $TYPE %>.gif" width="36" height=36" hspace="5" border="0"></a></td>
+<td>
+<font size="-1" color="#888888">Тип: <% uc($MULTI->{ext}) %><br>
+Размер: <% int($MULTI->{size}/1024) %> Кб
+</font>
+</td>
+</tr></table>
+
+</td></tr>
+%	}
+%
+%	foreach my $iattr (sort (@{ $iattrs }))
+%	{
+%		next	if ( ($iattr eq 'filename') || ($iattr eq 'mini') || ($iattr eq 'width') || ($iattr eq 'height') );
+<tr><td><font size="-1" color="#888888"><% $ATTRNAMES->{$iattr} %> (<% $iattr %>):</font></td></tr>
+<tr><td><input type="text" name="<% $attr %>.<% $iattr %>" size="60" value="<% html_escape($MULTI->{$iattr}) %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+%	}
+<tr><td><input type="checkbox" name="_delete_multi.<% $attr %>" value="1">Удалить<br><br></td></tr>
+</td></tr></table>
+
+<%ARGS>
+
+	$MULTI => undef
+	$rusname => undef
+	$attr => undef
+	$prop => {}
+
+</%ARGS>
+<%DOC>
+
+	Компонента отображает одну картинку...
+
+</%DOC>
+<%INIT>
+
+	my $iattrs = $prop->{iattrs};
+	$iattrs ||= [];
+
+	my $ATTRNAMES = {
+		'alt' => 'Подпись',
+		'btext' => 'Текст до картинки',
+		'atext' => 'Текст после картинки',
+		'url' => 'Ссылка с картинки',
+		'copyright' => 'Копирайт',
+	};
+	
+</%INIT>

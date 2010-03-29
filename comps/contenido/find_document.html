@@ -1,0 +1,149 @@
+<html>
+<head>
+<title>Подбор документа</title>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+</head>
+<style>
+<!--
+img {border:0;}
+form {margin:0;}
+select {font: 9pt Verdana; margin:1pt 1pt;}
+input {font: 9pt Verdana; margin:1pt 1pt; padding:0;}
+textarea {font: 8pt Verdana;}
+
+a {text-decoration:none;}
+
+p {font: 9pt Verdana;}
+p.td {font-size:8pt; text-align:left; margin:2pt 2mm;  line-height:125%;}
+p.std {text-align:left; margin:6pt 2mm;}
+p.stdsm {font-size:8pt; text-align:left; margin:6pt 2mm;}
+p.lmenu {font-size:8pt; color:gray; margin:6pt 2mm;}
+p.rem {font-size:8pt; margin:1pt 2pt; color:#a0a0a0;}
+p.copy {font-size:8pt; margin:6pt 2pt 2pt; color:#909090; text-align:right;}
+
+h3 {font: 11pt Verdana; font-weight:bold; margin:6pt 4mm 4pt 2mm;}
+h4 {font: 10pt Verdana; font-weight:bold; margin:6pt 4mm 4pt 2mm;}
+h4.lmnu {font: 8pt Verdana; font-weight:bold; margin:4pt 2mm 2pt 4pt; padding:2pt; line-height:105%}
+
+td {font: 8pt Verdana;}
+td.std {padding:2pt;}
+td.pager {padding:3px 5px;}
+th {font: 8pt Verdana; font-weight:bold;}
+th.sth {padding:2pt;}
+//-->
+</style>
+
+<script language="Javascript">
+<!--
+function FillFields (ID, Name) {
+  parent.document.forms['form'].<% $vf %>.value = ID;
+  parent.document.forms['form'].<% $nf %>.value = Name;
+  parent.<% $func %>_changed();
+  parent.document.getElementById('DocFinder').style.height = 0;
+//  return false;
+}
+//-->
+</script>
+
+<body style="margin:5px; border-bottom:1px solid gray;" LINK="#0000FF" VLINK="#0000FF">
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-bottom:1px solid gray;">
+<tr valign="top"><td><h4>Подбор документа:</h4></td>
+<td align="right">
+<div style="text-align:right; font-weight:bold"><a href="find_document.html" style="color:red;"
+ onclick="parent.document.getElementById('DocFinder').style.height = 0;">X</a></div>
+</td></tr>
+</table>
+
+% if ( $search_by ) {
+<div style="height:3px;"><spacer type="block" height="3"></div>
+<div style="border-bottom:1px solid gray; padding:1px;">
+<form action="find_document.html" method="get">
+<p class="lmenu">Ключевое слово:<br>
+<input type="text" maxlength="255" name="search" value="<% $search %>"
+ style="border:1px solid gray; width:180px; padding:2px;">&nbsp;<input
+ type="submit" name="" value=" &raquo; "
+ style="border:1px solid gray; width:33px; padding:0; font-weight:bold;">
+<input type="hidden" maxlength="255" name="nf" value="<% $nf %>">
+<input type="hidden" maxlength="255" name="vf" value="<% $vf %>">
+<input type="hidden" maxlength="255" name="show" value="<% $show %>">
+%	if ( $class ) {
+<input type="hidden" maxlength="255" name="class" value="<% $class %>">
+%	}
+%	if ( $s ) {
+<input type="hidden" maxlength="255" name="s" value="<% $s %>">
+%	}
+<input type="hidden" maxlength="255" name="search_by" value="<% $search_by %>">
+</p></form></div>
+% }
+
+% ### Листалка
+% ######################################
+% if ( $total > $size ) {
+%
+<div style="font:9pt Atial; border-bottom:1px solid black; padding:1px; text-align:center;">
+<& /inc/pages_.msn, p => $p, n => $size, total => $total, size => 4,
+params => {
+		nf	=> $nf,
+		vf	=> $vf,
+		show	=> $show,
+		$class ? ( class => $class ) : (),
+		$s ? ( s => $s ) : (),
+		$search_by ? ( search_by => $search_by ) : (),
+		$search ? ( search => $search ) : (),
+	} &>
+</div>
+% }
+%
+% if ( ref $docs eq 'ARRAY' && @$docs ) {
+% my $i = 0;
+<table width="100%">
+%	foreach my $doc ( @$docs ) {
+%		my $name = $doc->$show;
+%		$name =~ s/'/\\'/g;
+<tr bgcolor=<% $i++%2 ? '#f0f0f0' : 'white' %>><td class="td">&raquo;&nbsp;<a
+ href="find_document.html"
+ onclick="return FillFields(<% $doc->id %>,'<% $name |h %>')">
+<% $doc->$show %></a></td></tr>
+%	}
+</table>
+% }
+</body>
+</html>
+<%args>
+
+	$search_by	=> undef
+	$search		=> undef
+	$class		=> undef
+	$show		=> 'name'
+	$s		=> undef
+	$nf		=> undef
+	$vf		=> undef
+	$p		=> 1
+
+</%args>
+<%init>
+
+  return	unless $nf && $vf;
+  my ($docs, $total, %params);
+  my $size = 20;
+
+  $params{s} = $s		if $s;
+  $params{class} = $class	if $class;
+  if ( $search_by && $search ) {
+ 	$params{$search_by} = '%'.$search.'%';
+	$params{ilike} = 1;
+  }
+
+  $docs = $keeper->get_documents (
+		%params,
+		limit	=> $size,
+		offset	=> $size*($p-1),
+		return_mode => 'array_ref',
+	);
+  $total = $keeper->get_documents (
+		%params,
+		count	=> 1,
+	);
+  my $func = $1		if $vf =~ /(\w+)_([A-Za-z]+)$/;
+
+</%init>

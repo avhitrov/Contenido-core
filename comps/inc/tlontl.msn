@@ -1,0 +1,22 @@
+%
+%	# если ссылка не была передана
+%	if ($link eq ''){
+%
+<% $object %>\
+%
+%	# если ссылка равна текущему запросу (URI)
+%	}elsif($ENV{REQUEST_URI} eq $link || $ENV{REQUEST_URI} eq $link.'index.html'){
+%
+<% $object %>\
+%
+%	}else{
+%
+<a href="<% $link %>"<% $param ? ' '.$param : '' %>><% $object %></a>\
+%
+%	}
+%
+<%args>
+        $link => undef
+        $object => undef
+	$param => undef
+</%args>

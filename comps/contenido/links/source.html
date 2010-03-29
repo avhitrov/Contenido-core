@@ -1,0 +1,176 @@
+<& "/contenido/components/title.msn", title=>'Создание связей' &>
+<style>
+<!--
+body {margin:5px;}
+-->
+</style>
+
+% if (ref $document) {
+% ### Source is available
+% ######################################################
+
+<script language="JavaScript">
+<!--
+function DeleteDest ()
+{
+ oSelect = document.forms['destform'].elements[0];
+ for (j = 0; j < oSelect.options.length; j++) {
+	if (!oSelect.options[j].selected) {
+		oSelect.options[j] = null;
+	}
+ }
+ return true;
+}
+
+function SelectAllDest ()
+{
+ oSelect = document.forms['destform'].elements[0];
+// oSelect.setExpression('multiple', true);
+// document.recalc(true);
+ for (j = 0; j < oSelect.options.length; j++) {
+	oSelect.options[j].selected = true;
+ }
+ return true;
+}
+
+function CheckDest () {
+  var count = 0;
+  var oD = document.getElementById("dest_id_0");
+  var oC = document.getElementById("dest_class_0");
+  if ( oD && oC ) {
+	return true;
+  } else {
+	alert ('Не выбран ни один документ');
+	return false;
+  }
+}
+
+//-->
+</script>
+
+%
+% my @properties = $document->structure();
+% my ($prop) = grep { $_->{'attr'} eq 'status' } @properties;
+% my ($status) = grep { $_->[0] == $document->status } @{ $m->comp( '/contenido/components/inputs/status.msn', prop => $prop, object=>$document, name => $prop->{attr}, mode => 'get') };
+% $status = $status->[1];
+<table width="100%" border="0" align="center"><tr><td>
+<fieldset>
+<legend>Источник</legend>
+<table class="tform" width="100%">
+<tr valign="top"><td><b>Название:</b>
+</td><td><a href="/contenido/document.html?id=<% $document->id %>&class=<% $document->class %>" target="_top"><% $document->name %></a>
+</td></tr>
+<tr valign="top"><td><b>Класс:</b>
+</td><td><% $document->class %>
+</td></tr>
+<tr valign="top"><td><b>Статус:</b>
+</td><td><% $status %>
+</td></tr>
+</table>
+</fieldset>
+
+<fieldset>
+<legend>Список связей</legend>
+
+<form action="link_add.html" name="destform" target="_top" method="post" onsubmit="return CheckDest();">
+<div id="link_list"></div>
+
+<table class="tform" width="100%">
+<tr><td>
+<form action="link_add.html" name="destform" target="_top" method="post" onsubmit="return CheckDest();">
+<select multiple name="destinations" size="20" style="width:100%">
+</select>
+<p>К источнику будут привязаны только выделенные документы.</p>
+<input type="hidden" name="class" value="<% $class %>">
+<input type="hidden" name="source_id" value="<% $source_id %>">
+<input type="hidden" name="source_class" value="<% $source_class %>">
+<input type="button" value="Выделить все" onclick="SelectAllDest();">
+<input type="button" value="Удалить лишнее" onclick="DeleteDest();">
+<input type="submit" value="Связать выбранное">
+</td></tr>
+</table>
+</form>
+</fieldset>
+
+</td></tr></table>
+
+%#<pre><% Dumper(\@properties) %></pre>
+
+% }else{
+% ### Source is not available
+% ######################################################
+%
+
+<script language="JavaScript">
+<!--
+function AddSource (Value, Name)
+{
+// alert (Name);
+
+ var oSelect = parent.frames.destfrm.document.forms['sourceform'].elements[0];
+ var Found = 0;
+ for(j=0; j < oSelect.options.length; j++) {
+	if (oSelect.options[j].value == Value) {
+		Found = 1;
+	}
+ }
+ if (!Found) {
+	var oOption = document.createElement("OPTION");
+	oOption.text=Name;
+	oOption.value=Value;
+	oOption.selected=true;
+	oSelect.options.add(oOption);
+ }
+ return false;
+}
+
+//-->
+</script>
+
+<& /contenido/components/link_browse.msn,
+	class		=> $class,
+	source_class	=> $source_class,
+	p		=> $p,
+	use_section	=> $use_section,
+	alpha		=> $alpha,
+	alpha_search	=> $alpha_search,
+	search		=> $search,
+	search_by	=> $search_by,
+	restrict_class	=> $restrict_class,
+&>
+
+% }
+
+</body>
+</html>
+<%args>
+	$class          => ''
+	$source_class   => ''
+	$source_id      => ''
+	$dest_class     => ''
+	$dest_id        => ''
+	$save           => 0
+	$status         => 0
+
+	$p		=> 1
+	$restrict_class	=> undef
+	$use_section	=> undef
+	$alpha		=> undef
+	$alpha_search	=> undef
+	$search_by	=> undef
+	$search		=> undef
+
+</%args>
+<%init>
+
+  my $document;
+
+  if ($source_id) {
+	$document = $keeper->get_document_by_id ($source_id,
+			class	=> $source_class,
+		);
+  } else {
+        $source_class = $class->available_sources;
+  }
+
+</%init>

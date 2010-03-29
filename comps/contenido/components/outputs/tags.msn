@@ -1,0 +1,21 @@
+<%args>
+	$name => undef
+	$SETS => undef
+</%args>
+<%init>
+	return undef unless ref $SETS and $name and exists $SETS->{$name};
+
+	# Перекодировка...
+	my $str = $SETS->{$name};
+
+    my $i = 0;
+    my $n = 0;
+    while ($i < 100) {
+        my ($res, $msg) = $rpc_client->id->get_tags_by_names( split(/\s*,\s*/, $str) );
+        if ($res->{success} and ref($msg) eq 'HASH') {
+            return [keys %$msg];
+        }
+        $i++
+    }
+	return [];
+</%init>

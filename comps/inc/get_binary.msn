@@ -1,0 +1,34 @@
+<%DOC>
+
+	Компонента получает объект и возвращает хэш с бинарниками
+
+</%DOC>
+<%ARGS>
+
+	$doc
+
+</%ARGS>
+<%INIT>
+
+	return  unless ref($doc);
+
+	my @properties = $doc->structure();
+	my $binaries = {};
+        for (0..$#properties)
+	{
+		my $prop = $properties[$_];
+		my $name = $prop->{attr};
+		if ($prop->{type} eq 'multimedia') {
+			my $BINARY = undef;
+			if (length($doc->{ $name }) > 8)
+			{
+				$BINARY = eval ('use vars qw($VAR1); '.$doc->{ $name });
+				if (ref($BINARY) ne 'HASH') {  $BINARY = {} };
+			}
+			$binaries->{$name} = $BINARY;
+		}
+	}
+        return $binaries;
+
+</%INIT>
+

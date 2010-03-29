@@ -1,0 +1,131 @@
+
+ServerType		standalone
+ServerName		@HTTPD_SERVER@
+ServerAdmin		@SERVER_ADMIN@
+UseCanonicalName	off
+ServerSignature		on
+
+ResourceConfig		/dev/null
+AccessConfig		/dev/null
+
+ServerSignature		Off
+ServerTokens		Prod
+
+PidFile			@PROJECT_VAR@/run/httpd.pid
+LogLevel		@HTTPD_ELOG_LEVEL@
+LogFormat		"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" \"%{Via}i\" %T" combined
+
+<IfDefine RSYSLOG>
+ErrorLog		"| exec @LOGGER@ -h @RSYSLOG_HOST@ -j @PROJECT_LC@ -p user.err  >&- 2>&-"
+CustomLog		"| exec @LOGGER@ -h @RSYSLOG_HOST@ -j @PROJECT_LC@ -p user.info >&- 2>&-" combined
+</IfDefine>
+
+<IfDefine CRONOLOG>
+ErrorLog		"| exec @LOCAL@/bin/cronolog -S @PROJECT_VAR@/log/error_log @PROJECT_VAR@/log/@CRONOLOG_FORMAT@httpd.error  >&- 2>&-"
+CustomLog		"| exec @LOCAL@/bin/cronolog -S @PROJECT_VAR@/log/access_log @PROJECT_VAR@/log/@CRONOLOG_FORMAT@httpd.access >&- 2>&-" combined
+</IfDefine>
+
+<IfDefine FILELOG>
+ErrorLog		@PROJECT_VAR@/log/error_log
+CustomLog		@PROJECT_VAR@/log/access_log combined
+</IfDefine>
+
+Listen			@HTTPD_PORT@
+ListenBacklog           @LISTEN_BACK_LOG@
+
+MinSpareServers		@MIN_SPARE_SERVERS@
+MaxSpareServers		@MAX_SPARE_SERVERS@
+StartServers		@START_SERVERS@
+MaxClients		@MAX_CLIENTS@
+MaxRequestsPerChild	@MAX_REQUESTS_PER_CHILD@
+<IfModule @SPARE_REAPER_DELAY_FAKEMOD@.c>
+SpareReaperDelay	@SPARE_REAPER_DELAY@
+</IfModule>
+
+DocumentRoot		@HTTPD_DOCS@
+
+Alias			/contenido/@PROJECT@	@MASON_COMP@/contenido/@PROJECT@
+Alias			/i			@MASON_COMP@/i
+Alias			/contenido		@CORE_COMP@/contenido
+
+Timeout			600
+KeepAlive		off
+HostnameLookups		off
+
+Options			Includes
+
+PerlRequire		@CONF@/mod_perl/startup.pl
+PerlRequire		@CONF@/mason/handler.pl
+
+PerlModule		Apache::Status
+
+#установка общих handlers
+PerlChildInitHandler	Contenido::Apache::child_init
+PerlChildExitHandler	Contenido::Apache::child_exit
+
+<Location               />
+	order		allow,deny
+	allow		from all
+
+	SetHandler      perl-script
+        PerlHandler     @PROJECT@::Mason
+        PerlCleanupHandler      Contenido::Apache::cleanup
+        PerlCleanupHandler      Apache::SizeLimit
+</Location>
+
+<FilesMatch		 "\.(msn)$">
+	Order		allow,deny
+	Deny		from all
+</FilesMatch>
+
+<Location	/i>
+	SetHandler	        default-handler
+</Location>
+
+<Location	/images>
+	SetHandler	        default-handler
+</Location>
+
+<Location	/binary>
+	SetHandler	        default-handler
+</Location>
+
+<Location		/contenido>
+	order		allow,deny
+	allow		from all
+
+        AuthName                "@PROJECT_NAME@: Contenido"
+        AuthType                Basic
+        Require                 valid-user
+        PerlAuthenHandler       Contenido::Apache::authentication
+
+	SetHandler		perl-script
+	PerlHandler		@PROJECT@::Mason
+	PerlCleanupHandler	Contenido::Apache::cleanup
+	PerlCleanupHandler	Apache::SizeLimit
+</Location>
+
+<Location		/contenido/i>
+	order		allow,deny
+	allow		from all
+	Satisfy		any
+	SetHandler	default-handler
+</Location>
+
+ExtendedStatus	  on
+<Location		/server-status>
+	SetHandler	server-status
+</Location>
+
+#PerlSetVar	StatusOptionsAll	On
+#<Location /perl-status>
+#	SetHandler	perl-script
+#	PerlHandler	Apache::Status
+#</Location>
+
+Include			@CONF@/apache/mime.conf
+TypesConfig		@CONF@/apache/mime.types
+AddCharset		utf-8 js htm html shtml txt xml
+
+Include			@CONF@/apache/httpd_project.conf
+

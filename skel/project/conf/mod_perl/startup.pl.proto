@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+##########################################################
+# Here you can place project specific mod_perl directives.
+# This file will be required by core startup.pl.
+##########################################################
+
+1;

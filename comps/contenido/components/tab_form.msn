@@ -1,0 +1,80 @@
+<form action="./tabs.html" method="post">
+
+<input type="hidden" name="control_charset" value="Контроль">
+<input type="hidden" name="id" value="<% $tab->{id} %>">
+<table border="0" width="60%" class="tform">
+
+<tr>
+<td valign="top" width="40%">Идентификатор профиля:</td>
+<td><b><% $tab->{id} %></b></td>
+</tr>
+
+<tr>
+<td valign="top" width="40%">Название профиля:</td>
+<td><input type="text" style="width:90%;" name="name" value="<% $tab->{name} %>"></td>
+</tr>
+
+<tr>
+<td valign="top" width="40%">Глубина рубрикатора:</td>
+<td><input type="text" style="width:90%;" name="level" value="<% $tab->{level} || 3 %>"></td>
+</tr>
+
+<tr>
+<td valign="top" width="40%">Типы секций для показа:</td>
+<td>
+%
+%       my @local_values = ();
+%       for my $class (@{ $state->{available_sections} })
+%       {
+%		my $sect = new $class($keeper);
+%               push (@local_values, $class, ''.$sect->class_name.' ('.$class.')');
+%       }
+%       my @local_checks = ();
+%	if (ref($tab->{sections}))
+%	{
+%		@local_checks = @{ $tab->{sections} };
+%	}
+<& "/contenido/components/select.msn", multiple=>1, size=>5, values=>\@local_values, width=>"90%;", name=>'sections', check=>\@local_checks &>
+</td>
+</tr>
+
+<tr>
+<td valign="top" width="40%">Редакторские возможности:</td>
+<td>
+%	my @LEFT = $m->comp('/contenido/components/tasks.msn');
+%	@local_values = ();
+%	for my $left (@LEFT)
+%	{
+%		push (@local_values, $left->{attr}, $left->{rusname});
+%	}
+%	@local_checks = ();
+%	if (ref($tab->{lefts}))
+%	{
+%		@local_checks = @{ $tab->{lefts} };
+%	}
+<& "/contenido/components/select.msn", multiple=>1, size=>5, values=>\@local_values, width=>"90%;", name=>'lefts', check=>\@local_checks &>
+</td>
+</tr>
+
+<tr><td height="20"></td></tr>
+
+<tr><td colspan="2">
+<input type="submit" value="Сохранить изменения" style="font-size:13pt;font-weight:bold; height:40px;margin-bottom: 5px; background-color:#930300;color:#FFFFFF;">
+</td></tr>
+
+</table>
+
+<input type="hidden" name="save" value="1">
+</form>
+
+<%args>
+
+	$tab => {}
+
+</%args>
+<%init>
+
+	use vars qw($project $state $keeper $request);
+	return undef	if (! exists($tab->{id}));
+
+</%init>

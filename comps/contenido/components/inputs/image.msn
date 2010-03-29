@@ -1,0 +1,76 @@
+<!-- Одна картинка -->
+<table cellpadding="0" cellspacing="2" border="0">
+<tr><td><b><% $rusname %></b> / <font size="-1" color="#888888">name="<% $attr %>"</font> </td></tr>
+<tr><td><input type="file" name="<% $attr %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+%	if ( exists($IMAGE->{width}) && exists($IMAGE->{height}) && exists($IMAGE->{filename}) )
+%	{
+<tr><td style="font-size:95%;"><% $IMAGE->{filename} %></td></tr>
+%		my $max_show_width = 200;
+%		my $show_w = ( $IMAGE->{width} > $max_show_width ? $max_show_width : $IMAGE->{width} );
+%		my $show_h = ( $IMAGE->{width} > $max_show_width ? ($max_show_width*$IMAGE->{height}/$IMAGE->{width}) : $IMAGE->{height} );
+%		my $img_path = $state->{images_dir}.'/'.$IMAGE->{filename};
+<tr><td>
+%       $img_path =~ s|^/{2,}|/|; 
+%       my $u1 = URI->new($img_path);
+%       my $path = $u1->path;
+%       $path =~ s|/{2,}|/|g;
+%       $u1->path($path);        
+%       $img_path = $u1->canonical;
+<font size="-1" color="#888888">ШИР x ВЫС: <% $IMAGE->{width} %>x<% $IMAGE->{height} %></font>
+<img src="<% $img_path %>" alt="<% html_escape($IMAGE->{alt}) %>" width="<% $show_w %>" height="<% $show_h %>"><br>
+</td></tr>
+%	}
+%
+
+%	foreach my $iattr (@{ $iattrs })
+%	{
+%		next	if ( ($iattr eq 'filename') || ($iattr eq 'width') || ($iattr eq 'height') );
+%		if($iattr eq 'mini') {
+<tr><td><font size="-1" color="#888888">name="<% $attr %>_mini"</font> </td></tr>
+<tr><td><input type="file" name="<% $attr %>_mini" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+%	if (exists($IMAGE->{mini}->{filename}) )
+%	{
+<tr><td style="font-size:95%;"><% $IMAGE->{mini}->{filename} %></td></tr>
+%		my $max_show_width = 200;
+%		my $show_w = ( $IMAGE->{mini}->{width} > $max_show_width ? $max_show_width : $IMAGE->{mini}->{width} );
+%		my $show_h = ( $IMAGE->{mini}->{width} > $max_show_width ? ($max_show_width*$IMAGE->{mini}->{height}/$IMAGE->{mini}->{width}) : $IMAGE->{mini}->{height} );
+<tr><td>
+<font size="-1" color="#888888">ШИР x ВЫС: <% $IMAGE->{mini}->{width} %>x<% $IMAGE->{mini}->{height} %></font>
+<img src="<% $state->{images_dir}.'/'.$IMAGE->{mini}->{filename} %>" alt="<% html_escape($IMAGE->{mini}->{alt}) %>" width="<% $show_w %>" height="<% $show_h %>"><br>
+</td></tr>
+%	}
+%		} else {
+<tr><td><font size="-1" color="#888888"><% $ATTRNAMES->{$iattr} %> (<% $iattr %>):</font></td></tr>
+<tr><td><input type="text" name="<% $attr %>.<% $iattr %>" size="60" value="<% html_escape($IMAGE->{$iattr}) %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+%	}	}
+
+<tr><td><input type="checkbox" name="_delete_image.<% $attr %>" value="1">Удалить<br><br></td></tr>
+</table>
+
+<%ARGS>
+
+	$IMAGE => undef
+	$rusname => undef
+	$attr => undef
+	$prop => {}
+
+</%ARGS>
+<%DOC>
+
+	Компонента отображает одну картинку...
+
+</%DOC>
+<%INIT>
+
+	my $iattrs = $prop->{iattrs};
+	$iattrs ||= ['alt'];
+
+	my $ATTRNAMES = {
+		'alt' => 'Подпись',
+		'btext' => 'Текст до картинки',
+		'atext' => 'Текст после картинки',
+		'url' => 'Ссылка с картинки',
+		'copyright' => 'Копирайт',
+	};
+	
+</%INIT>

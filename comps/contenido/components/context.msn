@@ -1,0 +1,31 @@
+<%args>
+
+	$name => undef
+	$value => undef
+	$delete => undef
+
+</%args>
+<%init>
+	my $cookie_name = 'content_context';
+
+	if ($name) {
+		my $context = exists $request->{context} ? $request->{context} : {};
+		if ($delete) {
+			delete ($context->{$name});
+			$m->comp('/contenido/components/cookies.msn', name => $cookie_name, value => join('/', map { "$_-$context->{$_}" } keys %$context));
+			return undef;
+		}
+		if (! defined $value) {
+			return $context->{$name} if exists $context->{$name};
+		} else {
+			$context->{$name} = $value;
+			$m->comp('/contenido/components/cookies.msn', name => $cookie_name, value => join('/', map { "$_-$context->{$_}" } keys %$context));
+		}
+	} else {
+		return $request->{context} if exists $request->{context};
+		my %context = map { split /-/ } split('/', $m->comp('/contenido/components/cookies.msn', name => $cookie_name));
+		$request->{context} = \%context;
+		return $request->{context};
+	}
+
+</%init>

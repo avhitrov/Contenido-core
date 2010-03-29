@@ -1,0 +1,8 @@
+<%args>
+	$str => undef
+</%args>
+<%init>
+	use vars qw($keeper $request);
+	$str =~ s/\r//g;
+	return $str;
+</%init>

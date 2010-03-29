@@ -1,0 +1,125 @@
+% unless ($error) {
+<table width="100%" cellspacing="0" cellpadding="0" border="0">
+	<tr>
+		<td width="15%" style="padding-right: 3px;">
+			<input onkeyup="find_word_<% $name %>()" type="text" name="<% $name."_tmp" %>" size="10" onfocus="key_flag_<% $name %> = 0;" onblur="key_flag_<% $name %> = 1;" style="width: 100%;" <% $prop->{readonly} ? 'readonly' : '' %>>
+		</td>
+		<td width="80%">
+			<input type="hidden" name="<% $name %>" id="<% $name %>_hidden" value="<% $check ? $check : ($prop->{allow_null} ? '' : (@list ? $list[0]->id : '')) %>">
+			<select id="<% $name %>_select" class="selects" <% $prop->{readonly} ? 'readonly' : '' %> style="width: 100%;" onchange="<% $name %>_changed();">
+
+%	if ($prop->{allow_null}) {
+				<option value="" <% defined($check) ? '' : 'selected' %>>--- не указано ---</option>
+%	}
+
+%	for (@list) {
+				<option value="<% $_->id %> <% $_->class %>" <% defined($check) && $check eq $_->id ? "selected" : "" %>><% $prop->{'list_field'} ? $_->{$prop->{'list_field'}} : $_->name %></option>
+%	}
+			</select>
+		</td>
+		<td style="padding-left: 10px;"><a href="#" onclick="return <% $name %>_popup();" title="Найти документ"><img src="/contenido/i/lookup-19x19.gif" width="19" height="19" class="bb gb"></a></td>
+	</tr>
+
+	<tr id="<% $name %>_prev_table" style="display: none;">
+		<td>&nbsp;</td>
+		<td>
+			<table width="100%" cellspacing="0" cellpadding="0" border="0">
+				<tr>
+					<td width="100%" id="<% $name %>_prev_text" class="bb undo" style="padding: 3px;"></td>
+					<td style="padding-left: 3px; vertical-align: top;"><a href="#" onclick="return <% $name %>_undo();" title="Отменить изменения"><img src="/contenido/i/undo-19x19.gif" width="19" height="19" class="bb gb"></a></td>
+				</tr>
+			</table>
+		</td>
+		<td>&nbsp;</td>
+	</tr>
+</table>
+
+<script type="text/javascript">
+	var key_flag_<% $name %> = 1;
+	var <% $name %>_prev_value = document.getElementById('<% $name %>_select').selectedIndex;
+
+	if (navigator.appName == "Netscape") {
+		document.captureEvents(Event.KEYUP);
+	}
+
+	function find_word_<% $name %>() {
+		var str1 = document.form.<% $name."_tmp" %>.value;
+		if (str1 == "" || key_flag_<% $name %>) return;
+
+		for (var i = 0; i < document.form.<% $name %>_select.options.length; i++) {
+			var source = document.form.<% $name %>_select.options[i].text;
+			source = source.toLowerCase();
+			str1 = str1.toLowerCase();
+			if ( source.indexOf(str1) > -1) {
+				document.form.<% $name %>_select.options[i].selected=true;
+				<% $name %>_changed();
+				break;
+			}
+		}
+	}
+
+	function <% $name %>_popup() {
+		var s = document.getElementById('<% $name %>_select');
+		if (!s.value) {
+			alert('Нет выбранного значения');
+			return false;
+		}
+		var re = /^(\d+)\s+(.+)$/;
+		var matches = re.exec(s.value);
+		window.open('/contenido/document.html?class=' + matches[2] + '&id=' + matches[1]);
+		return false;
+	}
+
+	function <% $name %>_changed() {
+		var t = document.getElementById('<% $name %>_prev_table');
+		var h = document.getElementById('<% $name %>_hidden');
+		var s = document.getElementById('<% $name %>_select');
+		if (s.selectedIndex==<% $name %>_prev_value) {
+			if (t.style.display!='none') {
+				t.style.display = 'none';
+			}
+			return;
+		}
+		if (t.style.display=='none') {
+			t.style.display = '';
+		}
+
+		if (s.value) {
+			var re = /^(\d+)\s+(.+)$/;
+			var matches = re.exec(s.value);
+			h.value = matches[1];
+		} else {
+			h.value = '';
+		}
+	}
+
+	function <% $name %>_undo() {
+		document.getElementById('<% $name %>_select').selectedIndex = <% $name %>_prev_value;
+		<% $name %>_changed();
+		return false;
+	}
+
+	var s = document.getElementById('<% $name %>_select');
+	document.getElementById('<% $name %>_prev_text').innerHTML = s.options.item(s.selectedIndex).innerHTML || '&nbsp;';
+</script>
+
+% } else {
+<font color="red"><% $error %></font>
+% $m->comp('/contenido/components/inputs/integer.msn', %ARGS);
+% }
+
+<%args>
+	$name  => undef
+	$check => undef
+	$prop  => undef
+</%args>
+
+<%init>
+	my (@list, $error);
+
+	if ($prop && ref($prop) && ref($prop->{lookup_opts}) eq 'HASH') {
+		@list = $keeper->get_documents(order => ['name','reverse'], %{$prop->{lookup_opts}});
+	} else {
+		$error = 'Похоже неверное описание lookup_opts в документе';
+	}
+</%init>

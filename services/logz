@@ -1,0 +1,28 @@
+#!/bin/sh
+
+LOGSDIR=`echo "$1" | sed -E 's#/+$##'`
+
+if [ -z "$1" -o \! -d $1 ]; then
+	echo "ERROR: invalid logs directory '$1'"
+	exit 1
+fi
+
+STARTED=`date +%s`
+TODAY=`date -jr $STARTED +%Y/%m/%d`
+COUNT=0
+
+echo -e "\nStarted at "`date -jr $STARTED`
+
+for LOG in `cd $LOGSDIR && find -E ./ -type f									\
+	-regex '^\./[[:digit:]]{4}/[[:digit:]]{2}/[[:digit:]]{2}/[^/]+$' |			\
+	egrep -v '\.gz$' | egrep -v "^\./$TODAY/" | sed -E 's#^\./##' | sort`; do
+	echo "Compressing: $LOGSDIR/$LOG"
+	gzip $LOGSDIR/$LOG
+	echo "    Done"
+	COUNT=$(($COUNT + 1))
+done
+
+find -L $LOGSDIR -type l -exec rm {} \;
+
+FINISHED=`date +%s`
+echo -e "Finished at "`date -jr $FINISHED`", compressed $COUNT logs, elapsed "$(($FINISHED - $STARTED))" seconds"

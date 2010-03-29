@@ -1,0 +1,20 @@
+<% $link %>
+<%ARGS>
+
+	$file=>undef
+
+</%ARGS>
+<%INIT>
+
+	use vars qw($state);
+
+	my $link='';
+	my $filename = $state->{crosslinks_dir}.$file;
+	if(open(F,'<'.$filename))
+	{
+		local($/)=undef;
+		$link=<F>;
+		close F;
+	}
+
+</%INIT>

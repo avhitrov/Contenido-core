@@ -1,0 +1,42 @@
+$VAR1 = {
+          'sections' => {},
+          'colors' => {},
+          'documents' => {
+                           'Contenido::Document::DefaultDocument' => {},
+                         },
+          'links' => {
+                           'Contenido::Link::DefaultLink' => {},
+                         },
+          'sections' => {
+                           'Contenido::Section::DefaultSection' => {},
+                         },
+	  'users' => {
+			   'Contenido::User::DefaultUser' => {},
+	  },
+          'widths' => {},
+          's_alias' => {},
+          'redirects' => {},
+	  'tabs' => {
+                      'admin' => {
+                                   'sections' => [
+							'Contenido::Section::DefaultSection'
+                                                 ],
+                                   'name' => 'Администрирование',
+                                   'id' => 'admin',
+                                   'lefts' => [
+                                                'structure',
+                                                'project'
+                                              ]
+                                 },
+                      'rubricator' => {
+                                        'sections' => [
+                                                        'Contenido::Section::DefaultSection'
+                                                      ],
+                                        'name' => 'Тематический рубрикатор',
+                                        'id' => 'rubricator',
+                                        'lefts' => [
+                                                     'finder'
+                                                   ]
+                                      },
+	  },
+        };

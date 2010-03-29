@@ -1,0 +1,29 @@
+<& "/contenido/components/select.msn",  name => $name.'_day', values => \@days, check => $day &>\
+<& "/contenido/components/select.msn", name => $name.'_month', values => $months, check => $month &>\
+<& "/contenido/components/select.msn", name => $name.'_year', values => \@years, check => $year &> 
+<%ARGS>
+	$name => undef
+	$check => undef
+</%ARGS>
+<%INIT>
+
+	my @localtime = localtime(); $localtime[4]++; $localtime[5] += 1900;
+
+	# Формируем данные для select'а...
+	my @days = map { $_ => $_ } (' ', 1 .. 31);
+	my $months = $m->comp('/contenido/components/get_months.msn'); unshift @$months, ' '; unshift @$months, ' ';
+	my @years = map { $_ => $_ } (' ', 1940 .. $localtime[5] + 5);
+
+	# Устанавалием текущие даты...
+	my ($year,$month,$day);
+	if ($check)
+	{
+		$check =~ /(\d{4})-(\d{1,2})-(\d{1,2})/;
+		($year, $month, $day) = ($1+0, $2+0, $3+0);
+	}
+	else
+	{
+		($day,$month,$year) = (' ', ' ', ' ');
+	}
+</%INIT>
+

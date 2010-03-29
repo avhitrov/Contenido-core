@@ -1,0 +1,102 @@
+<& "/contenido/components/header.msn", title => 'Rmedia' &>
+<div style="width: 100%; height: 200px; padding: 12px;">
+<h1><span style="color: #555">R</span>Media</h1>
+
+
+
+    <form action="" method="POST" name="forma">
+    <textarea rows=12 cols=60 name="text" style="width:100%"><% $textarea_code %></textarea>
+
+    <textarea rows=1 cols=1 name="code" style="visibility:hidden;height:1px;width:1px;"><% $code %></textarea><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td>
+
+
+    <input type="checkbox" name="clearn" id="clearn" <% $checked_clearn%>>
+    <label for="clearn"><b>убрать</b> лишние переводы строк</label><br>
+
+    <input type="checkbox" name="copy" id="copy" <% $checked_copy %> value="1">
+    <label for="copy"><b>копировать</b> результат в буфер обмена</label><br><br>
+
+    <input type="submit" value="Обработать">
+
+    </td><td align="right" valign="top">
+    </td></tr></table>
+
+    </form> 
+
+%   if ($copy){
+    <script language="javascript">
+    <!--
+    document.forma.code.createTextRange().execCommand('Copy')
+    -->
+    </script>
+%   }
+
+<%args>
+
+    $text => undef
+    $copy => undef
+    $clearn => undef
+
+</%args>
+<%init>
+
+    my $arg_code = $text;
+    my $code = $text;
+    my $param_clearn = $clearn;
+    my $textarea_code = $code;
+    my $checked_copy = $copy ? 'checked' : '';
+    my $checked_clearn = $param_clearn? 'checked' : '';     
+
+</%init>
+
+<%perl>
+
+my $initial = $code;
+
+$textarea_code =~ s/&/&amp;/g;
+$textarea_code =~ s/</&lt;/g;
+$textarea_code =~ s/>/&gt;/g;
+$code =~ s/\@{3}/ /g;
+$code =~ s/\xB9/N/g;
+$code =~ s/&#8470;/N/g;
+$code =~ s/\xAE/(r)/g;
+$code =~ s/&#174;/(r)/g;
+$code =~ s/&reg;/(r)/g;
+$code =~ s/\xA9/(c)/g;
+$code =~ s/&#169;/(c)/g;
+$code =~ s/&copy;/(c)/g;
+$code =~ s/\x96/-/g;
+$code =~ s/&#150;/-/g;
+$code =~ s/\x97/-/g;
+$code =~ s/&#151;/-/g;
+$code =~ s/(&laquo;|&raquo;|\xAB|\xBB|\x93|\x94)/"/gi;
+$code =~ s/\xB6//g;
+$code =~ s/\x85/.../g;
+$code =~ s/&#133;/.../g;
+$code =~ s/&hellip;/.../g;
+$code =~ s/&#8230;/.../g;
+$code =~ s/<p[^>]*?>//gi;
+$code =~ s/<\/p>/\r\n\r\n/gi;
+$code =~ s/<br>/\r\n\r\n/gi;
+$code =~ s/\t+/ /g;
+if (!$param_clearn){$code =~ s/\r\n/\r\n\r\n/g;}
+$code =~ s/\r\n *\r\n/\r\n\r\n/g;
+$code =~ s/([^\.\;\:\?\!])\r\n/$1 /g;
+$code =~ s/(\r\n){2,}/\r\n/g;
+$code =~ s/ +/ /g;
+$code =~ s/ \r\n/\r\n/g;
+$code =~ s/\r\n /\r\n/g;
+$code =~ s/ $//g;
+$code =~ s/^/<p>/;
+$code =~ s/\r\n/<\/p>\r\n<p>/g;
+$code =~ s/$/<\/p>/;
+$code =~ s/<p><\/p>\r\n//gi;
+$code =~ s/<p><\/p>//gi;
+$code =~ s/\(c\)/&copy;/gi;
+
+if ($code){
+    print '<b>Результат (plain text):</b>';
+    print '<plaintext>'.$code;
+}
+
+</%perl>

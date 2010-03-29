@@ -1,0 +1,70 @@
+%#<pre><% Dumper(\%ARGS) %></pre>
+<%args>
+
+  $class	=> undef
+  $source_id	=> undef
+  $source_class	=> undef
+  $dest_id	=> undef
+  $dest_class	=> undef
+  $sources	=> undef
+  $destinations	=> undef
+
+</%args>
+<%init>
+
+  abort404	unless $class;
+
+  warn Dumper(\%ARGS);
+
+  my @documents;
+  my $ret_params;
+  if ( $source_id && $source_class ) {
+	my %links;
+	while ( my ($field, $value) = each %ARGS ) {
+		if ( $field =~ /dest_id_(\d+)/ ) {
+			$links{$1}{id} = $value;
+		} elsif ( $field =~ /dest_class_(\d+)/ ) {
+			$links{$1}{class} = $value;
+		}
+	}
+	warn Dumper (\%links);
+	foreach my $doc ( values %links ) {
+		my $link = $class->new ($keeper);
+		$link->source_id ($source_id);
+		$link->source_class ($source_class);
+		$link->dest_id ($doc->{id});
+		$link->dest_class ($doc->{class});
+		$link->status(1);
+		$link->store;
+	}
+	$ret_params = "id=$source_id&class=$source_class";
+  } elsif ( $dest_id && $dest_class ) {
+	my %links;
+	while ( my ($field, $value) = each %ARGS ) {
+		if ( $field =~ /source_id_(\d+)/ ) {
+			$links{$1}{id} = $value;
+		} elsif ( $field =~ /source_class_(\d+)/ ) {
+			$links{$1}{class} = $value;
+		}
+	}
+	foreach my $doc ( values %links ) {
+		my $link = $class->new ($keeper);
+		$link->dest_id ($dest_id);
+		$link->dest_class ($dest_class);
+		$link->source_id ($doc->{id});
+		$link->source_class ($doc->{class});
+		$link->status(1);
+		$link->store;
+	}
+	$ret_params = "id=$dest_id&class=$dest_class";
+  }
+  if ($ret_params) {
+	$r->header_out("Location", "/contenido/document.html?".$ret_params);
+	$r->status(302);
+	$r->send_http_header();
+	$m->abort();
+  }else{
+	abort404;
+  }
+
+</%init>

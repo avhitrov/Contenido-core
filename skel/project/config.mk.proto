@@ -1,0 +1,60 @@
+##############################################################################
+# $HeadURL$
+# $Id$
+###############################################################################
+
+# Main
+PROJECT_NAME =			@NAME@
+
+# Database related
+BASE_HOST =			localhost
+PGSQL_PORT =			5432
+PGSQL_BASE =			@NAME@
+BASE_USER =			@NAME@
+BASE_PASSWD =
+
+# Custom Apache handler
+#DEFAULT_HANDLER =		HTML::Mason::ApacheHandler
+
+# sample how to add required modules to project
+# PROJECT_REQUIRED +=		P-WebFetcher
+
+# sample how to setup rsync for static data
+# RSYNC_DIRS =			i www/css
+# RSYNC_SERVERS =		sample.server.ru::rsync_key
+
+# sample how to add more rewrite values
+# URI = /news
+# REWRITE += URI
+
+# pregenerate static on demand
+# PREGEN_GLOB =		 	state
+# PREGEN_LIST =		 	www/css/*.css
+
+ifeq (${DEVELOPMENT}, YES)
+
+MIN_SPARE_SERVERS =		1
+MAX_SPARE_SERVERS =		1
+START_SERVERS =		 	1
+MAX_CLIENTS =			1
+
+# Mason caching off
+MASON_CACHE_ENABLED =		NO
+
+else
+
+#увеличить если ожидается большая нагрузка или тормоза на базе
+MIN_SPARE_SERVERS =		1
+MAX_SPARE_SERVERS =		1
+START_SERVERS =		 	1
+MAX_CLIENTS =			1
+
+# Preload all stuff
+# предзагрузка всего при старте (экономия памяти и syntax check при старте)
+# PRELOADS = /components/*.msn /www/*.html /www/*/*.msn /www/*/*/*.msn /www/*/*.html
+
+# не проверять обновление кода при работе
+# STATIC_SOURCE_ENABLE =	YES
+
+endif
+

@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+#############################################
+# convert old rewrite patterns ( like @FOO@ )
+# to mtt-compatible syntax
+# (keeping @@BAR@@ samples)
+#############################################
+
+use strict;
+use warnings 'all';
+
+
+while (<>) {
+	s/(?<!\@)\@([^\s\@]+?)\@/<% \$$1 %>/g;
+	print;
+}

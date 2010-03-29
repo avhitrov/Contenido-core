@@ -1,0 +1,86 @@
+<%args>
+
+	$name => undef
+	$check => undef
+
+</%args>
+<%init>
+
+	my $VALUES = eval ('use vars qw($VAR1); '.$check);
+
+	my $LAST = 0;
+	$m->out('<table border="0" cellpadding="5" cellspacing="0">');
+	$m->out('<tr><th valign="top">Идентификатор</th><th>Русскоязычное имя поля<br><font color="gray">(то, что будет видно пользователю рядом с select)</font></th>');
+	$m->out('<th valign="top">Значения в выпадающем списке</th></tr>');
+
+	if ((defined $VALUES) && (ref($VALUES) eq 'HASH'))
+	{
+		for my $key (sort (keys(%{ $VALUES })))
+		{
+			my $attr = $key;
+			my $rusname = $VALUES->{$attr}->{rusname};
+			my $values = $VALUES->{$attr}->{values};
+
+			next	if (!defined($rusname) || !$rusname);
+			if ($attr =~ /^${name}_(\d+)$/)
+			{
+				$LAST = $1;
+			}
+			$m->out( $m->scomp( '.one_field.msn', attr => $attr, rusname => $rusname, values => $values ) );
+		}
+	}
+	for (($LAST+1)..($LAST+5))
+	{
+		my $attr = $name.'_'.$_;
+		$m->out( $m->scomp( '.one_field.msn', attr => $attr ) );
+	}
+
+	$m->out('</table>');
+
+</%init>
+<%def .one_field.msn>
+<!-- Одно поле -->
+
+<tr>
+
+<td width="20%" valign="top" style="font-size:80%; font-family:Tahoma;">
+<% $attr %>
+</td>
+
+<td width="30%" valign="top" style="font-size:80%; font-family:Tahoma;">
+<input name="<% $attr %>.selectrusname" type="text" value="<% $rusname %>" size="30">
+</td>
+
+<td>
+<textarea style="font-size:8pt;font-family:Tahoma;" rows=4 cols=60 name="<% $attr %>.selectdata" nowrap>\
+%		if ($values && (ref($values) eq 'ARRAY')) {
+<% join("\n", @{ $values } ) %>\
+%		}
+</textarea>
+</td>
+
+</tr>
+
+<%args>
+
+	$attr => undef
+	$rusname => undef
+	$values => []
+
+</%args>
+<%init>
+
+	return	undef		if (! defined($attr));
+
+</%init>
+</%def>
+<%doc>
+
+	Дополнительные поля в виде select'а. Каждое поле характеризуется следующими данными:
+		attr - уникальный ключ
+		rusname - русское название
+		values - значения (вводятся с помощью textbox)
+
+	Все это хранится в хэше...
+
+</%doc>

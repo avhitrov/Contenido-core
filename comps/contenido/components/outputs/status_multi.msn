@@ -1,0 +1,35 @@
+<%args>
+	$object
+	$name => undef
+	$SETS => undef
+</%args>
+<%init>
+
+	return undef unless ref $SETS;
+	return undef unless $name;
+
+	my @props = $object->structure();
+	my ($prop) = grep { $_->{attr} eq $name } @props;
+	return undef	unless ref $prop;
+
+	my @values = exists $prop->{values} && ref $prop->{values} eq 'ARRAY' ? @{ $prop->{values} } :
+			exists $prop->{cases} && ref $prop->{cases} eq 'ARRAY' ? @{ $prop->{cases} } : ();
+
+	return undef	unless @values;
+
+	my @ids;
+	foreach my $val ( @values ) {
+		if ( ref $val eq 'ARRAY' && scalar @$val == 2 ) {
+			if ( exists $SETS->{$name."_".$val->[0]} && $SETS->{$name."_".$val->[0]} ) {
+				push @ids, $val->[0];
+			}
+		} else {
+			if ( exists $SETS->{$name."_".$val} && $SETS->{$name."_".$val} ) {
+				push @ids, $val;
+			}
+		}
+	}
+
+	return \@ids;
+
+</%init>

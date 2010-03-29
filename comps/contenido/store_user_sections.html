@@ -1,0 +1,37 @@
+<%args>
+
+	$login => undef
+
+</%args>
+<%init>
+	unless ($user->check_group(1))
+	{
+		$m->clear_buffer;
+		$m->abort(403);
+	}
+	my $luser;
+	if ($login)
+	{
+		$luser = $keeper->get_user_by_login($login);
+
+		my %sections = ();
+		foreach my $name (keys %ARGS)
+		{
+			if ($name =~ /^section_(\d+)$/)
+			{
+				$sections{$1} = 1;
+			}
+		}
+		my @sections_in_order = ();
+		push (@sections_in_order, keys(%sections));
+
+		# Хитрый финт ушами - ибо через метод пустой выбор прав не сохраняется...
+		$luser->{groups} = [@sections_in_order];
+		$luser->store();
+
+		$r->header_out("Location", "users.html?login=$login");
+		$r->status(302);
+		$r->send_http_header();
+		$m->abort();
+	}
+</%init>

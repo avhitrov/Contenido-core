@@ -1,0 +1,78 @@
+<& "/contenido/components/header.msn", title => 'Редактирование профилей' &>
+
+<br>
+<table border="0" style="font-size:85%;" width="80%">
+<tr>
+<td width="10"></td>
+<td>
+<div style="font-size:130%;">Редактирование профилей</div>
+Профиль представляет из себя некий именованный набор из секций, доступных к редактированию обладателю данного профиля и различных возможностей редакторского интерфейса. Таким образом выделяются тематические блоки, например, административный, редакторский, пользовательский и т.д.
+<p>Каждый пользователь имеет доступ к заданному числу профилей. Так и осуществляется разделяемый доступ.
+</td>
+</tr>
+
+<tr><td height="20"></td></tr>
+
+<tr><td></td><td> 
+<& "/contenido/components/exists_tabs.msn" &>
+</td></tr>
+
+<tr><td></td><td>
+<& "/contenido/components/new_tab_form.msn" &>
+</td></tr>
+
+<tr><td></td><td>
+<& "/contenido/components/tab_form.msn", tab=>$tab &>
+</td></tr>
+
+</table>
+
+</body>
+</html>
+
+<%ARGS>
+
+	$save => undef
+
+	$id	=> undef
+	$name	=> undef
+	$level	=> 3
+	$sections => undef
+	$lefts	=> undef
+
+</%ARGS>
+<%INIT>
+
+	use vars qw($keeper $request);
+
+	my $toopi = $project->tabs();
+	my $tab = {};
+	if ($id && (length($id) > 0) && (exists($toopi->{$id})) )
+	{
+		$tab = $toopi->{$id};
+	} elsif ($id && (length($id) > 0) )
+	{
+		$tab->{id} = $id;
+	};
+
+	if ( $save && $id && (length($id) > 0))
+	{
+        $request->{local_codepage} = 'UTF8';
+        $request->{local_codepage} = 'WIN' if Convert::Cyrillic::cstocs('WIN', 'UTF8', $ARGS{control_charset}) eq 'Контроль';
+        $request->{local_codepage} = 'KOI8' if Convert::Cyrillic::cstocs('KOI8', 'UTF8', $ARGS{control_charset}) eq 'Контроль';
+		warn "Contenido Debug: Форма для редактирования описания объекта пришла в кодировке ".$request->{local_codepage}."\n"		if ($state->debug());
+
+		$tab->{id} = $id;
+		$tab->{name} = $m->comp('/contenido/components/filter.msn', str => $name);
+		$tab->{level} = $level;
+		$tab->{sections} = (ref($sections) ? $sections : [$sections]);
+		$tab->{lefts} = (ref($lefts) ? $lefts : [$lefts]);
+		$toopi->{$id} = $tab;
+
+		$project->tabs($toopi);
+		$project->store($keeper);
+
+		$m->redirect('tabs.html');
+	}
+
+</%INIT>

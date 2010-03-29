@@ -1,0 +1,56 @@
+#!/usr/bin/perl
+
+##############################################################################
+# $HeadURL: svn://cvs1.rambler.ru/cndinst/trunk/skel/GNUmakefile $
+# $Id: GNUmakefile 47 2006-06-08 08:45:46Z lonerr $
+###############################################################################
+
+use strict;
+use warnings "all";
+
+my ($proj_src, $proj_usr, $proj_name, $pregen_glob);
+
+use FindBin;
+BEGIN {
+	($proj_src, $proj_usr, $proj_name, $pregen_glob) = splice @ARGV, 0, 4;
+	exit unless @ARGV;
+	require "$proj_usr/$proj_name/lib/Modules.pm";
+}
+
+use locale;
+use Data::Dumper;
+use Contenido::Globals;
+use Contenido::Init;
+use HTML::Mason;
+
+
+my %pregen_glob = map {$_=>1} split / /, $pregen_glob;
+
+Contenido::Init->init();
+$keeper = Contenido::Keeper->new($state) if $pregen_glob{keeper};
+
+my $buf;
+my $interp = HTML::Mason::Interp->new(
+	autohandler_name => '',
+	comp_root        => "$proj_src/$proj_name/comps",
+	out_method       => \$buf,
+);
+
+{
+	$interp->compiler->allow_globals(map {"\$$_"} keys %pregen_glob);
+	no strict "refs";
+	$interp->set_global("\$$_" => $$_) for keys %pregen_glob;
+}
+
+for my $set (map {"$proj_src/$proj_name/comps/$_"} @ARGV) {
+	for (glob $set) {
+		die "No such static: $_\n" unless -f;
+		s|$proj_src/$proj_name/comps/*|/|;
+		$buf = '';
+		$interp->exec($_);
+		open ST, ">$proj_usr/$proj_name/comps$_" or die $!;
+		print ST $buf;
+		close ST;
+		print "created  $proj_usr/$proj_name/comps$_\n";
+	}
+}

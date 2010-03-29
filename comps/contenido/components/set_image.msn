@@ -1,0 +1,100 @@
+<%args>
+
+$SETS => undef
+$field => undef
+$default => undef
+$object => undef
+$prop => undef
+
+</%args>
+
+<%init>
+use IO::File;
+use Data::Dumper;
+
+return undef unless defined $SETS and defined $field;
+
+# --------------------------------------------------------------------------------------
+# Добавление одной картинки
+
+my $IMAGE = $default;
+
+if ($SETS->{$field}) {
+
+    my $preview = $prop->{'preview'} || $keeper->{'preview'};
+    my @preview = ref $preview && ref $preview eq 'ARRAY' ? @{$preview} : ref $preview ? ($keeper->{'preview'}) : ($preview);
+
+    if (ref $IMAGE eq 'HASH') {
+        foreach my $suffix (@preview) {
+            Contenido::File::remove(${$IMAGE->{mini}}{$suffix}->{'filename'}) if ${$IMAGE->{mini}}{$suffix} and ${$IMAGE->{mini}}{$suffix}->{'filename'};
+        }
+    }
+
+    my $filename = '/images/'.$object->get_file_name() || return;
+    my $filename_tmp = $state->{'tmp_dir'}.'/'.join('_', split('/', $filename));
+
+    my $upload = $r->upload($field);
+    if ($upload) {
+        my $extension = $upload->filename() =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
+        my $fh = $upload->fh();
+        my $size = (stat $fh)[7];
+    
+        my $fh_tmp = IO::File->new('>'.$filename_tmp.'.'.$extension) || die 'Can\'t open temporary file';
+    
+        my $buffer;
+    
+        sysread $fh, $buffer, $size;
+        syswrite $fh_tmp, $buffer, $size;
+    
+        undef $fh_tmp;
+    
+        if (Contenido::File::store($filename.'.'.$extension, $filename_tmp.'.'.$extension)) {
+            if (ref $IMAGE eq 'HASH' and $IMAGE->{'filename'}) {
+                Contenido::File::remove($IMAGE->{'filename'});
+            }
+    
+            # hashref slice assigning - жжесть
+            @{$IMAGE}{'filename', 'width', 'height'} = (
+                $filename.'.'.$extension,
+                Image::Size::imgsize($filename_tmp.'.'.$extension),
+            );
+            foreach my $suffix (@preview) {
+                
+                my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'\' -quality 80 '.$filename_tmp.'.'.$extension.' '.$filename_tmp.'.'.$suffix.'.'.$extension;
+                my $result = `$c_line`;
+        
+                if (length $result > 0) {
+                    warn 'Contenido Error: При вызове "'.$c_line.'" произошла ошибка "'.$result.'" ('.$@.")\n";
+                    return undef;
+                }
+                @{$IMAGE->{'mini'}{$suffix}}{'filename', 'width', 'height'} = (
+                    $filename.'.'.$suffix.'.'.$extension,
+                    Image::Size::imgsize($filename_tmp.'.'.$suffix.'.'.$extension),
+                );
+                Contenido::File::store($filename.'.'.$suffix.'.'.$extension, $filename_tmp.'.'.$suffix.'.'.$extension);
+            }
+            @{$IMAGE->{'mini'}}{'filename', 'width', 'height'} = @{$IMAGE->{'mini'}{$preview[0]}}{'filename', 'width', 'height'};
+        }
+    
+        unlink $filename_tmp.'.'.$extension if -e $filename_tmp.'.'.$extension;
+        foreach my $suffix (@preview) {    
+            unlink $filename_tmp.'.'.$suffix.'.'.$extension if -e $filename_tmp.'.'.$suffix.'.'.$extension;
+        }
+    } else {
+        warn 'ERROR in incoming POST form: "'.$field.' is not file upload (value: "'.$SETS->{$field}.'")';
+    }
+}
+
+# Дополнительные поля - берем все, что найдем...
+
+my $pattern = "^".$field.q|\.(.*)$|;
+
+foreach my $localfield (keys(%{ $SETS })) {
+    if ($localfield =~ /$pattern/) {
+        my $imagefield = $1;
+        $IMAGE->{$imagefield} = $m->comp("/contenido/components/filter.msn", str => $SETS->{$localfield});
+    }
+}
+
+return $IMAGE;
+</%init>

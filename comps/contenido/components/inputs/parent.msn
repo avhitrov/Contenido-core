@@ -1,0 +1,57 @@
+<select name="<% $name %>" class="selects">
+%	select_index_tree( $root_sect, 0, $level, $check, $CACHE );
+</select>
+
+<%args>
+
+	$name => undef
+	$check => undef
+
+	$root => 1
+	$level => 15
+
+</%args>
+<%init>
+	sub select_index_tree
+	{
+		use locale;
+		my ($sect, $offset, $count_offset, $selected, $CACHE) = @_;
+
+		my $spacer = '';
+		for(my $c=0; $c<$offset; $c++)
+		{
+			$spacer = $spacer.(($c == $offset-1) ? '&nbsp;&nbsp;&nbsp;>>&nbsp;&nbsp;&nbsp;' : '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+		}
+		if( $sect->id() )
+		{
+			$m->out('<option value="'.$sect->id.'" '.(($selected == $sect->id) ? ' selected' : '').'>'.$spacer.$sect->name.'</option>');
+		}
+		elsif( $sect->id() && $sect->id() == 1 )
+		{
+			
+			$m->out('<option style="background-color:#606060;color:#ffffff;" value="'.$sect->id.'" '.(($selected == $sect->id) ? ' selected' : '').'>'.$sect->name.'</option>');
+		}
+		my @childs = $sect->childs();
+		if( @childs && $offset < $count_offset )
+		{
+			$offset++;
+			foreach my $child_id (@childs)
+			{
+				my $child = $CACHE->{$child_id};
+				select_index_tree( $child, $offset, $count_offset, $selected, $CACHE);
+			}
+			$offset--;
+		}
+	}
+
+
+	my $CACHE = {};
+	my @cacher = $keeper->get_sections( light => 1 );
+	for my $c (@cacher)
+	{
+		$CACHE->{$c->id()} = $c;
+	}
+
+	my $root_sect = $CACHE->{$root} || $CACHE->{1};
+
+</%init>

@@ -1,0 +1,58 @@
+<% $body %>
+<%args>
+
+	$doc	=> undef
+	$field	=> 'body'
+	$text	=> undef
+	$imagefield	=> 'pictures'
+	$imageclass	=> ''
+	$rel		=> undef
+	$target		=> undef
+	$onclick	=> undef
+
+</%args>
+<%init>
+
+  return	unless ref $doc || $text;
+  use locale;
+  my $body = $text || $doc->$field;
+  $body =~ s/\r//sgi;
+  $body =~ s/[\n\t\ ]*$//sgi;
+  if ($body !~ /(<br|<p)/i) {
+        $body =~ s/([^\n])\n([^\n])/$1<br>\n$2/gi;
+        $body =~ s/\n{2,}/<\/p>\n\n<p>/gi;
+  }
+  $body =~ s/\[br\]/<br>/gi;
+  if ( ref $doc ) {
+	my $iclass = $imageclass ? ' class="'.$imageclass.'"' : '';
+	while ( $body =~ /\[%\ *(\w+)\ *%\]/gi ){
+		my $img_id = $1;
+		my $images = $doc->get_image($img_id);
+		if ( !(ref $images && exists $images->{filename} ) && $img_id =~ /^([a-z]+)_(\d+)$/i ) {
+			my $iid = $2;
+			$images = $doc->get_image($1);
+			$images = exists $images->{"image_$iid"} ? $images->{"image_$iid"} : undef;
+		}
+		if ( !(ref $images && exists $images->{filename}) && $imagefield && $img_id =~ /^$imagefield\_(\d+)$/ ) {
+			$images = $doc->get_image($imagefield);
+			my $iid = $img_id;
+			$iid =~ s/$imagefield/image/;
+			$images = exists $images->{$iid} ? $images->{$iid} : undef;
+		}
+		my $IMG = '';
+		if ( ref $images && exists $images->{filename} ) {
+			if ( $rel || $target || $onclick ) {
+				my ($a1,$a2) = defined $rel ? ('<a href="'.$images->{filename}.'" target="_blank" rel="'.$rel.'">','</a>') 
+						: defined $onclick ? ('<a href="'.$images->{filename}.'" target="_blank" onclick="'.$onclick.'(\''.$images->{filename}.'\')">','</a>')
+						: defined $target ? ('<a href="'.$images->{filename}.'" target="'.$target.'">','</a>')
+						: ('','');
+				$IMG = $a1.'<img src="'.$images->{mini}{filename}.'" width="'.$images->{mini}{width}.'" height="'.$images->{mini}{height}.'" border="0"'.$iclass.'>'.$a2;
+			} else {
+				$IMG = '<img src="'.$images->{filename}.'" width="'.$images->{width}.'" height="'.$images->{height}.'" border="0"'.$iclass.'>';
+			}
+			$body =~ s/\[%\ *$img_id\ *%\]/$IMG/si;
+		}
+	}
+  }
+
+</%init>

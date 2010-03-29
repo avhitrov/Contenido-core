@@ -1,0 +1,30 @@
+<%ARGS>
+
+	$menu => 1
+
+</%ARGS>
+<%INIT>
+
+	use vars qw($keeper);
+
+	my $MENU = [];
+	my $root = Contenido::Section->new($keeper,1);
+
+	my @childs = $root->childs();
+	for (0..$#childs)
+	{
+		my $cid = $childs[$_];
+		my $child = Contenido::Section->new($keeper,$cid);
+		if ($child->menu_A && ($menu == 1))
+		{
+			push (@{ $MENU }, $child);
+		};
+		if ($child->menu_B && ($menu == 2))
+		{
+			push (@{ $MENU }, $child);
+		};
+	}
+
+	return $MENU;
+
+</%INIT>

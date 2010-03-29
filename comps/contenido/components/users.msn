@@ -1,0 +1,32 @@
+<fieldset>
+    <legend>Пользователи редакторского интерфейса</legend>
+    <style>
+        ul.listtypes {margin:0 0 0 20px; padding:0 0 0 1.5em;}
+        ul.listtypes li {list-style-image:url(/contenido/i/nav-2-a.gif)}
+        ul.listtypes li.active, ul.listtypes li.unactive {list-style-image:url(/contenido/i/nav-2.gif)}
+        ul.listtypes li.unactive a {color:gray}
+    </style>
+
+    <ul class="listtypes" style="font-size:70%;font-family:Tahoma;text-align:left;">
+%   for my $u (sort { $a->name cmp $b->name } @users) {
+        <li class="<% $u->status == 0 ? 'un' : '' %>active"><a href="users.html?login=<% $u->login() %>&class=<% $u->class() %>"><% $u->name() %> (<% $u->login() %>)</a>
+%   }
+    </ul>
+
+    <table cellspacing="2" cellpadding="0" border="0" class="tform">
+        <tr><td height="5"></td></tr>
+        <tr><td colspan="2"><b><a href="users.html?class=">Новый пользователь &raquo;</a></b></td></tr>
+        <tr><td height="5"></td></tr>
+    </table>
+</fieldset>
+
+<%once>
+    use locale;
+</%once>
+
+<%init>
+    return unless ref $user;
+    return unless $user->check_group(1);
+
+    my @users = $keeper->_get_users();
+</%init>

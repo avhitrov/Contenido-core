@@ -1,0 +1,6 @@
+<textarea <% $prop->{readonly} ? 'readonly ' : '' %>name="<% $name %>" rows="<% $prop->{rows} || 8 %>" cols="<% $prop->{cols} || 8 %>" style="width:95%;font-family:arial;font-size:9pt;"><% $check %></textarea>
+<%args>
+	$name => undef
+	$check => undef
+	$prop => {}
+</%args>

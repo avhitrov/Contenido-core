@@ -1,0 +1,29 @@
+package @NAME@::SampleCustomDocument;
+
+use strict;
+
+use @NAME@::SQL::SampleTable;
+use base 'Contenido::Document';
+
+sub extra_properties
+{
+	return (
+	)
+}
+
+sub class_name
+{
+	return 'Элемент расписания';
+}
+
+sub class_description
+{
+	return 'Элемент расписания';
+}
+
+sub class_table
+{
+	return '@NAME@::SQL::SampleTable';
+}
+
+1;

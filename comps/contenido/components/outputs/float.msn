@@ -1,0 +1,12 @@
+<%args>
+	$object => undef
+	$name => undef
+	$SETS => undef
+</%args>
+<%init>
+    return undef unless ref $SETS;
+    return undef unless $name;
+
+    return undef if $SETS->{$name} eq '';
+    return $SETS->{$name};
+</%init>

@@ -1,0 +1,22 @@
+% if (@call)
+% {
+<& @call &>
+% }
+<%INIT>
+
+	use vars qw( $keeper $request $project );
+	$r->content_type('text/html');
+
+	my @path = split('/', $m->dhandler_arg());
+	my @call = ();
+
+	if (length($path[0]) < 1) { $path[0] = 'index.html' };
+	@call = (join('/',@path), %ARGS);
+
+	if (! $m->comp_exists($call[0]))
+	{
+		$m->clear_buffer();
+		$m->abort(404);
+	}
+
+</%INIT>

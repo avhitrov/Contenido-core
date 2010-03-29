@@ -1,0 +1,18 @@
+<%ONCE>
+	use Contenido::Captcha;
+</%ONCE>
+
+<%ARGS>
+	$cid => undef;
+</%ARGS>
+
+<%INIT>
+	$m->clear_and_abort(404) unless $cid;
+
+	my $captcha = Contenido::Captcha->new($keeper);
+	my $img = $captcha->create_image($cid);
+	$m->clear_and_abort(404) unless $img;
+
+	$r->content_type('image/png');
+	return $m->out($$img);
+</%INIT>

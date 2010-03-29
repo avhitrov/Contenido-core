@@ -1,0 +1,20 @@
+########################################################
+# Here you can place project specific apache directives.
+# This file will be included into core httpd.conf, after
+# core directives.
+########################################################
+
+# Локальное хранение файлов
+#Alias	/images			@IMAGES@
+#Alias	/binary			@BINARY@
+
+# Удаленное хранение файлов
+#RewriteEngine			on
+#RewriteRule   ^/images/(.*)	@IMAGES@/$1
+#RewriteRule   ^/binary/(.*)	@BINARY@/$1
+
+# Бывает нужно, если инсталляция сделана в symlink каталоге.
+# Например: /home => /usr/home
+<Directory />
+	Options FollowSymLinks
+</Directory>

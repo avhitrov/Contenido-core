@@ -1,0 +1,53 @@
+<% spacer(h=>5) %>
+<form action="store_document_links.html" method="POST">
+<table bgcolor="silver" cellpadding="0" cellspacing="1" width="100%">
+<tr>
+<th>Удалить</th>
+<th>Документ</th>
+<th>Связь</th>
+</tr>
+% my $i = 0;
+% foreach my $link ( @$links ) {
+%	my $doc = ref $destination ? $docs->{$link->source_id} : $docs->{$link->dest_id};
+<tr bgcolor="<% $i++ % 2 ? 'white' : '#f0f0f0' %>">
+%	if ( ref $doc ) {
+%		my $style = $link->status ? '' : ' color:#606060;';
+<td><input type="checkbox" name="links" value="link_<% $link->id %>_<% $doc->id %>_<% $link->class %>"></td>
+<td><a href="document.html?class=<% $doc->class %>&id=<% $doc->id %>" target="_blank" style="<% $style %>"><% $doc->name %></a></td>
+%	} else {
+<td><input type="checkbox" name="links" value="link_<% $link->id %>_<% ref $destination ? $link->source_id : $link->dest_id %>_<% $link->class %>"></td>
+<td><% ref $doc ? $doc->name : '!!!висячая связь!!!' %></td>
+%	}
+<td><a href="link.html?class=<% $link->class %>&id=<% $link->id %>" target="_blank">редактировать</a></td>
+</tr>
+% }
+</table>
+% if ( @$links ) {
+<div style="padding:2px; text-align:right">
+<input type="hidden" name="id" value="<% $document->id %>">
+<input type="hidden" name="class" value="<% $document->class %>">
+%	if ( ref $destination ) {
+<input type="hidden" name="source_class" value="<% $links->[0]->class %>">
+%	} else {
+<input type="hidden" name="dest_class" value="<% $links->[0]->class %>">
+%	}
+<input type="submit" value="Удалить выбранные связи документа" class="input_btn"></div>
+% }
+</form>
+<%args>
+
+	$links	=> undef
+	$docs	=> undef
+	$destination	=> undef
+	$source		=> undef
+
+</%args>
+<%init>
+
+  return	if !ref $destination && !ref $source;
+  return	unless ref $docs;
+  return	unless ref $links eq 'ARRAY' && @$links;
+
+  my $document = $destination || $source;
+
+</%init>

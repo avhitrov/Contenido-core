@@ -1,0 +1,24 @@
+package @NAME@::SampleDefaultDocument;
+
+use base 'Contenido::Document';
+
+sub extra_properties
+{
+        return (
+		{ 'attr' => 'body',	'type' => 'text',	'rusname' => 'Тело статьи' },
+		{ 'attr' => 'images',	'type' => 'images',	'rusname' => 'Картинки' },
+	)
+}
+
+sub class_name
+{
+	return 'Простой документ';
+}
+
+sub class_description
+{
+	return 'Самый простой класс. Предназначен для создания самых простых документов (текст и картинки). Является классом, используемым по умолчанию.';
+}
+
+
+1;

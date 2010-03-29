@@ -1,0 +1,71 @@
+% foreach my $cls ( @$lclasses ) {
+<div class="pad_<% $class eq $cls ? 'active' : 'passive' %>">
+%	if ( $class eq $cls ) {
+<nowrap><% $cls->class_name |h %></nowrap>
+%	} else {
+<nowrap><a href="?id=<% $document->id %>&class=<% $document->class %>&link_class=<% $cls %>"><% $cls->class_name %></a></nowrap>
+%	}
+</div>
+% }
+<br clear="all">
+<div style="padding:4px 0 2px;"><a target="_top"
+ href="link_frame.html?class=<% $class %>&<% $link_class_name %>=<% $document->class %>&<% $link_id_name %>=<% $document->id %>"><b>Добавить связь</b></a></div>
+% if ( $total > $size ) {
+<div style="padding:2px 0 4px;"><b>Страницы:</b> &nbsp;<&
+	'/inc/pages_.msn', total => $total, n => $size, p => $p,
+	params => { id => $document->id,  class => $document->class, link_class => $class },
+ &></div>
+% }
+<& /contenido/components/document_links_list.msn, 
+	links => $links, docs => $docs, $link_id_name eq 'dest_id' ? (destination => $document) : (source => $document) &>
+<%args>
+
+	$document	=> undef
+	$lclasses	=> undef
+	$class		=> undef
+	$p		=> 1
+	$opts		=> {}
+	$link_id_name	=> 'dest_id'
+	$link_class_name=> 'dest_class'
+
+</%args>
+<%init>
+
+  return	unless ref $document;
+  return	unless ref $lclasses eq 'ARRAY' && @$lclasses;
+  $class ||= $lclasses->[0];
+
+  my $size = 20;
+  my $revert_id = $link_id_name eq 'dest_id' ? 'source_id' : 'dest_id';
+  my $revert_class = $link_class_name eq 'dest_class' ? 'source_class' : 'dest_class';
+  $opts->{order_by} ||= 'id desc';
+  my $links = $keeper->get_links (
+		class	=> $class,
+		$link_id_name	=> $document->id,
+		$link_class_name	=> $document->class,
+		limit	=> $size,
+		offset	=> $size*($p-1),
+		%$opts,
+		return_mode	=> 'array_ref',
+	);
+  my $total = $keeper->get_links (
+		class	=> $class,
+		$link_id_name	=> $document->id,
+		$link_class_name	=> $document->class,
+		count	=> 1,
+		%$opts,
+	);
+  my $docs = {};
+  my %dclasses = map { $_->$revert_class => 1 } @$links		if ref $links eq 'ARRAY';
+  my @dclasses = keys %dclasses;
+  foreach my $cls ( @dclasses ) {
+	my %sids = map { $_->$revert_id => 1 } @$links		if ref $links eq 'ARRAY';
+	my @sids = keys %sids;
+	my @docs = $keeper->get_documents (
+			id	=> \@sids,
+			class	=> $cls,
+		)						if @sids;
+	map { $docs->{$_->id} = $_ } @docs;
+  }
+
+</%init>

@@ -1,0 +1,247 @@
+<script type="text/javascript">
+<!--
+var aIDs = new Array (<% scalar @$documents ? join (',', map { $_->id } @$documents) : '' %>); 
+function delete_check () {
+   for ( var i = 0; i < aIDs.length; i++ ) {
+	var sFieldName = 'delete_' + aIDs[i] + '_id';
+	var oField = document.forms['section_browse'].elements[sFieldName];
+	if ( oField.checked ) {
+		oField.checked = 0;
+	} else {
+		oField.checked = 1;
+	}
+   }
+}
+//-->
+</script>
+<form name="section_browse" action="sections.html" method="POST">
+<table width="100%" border="0" cellpadding="4" cellspacing="0" class="tlistdocs">
+<tr bgcolor="#efefef">
+<th><a href="javascript:delete_check()" onclick="delete_check(); return false;"><img src="/contenido/i/actions/delete.gif" width="14" height="17" alt="Удаление документов" align="absmiddle" border="0" hspace="1"></a></th>
+%
+%	foreach (@$columns) {
+<th><% $_->{shortname} || $_->{rusname} %></th>
+%	}
+%
+</tr>
+%
+%		unless (@$documents) {
+<tr><td align="center" colspan="<% scalar @$columns %>">Документы не найдены</td></tr>
+%		}
+%		foreach my $document (@$documents) {
+%
+%			next unless ref($document);
+%			my $document_access = $user->section_accesses($user, $document->section);
+%
+<tr valign="top">
+<td nowrap>\
+%			if ($document_access == 2) {
+%				$delete_status = 1;
+<input type="checkbox" name="<% 'delete_'.$document->id.'_id' %>">
+%			} else {
+&nbsp;
+%			}
+</td>
+%
+%			for my $col (@$columns) {
+%				if ($col->{attr} eq '_sort_') {
+%
+<td width="20px"><% $document->{sorder} %>&nbsp;<a
+ href="document_move.html?id=<% $document->{id} %>&move=up&s=<% $id %><% $params_unsection ? '&'.$params_unsection : '' %>"><img
+ src="/contenido/i/ico-up-9x10.gif" border=0 alt="Переместить документ на шаг вверх"></a>&nbsp;<a
+ href="document_move.html?id=<% $document->{id} %>&move=down&s=<% $id %><% $params_unsection ? '&'.$params_unsection : '' %>"><img
+ src="/contenido/i/ico-down-9x10.gif" border=0 alt="Переместить документ на шаг вниз"></a>\
+%
+%				} elsif ($col->{attr} eq 'dtime') {
+%
+<td nowrap><& "/contenido/components/show_dtime.msn", dtime=>$document->{dtime} &>\
+%
+%					if ($document->{ctime} ne $document->{mtime}) {
+%						my $colortime = '#c66';
+%
+<div style="color:<% $colortime %>;"><& "/contenido/components/show_dtime.msn", dtime=>$document->{mtime} &></div>\
+%
+%					}
+%
+%				} elsif ($col->{attr} eq 'name') {
+%
+<td><span<% $document->contenido_status_style ? ' style="' . $document->contenido_status_style . '"' : '' %> class="<% $document->status ? '':'hiddensect' %>">\
+%
+%					my $name=$document->name ? $document->name : 'Безымянный документ N'.$document->id;
+%					if ($document_access == 2) {
+%
+<a<% $document->contenido_status_style ? ' style="' . $document->contenido_status_style . '"' : '' %> href="document.html?id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>"><% $name | h %>&nbsp;</a>\
+%
+%					} else {
+%
+<% $name | h %>&nbsp;\
+%
+%					}
+%
+</span>\
+%
+%				} elsif ($col->{attr} eq 'id') {
+%
+<td><span class="<% $document->status ? '':'hiddensect' %>">\
+%					if ($document_access == 2) {
+<a href="document.html?id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>"><% $document->id %>&nbsp;</a>\
+%					} else {
+<% $document->id %>&nbsp;\
+%					}
+</span>\
+%
+%				} elsif ( exists $col->{inline} && $col->{inline} ) {
+%					$inline_status = 1;
+%					my $attr = $col->{attr};
+%					if ( $col->{type} =~ /^(string|integer|float)$/ && $col->{inline} ) {
+%						my $style = $col->{inline_style} ? $col->{inline_style} : ($col->{type} =~ /^(integer|float)$/ ? 'text-align:right; ' : '' );
+<td><input type="text" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : 'width:65px; ' %> <% $col->{inline_style} || '' %>">
+%					} elsif ($col->{type} eq 'checkbox') {
+%						my $checked = $document->$attr ? ' checked' : '';
+<td align="center"><input type="checkbox" name="<% 'update_'.$document->id.'_'.$attr %>"<% $checked %>>
+%					} elsif ($col->{type} eq 'select') {
+%						my $options = {};
+%						if ($toopi && (ref($toopi) eq 'HASH') && (exists($toopi->{$document->class}))) {
+%							%{ $options } = %{ $toopi->{$document->class} };
+%						}
+%						my $values = $options->{$col->{attr}};
+<td><select name="<% 'update_'.$document->id.'_'.$attr %>">
+%						if ( ref $values eq 'ARRAY' ) {
+%							foreach my $val ( @$values ) {
+%								my $selected = $val eq $document->$attr ? ' selected' : '';
+<option value="<% $val %>"<% $selected %>><% $val %>
+%							}
+%						}
+</select>
+%					} elsif ($col->{type} eq 'status') {
+%						my $cases = $col->{cases};
+%						if ( ref $cases eq 'ARRAY' ) {
+<td><select name="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>">
+%							foreach my $case ( @$cases ) {
+%								my $selected = $case->[0] eq $document->$attr ? ' selected' : '';
+<option value="<% $case->[0] %>"<% $selected %>><% $case->[1] %>
+%							}
+</select>
+%						}
+%					}
+%
+%				} elsif ($col->{attr} eq 'class') {
+%
+<td><% $document->class_name %>&nbsp;<font color="#999999">(<% $document->class %>)</font>\
+%
+%				} elsif ($col->{type} eq 'datetime') {
+%
+<td nowrap><& "/contenido/components/show_dtime.msn", dtime=>$document->{$col->{attr}} &>\
+%
+%				} elsif ($col->{attr} eq '_act_') {
+%
+<td nowrap>\
+%					if ($document_access == 2) {
+%
+<a href="document.html?id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>" title="Редактировать документ"><img
+ src="/contenido/i/actions/edit.gif" width="15" height="17" alt="Редактировать документ" align="absmiddle" border="0" hspace="1"></a>\
+<a href="document.html?clone=1&id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>" title="Копировать документ"><img
+ src="/contenido/i/actions/copy.gif" width="15" height="17" alt="Копировать документ" align="absmiddle" border="0" hspace="1"></a>\
+<a href="confirm.html?id=<% $document->id %>&action=documents_deletion&from=<% $section->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>" title="Удалить документ"><img
+ src="/contenido/i/actions/delete.gif" width="14" height="17" alt="Удалить документ" align="absmiddle" border="0" hspace="1"></a>\
+%						if ( $document->status != 0 ) {
+<a href="document.html?deactivate=1&id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>" title="Скрыть/деактивировать документ"><img
+ src="/contenido/i/actions/deactivate.gif" width="14" height="17" alt="Скрыть/деактивировать документ" align="absmiddle" border="0" hspace="1"></a>\
+%						}
+%						if ( $document->status != 1 ) {
+<a href="document.html?activate=1&id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>" title="Присвоить документу статус=1"><img
+ src="/contenido/i/actions/activate.gif" width="14" height="17" alt="Присвоить документу статус=1" align="absmiddle" border="0" hspace="1"></a>\
+%						}
+<br>\
+%
+%					} else {
+&nbsp;\
+%					}
+%					if ( $inline_status ) {
+<input type="hidden" name="update_<% $document->id %>_class" value="<% $document->class %>">
+%					}
+%					if ( $delete_status ) {
+<input type="hidden" name="delete_<% $document->id %>_class" value="<% $document->class %>">
+%					}
+%
+%				} else {
+%
+%					if ($col->{type} eq 'date') {
+%						my $date=$document->{$col->{attr}};
+%						$date=~/(\d{4}-\d{2}-\d{2})/;
+<td nowrap align="right"><% $1 || '&nbsp;' %>\
+%					} elsif ($col->{type} eq 'datetime') {
+<td nowrap align="right"><% $document->{$col->{attr}} || '&nbsp;' %>\
+%					} elsif ($col->{type} eq 'integer') {
+<td align="right"><% $document->{$col->{attr}} %>&nbsp;\
+%					} elsif ($col->{type} eq 'lookup') {
+<td align="left">\
+%						my $id = $document->{$col->{attr}};
+%						if ($id) {
+%							my ($doc)=$keeper->get_documents( ( ref($col->{lookup_opts}) ? %{$col->{lookup_opts}} : () ), id=>$id);
+%							if ($doc) {
+<a href="document.html?id=<% $doc->id %>&class=<% $doc->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>"><% $doc->name || $doc->id %></a>&nbsp;\
+%							} else {
+<span class="hiddensect"><% $document->{$col->{attr}} %>???</span>\
+%							}
+%						} else {
+<span class="hiddensect">NULL</span>\
+%						}
+%					} elsif ($col->{type} eq 'status') {
+%						my $status_map = ref $col->{cases} eq 'ARRAY' ? $col->{cases} : $keeper->default_status();
+%						my ($doc_status) = grep { $_->[0] eq $document->{$col->{attr}} } @$status_map; 
+%						$doc_status ||= [$document->{$col->{attr}}, 'Неизвестный'];
+		<td nowrap><% $doc_status->[1].'('.$doc_status->[0].')' %>\
+%					} else {
+<td><% defined($document->{$col->{attr}}) ? $document->{$col->{attr}} : '&nbsp;' %>\
+%					}
+%				}
+</td>
+%
+%			} #- for @columns
+%
+</tr>
+%		} #- foreach @documents
+</table>
+<input type="hidden" name="id" value="<% $section->id %>">
+%	if ( ref $filter eq 'HASH' ) {
+%		while ( my ($key, $value) = each %$filter ) {
+%			next	if $key eq 's';
+<input type="hidden" name="<% $key %>" value="<% $value |h %>">
+%		}
+%	}
+%	if ( $inline_status || $delete_status ) {
+<div style="text-align:right; padding:10px 0;">
+%		if ( $inline_status ) {
+<input type="submit" name="update" value="Сохранить изменения" class="input_btn">
+%		}
+%		if ( $delete_status ) {
+<input type="submit" name="delete" value="Удалить выбранные" class="input_btn" onclick="return confirm('Все отмеченные позиции будут удалены');">
+%		}
+</div>
+%	}
+</form>
+<%args>
+
+	$section	=> undef
+	$documents	=> undef
+	$columns	=> undef
+	$id		=> undef
+	$filter		=> undef
+
+</%args>
+<%init>
+
+   return	unless ref $documents eq 'ARRAY';
+   return	unless ref $columns eq 'ARRAY';
+   return	unless ref $section;
+
+   my $toopi = $project->documents();
+   my $inline_status = 0;
+   my $delete_status = 0;
+   my $params = ref $filter eq 'HASH' ? join ('&', map { $_.'='.$filter->{$_} } keys %$filter ) : '';
+   my $params_unclassed = ref $filter eq 'HASH' ? join ('&', map { $_.'='.$filter->{$_} } grep { $_ ne 'class' } keys %$filter ) : '';
+   my $params_unsection = ref $filter eq 'HASH' ? join ('&', map { $_.'='.$filter->{$_} } grep { $_ ne 's' } keys %$filter ) : '';
+
+
+</%init>

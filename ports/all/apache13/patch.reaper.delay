@@ -1,0 +1,118 @@
+diff -ru ./src/include/http_conf_globals.h /home/lonerr/tmp/apache13/apache_1.3.41/src/include/http_conf_globals.h
+--- ./src/include/http_conf_globals.h	2006-07-12 12:16:05.000000000 +0400
++++ /home/lonerr/tmp/apache13/apache_1.3.41/src/include/http_conf_globals.h	2008-03-06 14:34:45.000000000 +0300
+@@ -45,6 +45,7 @@
+ extern API_VAR_EXPORT int ap_daemons_to_start;
+ extern API_VAR_EXPORT int ap_daemons_min_free;
+ extern API_VAR_EXPORT int ap_daemons_max_free;
++extern API_VAR_EXPORT int ap_spare_reaper_delay;
+ extern API_VAR_EXPORT int ap_daemons_limit;
+ extern API_VAR_EXPORT int ap_suexec_enabled;
+ extern API_VAR_EXPORT int ap_listenbacklog;
+diff -ru ./src/main/http_core.c /home/lonerr/tmp/apache13/apache_1.3.41/src/main/http_core.c
+--- ./src/main/http_core.c	2006-07-12 12:16:05.000000000 +0400
++++ /home/lonerr/tmp/apache13/apache_1.3.41/src/main/http_core.c	2008-03-06 14:34:53.000000000 +0300
+@@ -2478,6 +2478,17 @@
+     return NULL;
+ }
+ 
++static const char *set_spare_reaper_delay(cmd_parms *cmd, void *dummy, char *arg)
++{
++    const char *err = ap_check_cmd_context(cmd, GLOBAL_ONLY);
++    if (err != NULL) {
++        return err;
++    }
++
++    ap_spare_reaper_delay = atoi(arg);
++    return NULL;
++}
++
+ static const char *set_server_limit (cmd_parms *cmd, void *dummy, char *arg) 
+ {
+     const char *err = ap_check_cmd_context(cmd, GLOBAL_ONLY);
+@@ -3616,6 +3627,8 @@
+   "Minimum number of idle children, to handle request spikes" },
+ { "MaxSpareServers", set_max_free_servers, NULL, RSRC_CONF, TAKE1,
+   "Maximum number of idle children" },
++{ "SpareReaperDelay", set_spare_reaper_delay, NULL, RSRC_CONF, TAKE1,
++  "Delay to kill spare servers" },
+ { "MaxServers", set_max_free_servers, NULL, RSRC_CONF, TAKE1,
+   "Deprecated equivalent to MaxSpareServers" },
+ { "ServersSafetyLimit", set_server_limit, NULL, RSRC_CONF, TAKE1,
+diff -ru ./src/main/http_main.c /home/lonerr/tmp/apache13/apache_1.3.41/src/main/http_main.c
+--- ./src/main/http_main.c	2007-11-16 00:31:15.000000000 +0300
++++ /home/lonerr/tmp/apache13/apache_1.3.41/src/main/http_main.c	2008-03-06 14:34:53.000000000 +0300
+@@ -214,6 +214,7 @@
+ API_VAR_EXPORT int ap_daemons_to_start=0;
+ API_VAR_EXPORT int ap_daemons_min_free=0;
+ API_VAR_EXPORT int ap_daemons_max_free=0;
++API_VAR_EXPORT int ap_spare_reaper_delay=0;
+ API_VAR_EXPORT int ap_daemons_limit=0;
+ API_VAR_EXPORT time_t ap_restart_time=0;
+ API_VAR_EXPORT int ap_suexec_enabled = 0;
+@@ -5117,7 +5118,7 @@
+ #define SIG_TIMEOUT_KILL SIGALRM
+ #endif
+ 
+-static void perform_idle_server_maintenance(void)
++static void perform_idle_server_maintenance(int *rloop)
+ {
+     int i;
+     int to_kill;
+@@ -5209,11 +5210,20 @@
+ 	 */
+         pid = ap_scoreboard_image->parent[to_kill].pid;
+         if (in_pid_table(pid)) {
+-            kill(pid, SIG_IDLE_KILL);
+-            idle_spawn_rate = 1;
++            if (*rloop >= ap_spare_reaper_delay) {
++                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO, server_conf,
++                    "reaping spare child (pid: %d, delay: %d/%d)", pid, *rloop, ap_spare_reaper_delay);
++                kill(pid, SIG_IDLE_KILL);
++                idle_spawn_rate = 1;
++                *rloop = 0;
+ #ifdef TPF
+-            ap_update_child_status(to_kill, SERVER_DEAD, (request_rec *)NULL);
++                ap_update_child_status(to_kill, SERVER_DEAD, (request_rec *)NULL);
+ #endif
++            } else {
++                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, server_conf,
++                    "empty reaper cycle (delay: %d/%d)", *rloop, ap_spare_reaper_delay);
++                ++*rloop;
++            }
+         }
+         else {
+             ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, server_conf,
+@@ -5221,6 +5231,7 @@
+         }
+     }
+     else if (idle_count < ap_daemons_min_free) {
++	*rloop = 0;
+ 	/* terminate the free list */
+ 	if (free_length == 0) {
+ 	    /* only report this condition once */
+@@ -5268,6 +5279,7 @@
+ 	}
+     }
+     else {
++	*rloop = 0;
+ 	idle_spawn_rate = 1;
+     }
+ }
+@@ -5450,6 +5462,7 @@
+ 		     amutex->name, ap_default_mutex_method());
+ 	restart_pending = shutdown_pending = 0;
+ 
++	int reaper_loop = 0;
+ 	while (!restart_pending && !shutdown_pending) {
+ 	    int child_slot;
+ 	    ap_wait_t status;
+@@ -5517,7 +5530,7 @@
+ 		continue;
+ 	    }
+ 
+-	    perform_idle_server_maintenance();
++	    perform_idle_server_maintenance(&reaper_loop);
+ 	}
+ 
+ 	if (shutdown_pending) {

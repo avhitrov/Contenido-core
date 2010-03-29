@@ -1,0 +1,32 @@
+<& "/contenido/components/header.msn", title => 'XLS2HTML' &>
+<form action="" method="post" style="width: 100%; height: 200px; padding: 12px;">
+<h1>XLS<span style="color: #555">2</span>HTML</h1>
+<textarea name="code" style="width: 100%; height: 100%;"><% $arg_code %></textarea><br>
+<input type="submit" value="Преобразовать">
+</form>
+
+%   if (!$code){exit;}
+
+<plaintext><table border>
+  <tr>
+    <td><% $code %></td>
+  </tr>
+</table>
+
+<%args>
+
+    $code => undef
+
+</%args>
+<%init>
+
+    my $separator = "\t"; # разделитель ячеек
+    my $space = '&nbsp;'; # этим заполняем пустые ячейки
+    my $arg_code = $code;
+
+    $code =~ s|$separator|</td><td>|g;
+    $code =~ s|[\n\r]+|</td>\n  </tr>\n  <tr>\n    <td>|g;
+    $code =~ s|</td><td>|</td>\n    <td>|g;
+    $code =~ s|<td></td>|<td>$space</td>|g;
+
+</%init>

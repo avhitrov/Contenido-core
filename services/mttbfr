@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+
+####################################
+# make 'before-process' mtt argument
+####################################
+
+use strict;
+use warnings 'all';
+
+
+print <<'EOM';
+#% $STAMP = 0;
+EOM
+
+for (sort grep {/^MTT_/} keys %ENV) {
+	(my $key = $_) =~ s/^MTT_//;
+	$ENV{$_} =~ s/\\/\\\\/g;
+	$ENV{$_} =~ s/'/\\'/g;
+	print "#% my \$$key = '$ENV{$_}';\n";
+}

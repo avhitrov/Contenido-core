@@ -1,0 +1,94 @@
+% if ($save == 1) {
+<script>
+	self.opener.location.reload();
+	window.close();
+</script>
+% } else {
+
+<& "/contenido/components/header.msn" &>
+%#<& "/contenido/components/naviline.msn", sect_id => $owner->id &>
+
+% if ( (length($class) <= 0) && (! ref($link)) ) {
+
+%	if ($id) {
+<div align="center" style="font-size:110%; color:red;">
+Связь с идентификатором <% $id %> не найдена
+</div>
+<br><br>
+%	} else {
+<!-- Блок с выбором новой связи для создания -->
+<table width="50%" border="0"><tr><td>
+<fieldset>
+<legend>Выберите тип связи для создания</legend>
+<& "/contenido/components/new_objects_form.msn", proto => 'links' &>
+</fieldset>
+</td></tr></table>
+%	}
+
+% } else {
+<& "/contenido/components/obj_list_js.msn", object => $link, links_code => 0 &>
+<& "/contenido/components/object_form.msn", object => $link, proto => 'links' &>
+% }
+
+</body>
+</html>
+
+% } ## else save == 1
+
+<%ARGS>
+	$class => undef
+	$source_id => undef
+	$source_class => undef
+	$id => undef
+	$delete => undef
+	$save => undef
+</%ARGS>
+
+<%INIT>
+	# Проверка заданности класса - он должен быть задан явно...
+	if ($class)
+	{
+		my @correct_classes = @{ $state->{available_links} };
+		if (! (grep { $_ eq $class } @correct_classes))
+		{
+			# Класс задан, но он не корректный
+			$class = undef;
+		}
+	}
+
+	my $link;
+	if ($id && ($id !~ /\D/) && ($id > 0)) {
+		$link = $keeper->get_link_by_id($id, class => $class);
+	} else {
+		$link = new $class ($keeper);
+	}
+
+	
+
+#	# Удаление...
+#	if ( defined($id) && ($id > 0) && ($delete == 1) )
+#	{
+#		$link = $keeper->get_link_by_id($id);
+#		$link->delete();
+#
+#		$r->header_out("Location", "sections.html?id=".$owner->id);
+#		$r->status(302);
+#		$r->send_http_header();
+#		$m->abort();
+#	}
+
+	# Сохранение существующего документа или создание нового...
+	# Кстати, пока никак не обрабатываются связи...
+	#
+	if ( $save == 1 ) {
+		if ($m->comp('/contenido/components/set_properties.msn', object => $link, SETS => \%ARGS) != 1) {
+			# Ошибка, надо бы обработать...
+		}
+		$link->store();
+	}
+	if ($ARGS{_save_auto}) {
+		$m->redirect("./document_links.html?id=".$source_id);
+	}
+
+</%INIT>
+

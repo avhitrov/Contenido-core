@@ -1,0 +1,83 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings 'all';
+use locale;
+
+use Data::Dumper;
+use FindBin;
+use Getopt::Std;
+
+
+my %opts;
+getopts('hkn', \%opts);
+
+&usage if $opts{h} || $#ARGV!=1 || ! -d $ARGV[0] || ! -f $ARGV[1];
+$ARGV[0]=~s/\/+$/\//;
+
+my $md5;
+if ($opts{m}) {
+	$md5 = (`which md5`=~/(.*)/)[0] || (`which md5sum`=~/(.*)/)[0] || die "No md5 binary found\n";
+	$md5 .= ($md5=~/md5$/ ? ' -r ' : '');
+}
+
+my %snap;
+open SNAP, "<$ARGV[1]" or die $!;
+$_ = <SNAP>;
+/^STATE=(MD5|MTIME)$/ or die "Unknown STATE line: $_\n";
+my $stype = $1;
+for (map {chomp; $_} <SNAP>) {
+	next unless /^(.+?)(\s+STATE=(.+))?$/;
+	if ($2) {
+		$snap{$1} = $3;
+	} else {
+		$snap{$1} = undef;
+	}
+}
+close SNAP;
+
+for (grep {$snap{$_}} keys %snap) {
+	next unless -f "$ARGV[0]/$_";
+
+	my $state;
+	if ($stype eq 'MD5') {
+ 		$state = (`$md5 $ARGV[0]/$_ | awk '{print \$1}'`=~/(.*)/)[0];
+	} else {
+ 		$state = join(':', (stat("$ARGV[0]/$_"))[1,9]) or die $!;
+	}
+
+	if ($snap{$_} eq $state) {
+		unlink "$ARGV[0]/$_" unless $opts{n};
+		print "    removing old file: $_\n";
+	} else {
+		print "    skipping modified file: $_\n";
+	}
+}
+
+for (sort {(length($b)<=>length($a))||($a cmp $b)} grep {!$snap{$_}} keys %snap) {
+	opendir DIR, "$ARGV[0]/$_" or die $!;
+	my @cont = readdir DIR;
+	if ($#cont==1) {
+		rmdir "$ARGV[0]/$_";
+		print "    removing empty dir: $_\n";
+	} else {
+		print "    skipping non-empty dir: $_\n";
+	}
+	closedir DIR;
+}
+
+unlink $ARGV[1] unless $opts{k} || $opts{n};
+
+
+sub usage {
+	print <<EOM;
+Usage: $FindBin::RealScript [options] prefix file
+
+Options:
+    -h             Print this message
+    -k             Keep file
+    -n             Dry-run mode
+
+EOM
+	exit;
+}

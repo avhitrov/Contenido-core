@@ -1,0 +1,10 @@
+<%args>
+
+	$document	=> undef
+
+</%args>
+<%init>
+
+  return	unless ref $document;
+
+</%init>

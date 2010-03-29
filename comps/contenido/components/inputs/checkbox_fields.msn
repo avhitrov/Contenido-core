@@ -1,0 +1,72 @@
+<%args>
+
+	$name => undef
+	$check => undef
+
+</%args>
+<%init>
+
+	my $VALUES = eval ('use vars qw($VAR1); '.$check);
+
+	my $LAST = 0;
+	$m->out('<table border="0" cellpadding="5" cellspacing="0" width="60%">');
+	$m->out('<tr><th valign="top">Идентификатор</th><th>Русскоязычное имя поля<br><font color="gray">(то, что будет видно пользователю рядом с checkbox)</font></th></tr>');
+
+	if ((defined $VALUES) && (ref($VALUES) eq 'HASH'))
+	{
+		for my $key (sort (keys(%{ $VALUES })))
+		{
+			my $attr = $key;
+			my $rusname = $VALUES->{$attr}->{rusname};
+			next	if (! defined($rusname) || !$rusname);
+
+			if ($attr =~ /^${name}_(\d+)$/)
+			{
+				$LAST = $1;
+			}
+			$m->out( $m->scomp( '.one_field.msn', attr => $attr, rusname => $rusname ) );
+		}
+	}
+	for (($LAST+1)..($LAST+5))
+	{
+		my $attr = $name.'_'.$_;
+		$m->out( $m->scomp( '.one_field.msn', attr => $attr ) );
+	}
+
+	$m->out('</table>');
+
+</%init>
+<%def .one_field.msn>
+<!-- Одно поле -->
+
+<tr>
+<td width="40%" valign="top" style="font-size:80%; font-family:Tahoma;">
+<% $attr %>
+</td>
+
+<td width="60%" valign="top" style="font-size:80%; font-family:Tahoma;">
+<input name="<% $attr %>.checkboxrusname" type="text" value="<% $rusname %>" size="40">
+</td>
+</tr>
+
+<%args>
+
+	$attr => undef
+	$rusname => undef
+
+</%args>
+<%init>
+
+	return	undef		if (! defined($attr));
+
+</%init>
+</%def>
+<%doc>
+
+	Дополнительные поля в виде checkbox'а. Каждое поле характеризуется следующими данными:
+		attr - уникальный ключ
+		rusname - русское название
+
+	Все это хранится в хэше...
+
+</%doc>

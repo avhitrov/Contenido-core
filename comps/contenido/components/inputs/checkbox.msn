@@ -1,0 +1,7 @@
+<input <% $prop->{readonly} ? 'readonly ' : '' %>type="checkbox" name="<% $name %>" value="<% $value %>" <% $check ? ' checked' : '' %>>
+<%args>
+	$name	=> undef
+	$value	=> 1
+	$check	=> undef
+	$prop	=> {}
+</%args>

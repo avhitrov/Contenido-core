@@ -1,0 +1,39 @@
+%# vim:syn=mason
+<%args>
+	$object
+	$name => undef
+	$SETS => undef
+</%args>
+<%init>
+	return undef unless ref $SETS;
+	return undef unless $name;
+
+	# Если оно хранится в поле типа integer[] то нам вернется массив, если в data, то ссылка на массив.
+	# Просекаем фишку
+
+	my %ids;
+	while (my ($k, $v) = each(%$SETS)) {
+		next	unless $v;
+		if ( $k =~ /^${name}_(\d+)_(delete|id)/ ) {
+			my $id = $1;
+			my $key = $2;
+			if ( ref $v eq 'ARRAY' ) {
+				map { $ids{$_}{$key} => $_ } @$v;
+			} else {
+				$ids{$id}{$key} = $id;
+			}
+		} elsif ( $k =~ /^${name}_(addanotheritem)/ ) {
+			if ( ref $v eq 'ARRAY' ) {
+				map { $ids{$_}{id} => $_ } @$v;
+			} else {
+				$ids{$v}{id} = $v;
+			}
+		}
+	}
+	warn "\n\nPickup form ($name)".Dumper(\%ids)."\n";
+	my @ids = map { $_->{id} } grep { !exists $_->{delete} } values %ids;
+	warn "What to leave ($name)".Dumper(\@ids)."\n\n";
+
+	return \@ids;
+
+</%init>

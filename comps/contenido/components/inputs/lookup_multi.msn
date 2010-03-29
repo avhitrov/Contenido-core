@@ -1,0 +1,112 @@
+%# vim:syn=mason
+<style>
+.td { font:11px Verdana; padding:2px 4px; }
+</style>
+% unless ($error) {
+
+%	if (@ids) {
+<table width="95%" cellpadding="2" cellspacing="1" bgcolor="gray">
+<tr bgcolor="silver"><th width="99%">Название</th><th width="1%">Удалить?</th></tr>
+%		my $i = 0;
+%		foreach my $id (@ids) {
+<tr bgcolor="<% $i++ % 2 ? '#f0f0f0' : 'white' %>">
+<td class="td"><% (ref($list{$id}) && $list{$id}->name) || 'неизвестно' %></td>
+<td align="center"><input type="checkbox" name="<% $name %>_delete" value="<% $id %>"/></td></tr>
+%		}
+</table>
+%	}
+
+<table cellspacing="0" cellpadding="2" border="0" width="95%"
+ style="border-bottom:1px solid gray; border-left:1px solid gray; border-right:1px solid gray;">
+<tr bgcolor="#e0e0f0"><td class="td" width="5%" nowrap><b>Добавить:</b>
+<input onkeyup="find_word_<% $name %>()" type="text" name="<% $name %>_tmp" size="10" onfocus="key_flag_<% $name %> = 0;" onblur="key_flag_<% $name %> = 1;">
+</td>
+<td width="94%">
+<input type="hidden" name="<% $name %>_add" id="<% $name %>_hidden">
+<select id="<% $name %>_select" class="selects" onchange="<% $name %>_changed();" style="width:100%">
+		<option value=""></option>
+%	for ( sort { $sort{$a->id} <=> $sort{$b->id} } values %list ) {
+				<option value="<% $_->id %> <% $_->class %>"><% $_->name . '(' . ( $prop->{lookup_opts}->{show_in_select} ? $_->{$prop->{lookup_opts}->{show_in_select}} : 'no' ) . ')' %></option>
+%	}
+</select>
+</td>
+<td width="1%" style="padding:0 7px;"><a href="#" onclick="return <% $name %>_popup();" title="Найти документ"><img src="/contenido/i/lookup-19x19.gif" width="19" height="19" class="bb gb"></a></td>
+</tr>
+</table>
+
+<script type="text/javascript">
+	var key_flag_<% $name %> = 1;
+
+	if (navigator.appName == "Netscape") {
+		document.captureEvents(Event.KEYUP);
+	}
+
+	function find_word_<% $name %>() {
+		var str1 = document.form.<% $name %>_tmp.value;
+		if (str1 == "" || key_flag_<% $name %>) return;
+
+		for (var i = 0; i < document.form.<% $name %>_select.options.length; i++) {
+			var source = document.form.<% $name %>_select.options[i].text;
+			source = source.toLowerCase();
+			str1 = str1.toLowerCase();
+			if ( source.indexOf(str1) > -1) {
+				document.form.<% $name %>_select.options[i].selected=true;
+				<% $name %>_changed();
+				break;
+			}
+		}
+	}
+
+	function <% $name %>_popup() {
+		var s = document.getElementById('<% $name %>_select');
+		if (!s.value) {
+			alert('Нет выбранного значения');
+			return false;
+		}
+		var re = /^(\d+)\s+(.+)$/;
+		var matches = re.exec(s.value);
+		window.open('/contenido/document.html?class=' + matches[2] + '&id=' + matches[1]);
+		return false;
+	}
+
+	function <% $name %>_changed() {
+		var h = document.getElementById('<% $name %>_hidden');
+		var s = document.getElementById('<% $name %>_select');
+
+		if (s.value) {
+			var re = /^(\d+)\s+(.+)$/;
+			var matches = re.exec(s.value);
+			h.value = matches[1];
+		} else {
+			h.value = '';
+		}
+	}
+</script>
+
+% } else {
+	<font color="red"><% $error %></font>
+% }
+
+<%args>
+	$object
+	$name => undef
+	$check => undef
+	$prop => {}
+</%args>
+<%init>
+	my (%list, %sort, $error);
+
+	# Если оно хранится в поле типа integer[] то нам вернется массив, если в data, то ссылка на массив.
+	# Просекаем фишку
+	my @ids = ref($object->$name) eq 'ARRAY' ? @{ $object->$name } : $object->$name;
+
+	if ($prop && ref($prop) && ref($prop->{lookup_opts}) eq 'HASH') {
+		my $i = 0;
+		foreach my $obj ($keeper->get_documents(%{$prop->{lookup_opts}}, order => ['name','reverse'])) {
+			$list{$obj->id} = $obj;
+			$sort{$obj->id} = $i++;
+		}
+	} else {
+		$error = 'Похоже неверное описание lookup_opts в документе';
+	}
+</%init>

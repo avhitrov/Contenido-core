@@ -1,0 +1,42 @@
+<%ARGS>
+	$_URL		=> 'rate/ok.html'
+	$id		=> undef
+	$vote		=> undef
+</%ARGS>
+<%ONCE>
+	use Apache::Cookie;
+	use Rate::Main;
+</%ONCE>
+<%INIT>
+	&abort404() unless ($id);
+	&abort404() unless ($vote=~/^[1-5]$/);
+
+	my $document;
+	foreach (@{$state->rate->allowed_classes}) {
+		$document = $keeper->get_document_by_id($id,class=>$_);
+		last if $document;
+	}
+	&abort404() unless $document;
+
+	my $ip		= $r->header_in("X-Real-IP");
+	my (@ip_list)	= split(/\s*,\s*/, $ip);
+	my $real_ip	= shift @ip_list;
+
+	my $referer	= $r->header_in("Referer");
+
+
+	my $cookie_name = $state->rate->cookie;
+        my $cookie      = Apache::Cookie->new($r);
+        my $cookies     = $cookie->parse;
+	my $key		= $cookies->{$cookie_name} ? $cookies->{$cookie_name}->value() : $real_ip;
+
+	#here we have user key and both values
+	Rate::Main->write_one($key, $id, $vote, $real_ip, $referer, time());
+
+        $_URL =~ s/^\///;
+        $r->header_out("Location", "/".$_URL);
+        $r->status(302);
+        $r->send_http_header();
+        $m->out('<html><body>redirect</body></html>');
+        $m->abort();
+</%INIT>

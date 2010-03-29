@@ -1,0 +1,32 @@
+<frameset border="0" bordercolor="black" rows="40,*" frameborder="1">
+<frame src="links/title.html?class=<% $class %>" bordercolor="black" marginheight="2" marginwidth="2"
+ name="linktitle" noresize scrolling="no" height="30">
+<frameset border="0" bordercolor="black" cols="50%,50%" frameborder="1">
+<frame src="links/source.html<% $sargs %>" bordercolor="gray" marginheight="2" marginwidth="2" name="sourcefrm" noresize scrolling="yes">
+<frame src="links/destination.html<% $dargs %>" bordercolor="black" marginheight="2" marginwidth="2" name="destfrm" noresize scrolling="yes">
+</frameset>
+</frameset>
+
+<%args>
+	$class		=> ''
+	$source_class	=> ''
+	$source_id	=> ''
+	$dest_class	=> ''
+	$dest_id	=> ''
+	$save		=> 0
+	$status		=> 0
+</%args>
+<%init>
+
+  my (@source_args, $sargs, @dest_args, $dargs);
+  push @source_args, 'class='.$class			if $class;
+  push @source_args, 'source_class='.$source_class	if $source_class;
+  push @source_args, 'source_id='.$source_id		if $source_id;
+  push @dest_args, 'class='.$class			if $class;
+  push @dest_args, 'dest_class='.$dest_class		if $dest_class;
+  push @dest_args, 'dest_id='.$dest_id			if $dest_id;
+
+  $sargs = @source_args ? '?'.join('&', @source_args) : undef;
+  $dargs = @dest_args ? '?'.join('&', @dest_args) : undef;
+
+</%init>

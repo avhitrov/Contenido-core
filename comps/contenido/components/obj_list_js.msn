@@ -1,0 +1,156 @@
+<STYLE TYPE="text/css">
+TABLE#tblCoolbar 
+	{ 
+	background-color:threedface; padding:1px; color:menutext; 
+	border-width:1px; border-style:solid; 
+	border-color:threedhighlight threedshadow threedshadow threedhighlight;
+	}
+.cbtn
+	{
+	height:18;
+	BORDER-LEFT: threedface 1px solid;
+	BORDER-RIGHT: threedface 1px solid;
+	BORDER-TOP: threedface 1px solid;
+	BORDER-BOTTOM: threedface 1px solid; 
+	}
+.txtbtn {font-family:tahoma; font-size:70%; color:menutext;}
+</STYLE>
+
+<script LANGUAGE="JavaScript">
+sDocumentClass = '<% $object->class %>';
+nDocumentID = <% $object->id || 0 %>;
+var ObjLists = new Array;
+<%perl>
+	my @properties = $object->structure();
+	my $i = 0;
+	foreach my $attr (@properties)
+	{
+		if ($attr->{type} eq 'obj_list')
+		{ 
+			$m->out("ObjLists[$i] = '".$attr->{attr}."';\n");
+			$i++;
+		}
+	}
+</%perl>
+
+function show_layer( name, xof, yof ) {
+	var layer = eval('document.all.span_' + name);
+	var rel = document.all['pos_' + name];
+	var x = rel.offsetLeft;
+	var y = rel.offsetTop;
+
+	while (rel.offsetParent != null) {
+		rel = rel.offsetParent;
+		x += rel.offsetLeft;
+		y += rel.offsetTop;
+		if (rel.tagName == 'BODY') break;
+	}
+	layer.style.left = x + (xof || 400);
+	layer.style.top = y + (yof || -50);
+	layer.style.visibility = 'visible';
+}
+
+function hide_layer(name) {
+	var layer = eval('document.all.span_' + name);
+	layer.style.visibility = 'hidden';
+}
+
+
+// object list javascripts
+
+
+
+function already_added(opts, item)
+{
+	var i = 0;
+	while ( i < opts.length)
+	{
+		if (opts[i].value == item.value || opts[i].text == item.text) return true;
+		i++;
+	}
+	return false;
+}
+
+% if ($links_code) {
+dobj_opener = self.opener.document.forms['links'].elements['links'];
+alert(dobj_opener.options.length);
+% }
+
+function sel_wo_del(sobj, dobj)
+{
+//	sobj = eval('iobjs.document.form.objs');
+//	dobj = document.dform.objs;
+	var i = 0;
+		while ( i < sobj.elements.length )
+		{
+			if (sobj.elements[i].checked)
+			{
+				var item = new Option();
+				item.value = sobj.elements[i].name;
+				item.text = sobj.elements[i].value;
+				if (!already_added(dobj.options, item))
+				{
+					dobj.options[dobj.options.length] = item;
+% if ($links_code) {
+					dobj_opener.options[dobj_opener.options.length] = item;
+% }
+				}
+				sobj.elements[i].checked = null;
+			}
+			i++;
+		}
+}
+
+function del(sobj)
+{
+	var i = 0;
+	var j;
+ 	while ( i < sobj.options.length )
+	{
+		if (sobj.options[i].selected && sobj.options[i].value != null)
+		{
+			sobj.options[i] = null;
+			j = i;
+		}
+		i++;
+	}
+
+% if ($links_code) {
+	dobj_opener.options[j] = null;
+% }
+}
+
+function Save() 
+{
+	for (var i = 0; i < ObjLists.length; i++)
+	{
+		var el = eval("document.form.obj_list_" + ObjLists[i]);
+		var tmp = Array();
+		for (var j=0;j<el.options.length;j++)
+			tmp[j] = el.options[j].value;
+		eval('document.form.' + ObjLists[i]).value = tmp.join(',');
+	}
+
+	if ( document.form.obj_list_dest_id )
+	{
+		for(var i=0; i<document.form.obj_list_dest_id.length; i++)
+		{
+			document.form.obj_list_dest_id[i].selected = true;
+		}
+	}
+
+	return true;	
+}
+
+</script>
+<%ARGS>
+
+	$object => undef
+	$links_code => undef
+
+</%ARGS>
+<%INIT>
+
+	return undef	unless ref($object);
+
+</%INIT>

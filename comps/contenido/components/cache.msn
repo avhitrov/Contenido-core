@@ -1,0 +1,36 @@
+<!-- Структура сайта -->
+
+<fieldset>
+<legend>Очистить кэш</legend>
+
+% if ($removed) {
+<script>alert('Кэш очищен!');</script>
+% }
+
+<div align="center">
+<input type="submit" onClick="javascript: location.search='cache=remove'" class="input_btn" style="width:60%; height:30px;" name="cache" value="Очистить кэш">
+</div>
+
+</fieldset>
+
+<%args>
+
+	$cache => undef
+
+</%args>
+<%init>
+	
+	my $removed;
+	if ($cache eq 'remove') {
+		# Нету нормального API для удаления всего кэша, есть только для текущего namespace
+		# Поэтому приходится немного хачить... :)
+		
+		my $backend = $m->cache->{_Backend};
+		my @namespaces = $backend->get_namespaces();
+		foreach (@namespaces) {
+			$backend->delete_namespace($_);
+		}
+		$removed = 1;
+	}
+	
+</%init>

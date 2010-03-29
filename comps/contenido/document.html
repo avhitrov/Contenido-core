@@ -1,0 +1,217 @@
+%# vim:syn=mason
+<& "/contenido/components/header.msn" &>
+<& "/contenido/components/naviline.msn", sect_id => $owner->id &>
+
+% if ($error) {
+<div align="center" style="font-size:110%; color:red;">
+<% $error %>
+</div>
+<br><br>
+% }
+
+% if (!ref($document)) {
+%	if ($id) {
+<div align="center" style="font-size:110%; color:red;">
+Документ с идентификатором <% $id %> не найден
+</div>
+<br><br>
+%	} elsif ($class) {
+<!-- Блок с выбором нового документа для создания -->
+<table width="50%" border="0"><tr><td>
+<fieldset>
+<legend>Выберите тип документа для создания</legend>
+<& "/contenido/components/new_objects_form.msn", proto => 'documents', sect_id => $owner->id &>
+</fieldset>
+</td></tr></table>
+%	} else {
+<div align="center" style="font-size:110%; color:red;">
+Не верный вызов документа!!! (отсутствуют id и class одновременно)
+</div>
+<br><br>
+%	}
+
+% } else {
+
+<& "/contenido/components/obj_list_js.msn", object => $document &>
+<& "/contenido/components/object_form.msn", 
+	object	=> $document, 
+	proto	=> 'documents', 
+	sect_id => $owner->id,
+	clone	=> $clone,
+	filter_params	=> \%filter_params,
+&>
+%	if (ref($document) && ($document->id))
+%	{
+
+<!-- Связи и привязки к рубрикам -->
+
+<br>
+
+<table width="100%" cellspacing="5" cellpadding="0" border="0">
+<tr>
+<td width=50% valign=top>\
+<& "/contenido/components/document_sections.msn", document => $document &>\
+<& "/contenido/components/user_sections.msn", luser => $document &>\
+%		if ( $m->comp_exists ("/contenido/components/pbase_rubrics.msn") ) {
+<& "/contenido/components/pbase_rubrics.msn", document => $document &>\
+%		}
+</td>
+<td width=50% valign=top>\
+%		if ( $m->comp_exists ("/contenido/components/pbase_links.msn") ) {
+<& "/contenido/components/pbase_links.msn", document => $document &>\
+%		}
+<iframe id="links" src="document_links.html?id=<% $document->id() %>&class=<% $document->class() %>" width="100%" height="700" frameborder="0"></iframe>
+
+</td>
+</tr>
+</table>
+
+<!-- / Связи и привязки к рубрикам -->
+
+%	}
+% }
+
+</body>
+</html>
+<%ARGS>
+	$p		=> 1
+	$class		=> undef
+	$sect_id	=> undef
+	$s_alias	=> undef
+	$id		=> undef
+	$delete		=> undef
+	$save		=> undef
+	$clone		=> undef
+	$activate	=> undef
+	$deactivate	=> undef
+</%ARGS>
+<%INIT>
+	my $error='';
+        ### !!! При добавлении переменных в ARGS их надо внести в список исключений в структуре ниже
+
+	my $filter = $m->comp('/contenido/components/context.msn', name => 'filter');
+
+	my $document;
+	my $new;
+
+	if ($id && ($id !~ /\D/) && ($id > 0)) {
+		$document = $keeper->get_document_by_id($id, class=>$class);
+		if ( $clone && exists $document->{'attributes'}->{'dtime'} ) {
+			$document->dtime(undef);
+		}
+	} elsif ( ($class) && (length($class)>0) && (! ref($document)) ) {
+		$document = new $class ($keeper);
+		$new = 1;
+		my @properties = $document->structure();
+		foreach my $prop ( @properties ) {
+			my $attr = $prop->{attr};
+			### !!! Если не стандартная переменная, то можем инициализировать
+			if ( exists $ARGS{$attr} && ! grep { $prop->{attr} eq $_ } qw( class sect_id id delete save clone s_alias activate deactivate p s use_section alpha alpha_search search_by search ) ) {
+				$document->$attr($ARGS{$attr});
+			}
+		}
+	}
+
+	my @props = $document->structure();
+	my %filter_params;
+	if ($ARGS{use_section} && !grep { $_->{attr} eq 'use_section' } @props ) {
+		$filter_params{use_section} = $ARGS{use_section};
+		$filter_params{class} = $document->class;
+	}
+	$filter_params{alpha} = $ARGS{alpha}			if $ARGS{alpha} && !grep { $_->{attr} eq 'alpha' } @props;
+	$filter_params{alpha_search} = $ARGS{alpha_search}	if $ARGS{alpha_search} && !grep { $_->{attr} eq 'alpha_search' } @props;
+	$filter_params{search_by} = $ARGS{search_by}		if $ARGS{search_by} && !grep { $_->{attr} eq 'search_by' } @props;
+	$filter_params{search} = $ARGS{search}			if $ARGS{search} && !grep { $_->{attr} eq 'search' } @props;
+	$filter_params{s} = $ARGS{s}				if $ARGS{s} && !grep { $_->{attr} eq 's' } @props;
+	$filter_params{p} = $p					if $p > 1;
+	my $return_params = join ('&', map { $_.'='.$filter_params{$_} } grep { $_ ne 's' } keys %filter_params );
+
+
+	if ($s_alias) {
+		$sect_id = $project->s_alias->{$s_alias};	
+	}
+
+	if ( (! $sect_id) && (ref($document)) && ($document->id) ) {
+		$sect_id = $document->section();
+	}
+	my $owner = $keeper->get_section_by_id ($sect_id || $Contenido::Section::ROOT || 1);
+
+	if (! ref($owner)) {
+		$owner = $keeper->get_section_by_id ($Contenido::Section::ROOT || 1);
+	}
+	if (! ref($owner)) {
+		warn "Contenido Die: Не могу найти корневую секцию\n";
+		return undef;
+	}
+
+	if (ref($document) && $document->id() && $document->section()) {
+		my $document_access = $user->section_accesses($user, $owner);
+		if ($document_access != 2) {
+			$m->clear_buffer;
+			$m->abort(403);
+		}
+	}
+
+	# Удаление...
+	if (defined($id) && ($id > 0) && ($delete == 1)) {
+		$document->delete( attachments => 1 );
+
+		$m->redirect("sections.html?id=".($filter_params{s} || $owner->id).($return_params ? '&'.$return_params : ''));
+	}
+
+	# Активация...
+	if (defined($id) && ($id > 0) && ($activate == 1)) {
+		$document->status(1);
+		$document->store;
+
+		$m->redirect("sections.html?id=".($filter_params{s} || $owner->id).($return_params ? '&'.$return_params : ''));
+	}
+
+	# Дективация...
+	if (defined($id) && ($id > 0) && ($deactivate == 1)) {
+		$document->status(0);
+		$document->store;
+
+		$m->redirect("sections.html?id=".($filter_params{s} || $owner->id).($return_params ? '&'.$return_params : ''));
+	}
+
+	# Сохранение существующего документа или создание нового...
+	# Кстати, пока никак не обрабатываются связи...
+	elsif ( $save == 1 )
+	{
+		my $clonesource;
+		if ( $clone ) {
+			$clonesource = $keeper->get_document_by_id ($clone,
+				class	=> $document->class,
+			);
+		}
+		if ($m->comp('/contenido/components/set_properties.msn', object => $document, SETS => \%ARGS) != 1)
+		{
+			# Ошибка, надо бы обработать...
+			warn "Contenido Warning: Не могу установить значения полей!\n";
+		}
+		if ( $clone ) {
+			$m->comp('/contenido/components/clone_attachments.msn', object => $document, source => $clonesource );
+			$document->sections( $clonesource->sections );
+		} elsif ( $new ) {
+			$document->sections( $owner->id, $filter > 0 ? ($filter) : ());
+		}
+
+
+		unless ($document->store()) {
+			# Ошибка, надо бы обработать...
+			$error="Ошибка сохранения ($keeper->{last_error})";
+		} else {
+
+			if ($ARGS{_save_and_leave}) {
+				$m->redirect("sections.html?id=".($filter_params{s} || $owner->id).($return_params ? '&'.$return_params : ''));
+			} elsif ($ARGS{_save_and_again}) {
+				$m->redirect("document.html?class=".$document->class()."&sect_id=".($filter_params{s} || $owner->id).($return_params ? '&'.$return_params : ''));
+			}
+
+
+			$m->redirect("document.html?id=".$document->id()."&class=".$document->class().(exists $filter_params{s} ? '&s='.$filter_params{s} : '').($return_params ? '&'.$return_params : ''));
+		}
+	}
+
+</%INIT>

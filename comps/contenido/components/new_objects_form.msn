@@ -1,0 +1,39 @@
+<form action="<% $INVITE->{$proto}->[1] %>" method="GET" name="formnew">
+<div align="right">
+<table width="100%" border="0" cellpadding="3" cellspacing="0" class="tform">
+<tr><td><% $INVITE->{$proto}->[0] %></td>
+
+%	my $classes = [ '' => '--- Выберите тип ---' ];
+%	
+%	foreach my $class (sort {$a->class_name cmp $b->class_name} $proto eq 'documents' ? @{ $user->get_available_classes } : @{ $state->{'available_'.$proto} })
+%	{
+%		my $object = $class->new($keeper);
+%		push @$classes, $class, "".$object->class_name()." ($class)";
+%	}
+
+<td width="100%">
+<& "/contenido/components/select.msn", name=>'class', values=>$classes, check=>$default, style=>'width:100%;' &>
+</td>
+<td><input type="submit" value="Создать"></td>
+<td><input type="hidden" name="sect_id" value="<% $sect_id %>"></td>
+</tr></table>
+
+</div></form>
+<%ONCE>
+	use locale;
+</%ONCE>
+<%ARGS>
+
+	$default => undef
+	$proto => 'documents'
+	$sect_id => 1
+
+</%ARGS>
+<%INIT>
+	my $INVITE = {
+		'documents' => ['Новый&nbsp;документ','document.html'],
+		'sections' => ['Новая&nbsp;секция','section.html'],
+		'links' => ['Новая&nbsp;связь','link.html'],
+		'users' => ['Новый&nbsp;пользователь','users.html'],
+	};
+</%INIT>

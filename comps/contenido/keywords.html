@@ -1,0 +1,59 @@
+<& "/contenido/components/header.msn", title => 'Ключевые слова' &>
+
+<br>
+<table border="0" style="font-size:85%;" width="80%">
+<tr>
+<td width="10"></td>
+<td>
+<div style="font-size:130%;">Ключевые слова</div>
+<br>
+На этой страницы Вы видите полный список ключевых слов. При нажатии на ключевое слово Вы попадете на редактирование 
+документа, к которому привязано это ключевое слово. Каждое слово может быть привязано только к одному документу.
+<p>
+Обратите внимание, что ключевые слова на сайте обновляются не моментально, а в течении часа.
+
+</td>
+</tr>
+
+<tr>
+<td></td>
+<td>
+<br><br>
+<div style="font-size:130%;">Список</div>
+
+<!-- Список ключевых слов -->
+%	my $divider = scalar(@keywords) / 5;
+%	if ($divider < 25) { $divider = 200 };
+<table border=0 cellpadding=0 cellspacing=0 style="font-size:98%">
+<tr>
+<td width="20%">
+%	my $count = 0;
+%	for my $KEY (sort { $a->{keyword} cmp $b->{keyword} } (@keywords))
+%	{
+%		my $document = $keeper->get_document_by_id($KEY->{id});
+%		my $unlinked = $document->section ? 0 : 1;
+%		my $document_access = $user->section_accesses($user, $document->section);
+%		my $href = $document_access == 2 || $unlinked;
+%		if (((++ $count) % $divider) == 0)
+%		{
+</td><td>
+%		}
+<% $href ? '<a href="/contenido/document.html?id=' . $KEY->{id} . '">' : '' %><% $unlinked ? '<i>' : '' %><% $KEY->{keyword} %><% $unlinked ? '</i>' : '' %><% $href ? '</a>' : '' %><br>
+%	}
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+<%init>
+
+	use vars qw($project $state $user $keeper $request);
+
+	my @keywords = $keeper->get_keywords();
+
+</%init>

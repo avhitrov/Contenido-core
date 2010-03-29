@@ -1,0 +1,30 @@
+%# vim:syn=mason
+<%args>
+	$object
+	$name => undef
+	$SETS => undef
+</%args>
+<%init>
+	return undef unless ref $SETS;
+	return undef unless $name;
+
+	# Если оно хранится в поле типа integer[] то нам вернется массив, если в data, то ссылка на массив.
+	# Просекаем фишку
+	my @ids = ref($object->$name) eq 'ARRAY' ? @{ $object->$name } : $object->$name;
+
+	my %ids;
+	$ids{$_} = 1 foreach @ids;
+
+	while (my ($k, $v) = each(%$SETS)) {
+		next unless $k =~ /^${name}_(add|delete)$/;
+		next unless $v;
+
+		if ($1 eq 'add') {
+			$ids{$v} = 1;
+		} elsif ($1 eq 'delete') {
+			delete $ids{$v};
+		}
+	}
+
+	return [keys %ids];
+</%init>

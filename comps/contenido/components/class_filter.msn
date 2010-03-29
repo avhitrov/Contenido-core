@@ -1,0 +1,36 @@
+	<fieldset>
+	<legend>Отбор по классам</legend>
+
+        <table width="100%" border="0" cellpadding="3" cellspacing="0" class="tlistdocs">
+        <tr bgcolor="#efefef">
+        <th align="center" width="1%">N</th>
+        <th colspan=2>Название</th>
+%	my $serial=0;
+%	foreach my $local_class (sort {$a->class_name cmp $b->class_name} @{ $user->get_available_classes }) {
+%		$serial++;
+%		my $document = new $local_class ($keeper);
+%		next unless (ref($document));
+%		if ($local_class eq $class) {
+<tr bgcolor="green">\
+%		} else {
+<tr>\
+%		}
+<td><% $serial %></td>\
+<td style="font-size:75%;" nowrap><% $document->class_name() %></td>\
+<td style="font-size:75%;" nowrap align="right"><a href="sections.html?class=<% $document->class() %>&id=<% $id %>&use_section=1">С учетом</a>/<a href="sections.html?class=<% $document->class() %>&id=<% $id %>">Без учета</a>&nbsp;секции</td>\
+</tr>
+%	}
+	</table>
+	</fieldset>
+
+<%ONCE>
+	use locale;
+</%ONCE>
+<%ARGS>
+	$section => undef
+	$class => undef
+</%ARGS>
+<%INIT>
+#	return undef	if (! ref($section));
+	my $id=ref($section) ? $section->id() : '';
+</%INIT>

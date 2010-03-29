@@ -1,0 +1,72 @@
+<% $DIGITS_LINE %>\
+% if (defined $alpha) {
+%delete $local_params->{alpha};
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="<% $href %>?<% join('&', map { "$_=$local_params->{$_}" } keys %$local_params) %>">Сброс</a>\
+% }
+<br>
+<% $EN_ALPHA_LINE %>
+<br>
+<% $RU_ALPHA_LINE %>
+
+<%args>
+	$alpha => undef 
+	$href => undef
+	$params => {}
+	$delimiter => ' | '
+</%args>
+<%ONCE>
+	my @digits=qw(0	1 2 3 4 5 6 7 8 9);
+	my @en_alpha=qw(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z);
+	my @ru_alpha=qw(А Б В Г Д Е Ж З И Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Э Ю Я & ' ");	#' - restore vim syntax highlighting
+</%ONCE>
+
+<%init>
+	my $local_params={%$params};
+	$local_params->{p}=1;
+	delete $local_params->{search_by}	if exists $local_params->{search_by};
+	delete $local_params->{search}		if exists $local_params->{search};
+
+	# если !$href и файл страницы не является DirectoryIndex, напр: 
+	# .../../gallery.html. а ссылка в нем относительная, напр: <a href="?param=1">, 
+	# то IE перейдет на .../../gallery.html?param=1., а NN (4.x) перейдет на 
+	# .../../?param=1.., следующий блок вытащит и подставит нужное имя файла.
+
+	if (!$href)
+	{
+		$href = $r->uri();
+		$href =~ s/\/([\w]{1,}(\.[sp]?html?))//;
+		$href = $1;
+		if ($href =~ /(index|default|main)$2/ ){
+			$href = '';
+		}
+	}
+	
+    my @parts=();
+    foreach my $pn (@digits)
+    {
+        $local_params->{alpha} = $pn;
+        push @parts, ($pn eq $alpha) ? $pn : "<a href=\"$href?".join('&', map { "$_=$local_params->{$_}" } keys %$local_params)."\">$pn</a>";
+    }
+	my $DIGITS_LINE=join($delimiter,@parts);
+
+	@parts=();
+    foreach my $pn (@en_alpha)
+    {
+        $local_params->{alpha} = $pn;
+        push @parts, ($pn eq $alpha) ? $pn : "<a href=\"$href?".join('&', map { "$_=$local_params->{$_}" } keys %$local_params)."\">$pn</a>";
+    }
+    my $EN_ALPHA_LINE=join($delimiter,@parts);
+
+	@parts=();
+    foreach my $pn (@ru_alpha)
+    {
+        $local_params->{alpha} = $pn;
+        push @parts, ($pn eq $alpha) ? $pn : "<a href=\"$href?".join('&', map { "$_=".$m->interp->apply_escapes($local_params->{$_}, 'u') } keys %$local_params)."\">$pn</a>";
+    }
+    my $RU_ALPHA_LINE=join($delimiter,@parts);
+
+</%init>
+
+<%doc>
+	Стандартная алфавитная линеечка
+</%doc>

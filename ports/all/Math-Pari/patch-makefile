@@ -1,0 +1,20 @@
+--- Makefile.PL.orig	Tue Apr  1 15:46:16 2008
++++ Makefile.PL	Tue Apr  1 15:47:02 2008
+@@ -44,7 +44,7 @@
+ EOP
+ 
+ if ($common::parilib) {
+-  $pari_version = '2001004';	# XXXX How to get a correct one?
++  $pari_version = '2003000';	# XXXX How to get a correct one?
+   $define = '-DNO_HIGHLEVEL_PARI';
+   print <<EOP;
+ Trying to use existing PARI library (at $common::parilib)
+@@ -157,7 +157,7 @@
+ # the contents of the Makefile being created.
+ &WriteMakefile(
+ 	       LIBS	     =>  $libs,
+-	       INC	     => $extra_inc . ' -I$(PARI_DIR)/src/headers -I$(PARI_DIR)/src -I./libPARI',
++	       INC	     => '-I$(PREFIX)/include/pari -I$(PARI_DIR)/src',
+ 	       NAME	     => 'Math::Pari',
+ 	       ($common::parilib ? () :
+ 		 (MYEXTLIB   =>  'libPARI/libPARI$(LIB_EXT)')),

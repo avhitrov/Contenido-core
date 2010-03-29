@@ -1,0 +1,31 @@
+<%args>
+
+        $root		=> undef,
+        $offset		=> undef,
+        $count_offset	=> undef,
+        $selected	=> undef,
+	$section_tree	=> undef
+
+</%args>
+<%INIT>
+
+	my $spacer = '';
+	for(my $c=1; $c<$offset; $c++) {
+		$spacer = $spacer.(($c == $offset-1) ? '&nbsp;&nbsp;&nbsp;>>&nbsp;&nbsp;&nbsp;' : '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+	}
+	if( ref $root && $root->id != $Contenido::Section::ROOT ) {
+		$m->out('<option value="'.$root->id.'" '.(($selected == $root->id) ? ' selected' : '').'>'.$spacer.$root->name.'</option>');
+	}
+
+	my $childs = exists $section_tree->{$root->id} ? $section_tree->{$root->id}{children} : undef;
+	if((ref($childs) eq 'ARRAY') and (@$childs) && ($offset < $count_offset)) {
+		$offset++;
+		foreach my $child (@$childs) {
+			$m->comp('/contenido/components/select_index_tree_elem.msn', 
+				section_tree => $section_tree, root => $child, 
+				offset => $offset, count_offset => $count_offset, selected => $selected);
+		}
+		$offset--;
+	}
+
+</%init>

@@ -1,0 +1,178 @@
+#!/usr/bin/perl
+
+use strict;
+
+use Apache;
+use Apache::Constants;
+use Time::HiRes;
+
+use Contenido::Globals;
+use Contenido::Apache;
+use Contenido::Init;
+
+$Contenido::Globals::PROJECT_NAME = '@PROJECT@';
+$store_method = lc('@STORE_METHOD@');
+$DEBUG = lc('@DEBUG@') eq 'yes';
+$DEBUG_SQL = lc('@DEBUG_SQL@') eq 'yes';
+$DEBUG_CORE = lc('@DEBUG_CORE@') eq 'yes';
+
+#базовая инициализация Contenido
+Contenido::Init->init();
+
+#импортим все что нужно в пакет в котором работают компоненты
+package HTML::Mason::Commands;
+
+use Data::Dumper;
+use CGI::Cookie;
+use Convert::Cyrillic;
+use Image::Size;
+use Time::HiRes qw(gettimeofday);
+use POSIX qw(strftime);
+use Contenido::File;
+use Contenido::DateTime;
+
+use Utils;
+use Contenido::Globals;
+use Contenido::Init;
+
+use vars qw(%_comments);
+
+%_comments = (
+	'text/css'  => ['/*', '*/' ],
+	'text/html' => ['<!--', '-->'],
+);
+
+require "@CONF@/mason/handler_project.pl";
+
+1;
+
+#обьявление package в котором работает основной handler
+package @PROJECT@::Mason;
+
+use Contenido::Globals;
+use HTML::Mason::ApacheHandler;
+use HTML::Entities;
+use Utils;
+
+my %ah_args = (
+	data_dir		=> '@PROJECT_VAR@/mason',
+	comp_root		=> [['project'=>'@MASON_COMP@'], ['core'=>'@CORE_COMP@']],
+);
+
+if ( '@PLUGINS@' ) {
+	my @plcomps = map { [$_=>'@PLUGIN_COMP@'.'/'.$_.'/comps'] } grep { $_ } split(/\ +/, '@PLUGINS@');
+	if ( @plcomps ) {
+		@{$ah_args{comp_root}} = ($ah_args{comp_root}->[0], @plcomps, $ah_args{comp_root}->[1]);
+	}
+}
+
+if (lc('@DEVELOPMENT@') eq 'yes') {
+	$ah_args{error_mode} = 'output';
+
+	if (lc '@COMP_TIMINGS_DISABLE@' ne 'yes') {
+		$ah_args{preamble}   = q|
+		use locale;
+		my $_comm   = $_comments{$r->content_type};
+		my $s_time_ = [Time::HiRes::gettimeofday];
+		if ($_comm) {
+			$m->out("\n".$$_comm[0]." ".$m->current_comp->path.":\tStart t: ".Time::HiRes::time." ".$$_comm[1]."\n");
+		}|;
+		$ah_args{postamble}  = q|
+		if ($_comm) {
+			$m->out("\n".$$_comm[0]." ".$m->current_comp->path.":\tFinish t: ".Time::HiRes::time.", w: ".sprintf('%.4f', Time::HiRes::tv_interval($s_time_))." ".$$_comm[1]."\n");
+		}|;
+	} else {
+		$ah_args{preamble}   = q|
+			use locale;
+		|;
+	}
+} else {
+	$ah_args{preamble}   = q|
+		use locale;
+	|;
+	$ah_args{error_mode} = lc('@ERROR_MODE@') eq 'output' ? 'output':'fatal';
+	$ah_args{preloads}   = [qw(@PRELOADS@)];
+	if (lc('@STATIC_SOURCE_ENABLE@') eq 'yes') {
+        	$ah_args{static_source}     = 1;
+	}
+}
+
+if ( lc '@PREAMBLE_HANDLER@' and ref $state->{preamble_handler_obj} ) {
+	$ah_args{preamble}   .= q|
+	{
+        my $ret = $state->{preamble_handler_obj}->handle( $m, \@_ );
+        if ( ref $ret eq 'HASH' ) {
+            return if ($ret->{_cached} or $ret->{_return}); # component is self cached or wanna return
+            &http_abort( $ret->{http_abort} ) if $ret->{http_abort};
+        }
+    }
+    |;
+}
+
+#Только для нового perl к сожалению :(
+if (@PERL_LEVEL@ >= 500600) {
+	$ah_args{buffer_preallocate_size}	= 256000;
+	$ah_args{enable_autoflush}		= 0;
+}
+
+# Кеширование Mason (в принципе)
+if (lc '@MASON_CACHE_ENABLED@' eq 'yes') {
+	# Кеширование Mason посредством Memcached
+	if (lc '@MASON_MEMCACHED_ENABLED@' eq 'yes') {
+		$ah_args{data_cache_defaults} = {
+			cache_class  => 'Contenido::Cache::Memcached',
+			mc_backend   => '@MASON_MEMCACHED_BACKEND@',
+			mc_servers   => [qw(@MASON_MEMCACHED_SERVERS@)],
+			mc_debug     => lc '@MASON_MEMCACHED_DEBUG@' eq 'yes',
+			mc_namespace => '@MASON_MEMCACHED_NAMESPACE@',
+		};
+	}
+} else {
+		$ah_args{data_cache_defaults} = {
+			cache_class  => 'Cache::NullCache',
+		};
+}
+
+$ah_args{escape_flags} = {
+	h => sub { HTML::Entities::encode_entities(${ $_[0] }, '\'<>&"') },
+	js => sub { Utils::js_escape( ${ $_[0] } ) },
+    strip_crlf =>  sub { ${$_[0]} =~ s/\r?\n\s*/ /g },
+};
+
+$ah_args{default_escape_flags} = '@DEFAULT_ESCAPE_FLAGS@' unless '@DEFAULT_ESCAPE_FLAGS@' eq '';
+
+# Кеширование скомпиленных компонент
+if (lc '@COMP_CACHE_ENABLED@' eq 'no') {
+	$ah_args{use_object_files}    = 0;
+	$ah_args{code_cache_max_size} = 0;
+}
+
+my $ah =new @DEFAULT_HANDLER@(%ah_args);
+
+sub handler {
+	my $r = shift;
+
+	# Mason НЕ обрабатывает всякое г!!!! /i/ /images/ /binary/
+    return Apache::Constants::DECLINED unless Contenido::Apache::is_valid_request($r);
+
+	my $status;
+
+	# устанавливаем соединение с базой для проекта и всех используемых плагинов,
+	# если их нет или они были потеряны
+    # и пытаемся обработать запрос
+	eval {
+		Contenido::Apache::request_init($r);
+		$status = $ah->handle_request($r) 
+	};
+
+	if ($@) {
+		warn '['.scalar(localtime())."] got error $@\n";
+		return Apache::Constants::SERVER_ERROR;
+	} else { 
+	    return $status;
+    }
+}
+
+
+1;
+

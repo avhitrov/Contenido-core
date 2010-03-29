@@ -1,0 +1,88 @@
+package @NAME@::State;
+
+# ----------------------------------------------------------------------------
+# Состояние проекта @NAME@.
+# В этом пакете обязательно должны быть методы new(), info().
+#
+# При создании объекта Contenido::State будет создан также объект
+#    класса @NAME@::State. Он будет доступен (этот метод вернет объект)
+#    через метод, имеющий имя равное результату выполнения следующего 
+#    фрагмента perl-кода: lc('@NAME@').
+# ----------------------------------------------------------------------------
+
+use strict;
+use vars qw($VERSION $AUTOLOAD);
+$VERSION = '1.0';
+
+sub new {
+	my ($proto) = @_;
+	my $class = ref($proto) || $proto;
+	my $self = {};
+	bless($self, $class);
+
+##	Далее настройки проекта на основе переменных из config.mk в виде:
+##	$self->{variable_name} = 'VARIABLE_NAME_SURROUNDED_BY_@@';
+
+	$self->{contenido_notab} = 1;
+
+	$self->_init_();
+
+	return $self;	
+}
+
+# Вывод информации об объекте...
+sub info
+{
+	my $self = shift;
+	return undef		unless ref($self);
+
+	warn "Contenido: Объект @NAME@::State заполнен следующими параметрами:\n";
+	foreach my $attribute (sort (keys( %{ $self->{attributes} } )))
+	{
+		my $la = length($attribute);
+		warn "\t".$attribute.("\t" x (2-int($la/8))).": ".$self->{$attribute}."\n";
+	}
+}
+
+
+# Инициализация.
+#  - Создает внутри объекта хэш с типами полей - это нужно для быстрой
+#    работы метода AUTOLOAD...
+sub _init_
+{
+	my $self = shift;
+
+## Здесь список параметров, указанных в new()
+	foreach my $attribute ( qw(
+				contenido_notab
+			 ) )
+	{
+		$self->{attributes}->{ $attribute } = 'SCALAR';
+	}
+}
+
+
+# ----------------------------------------------------------------------------
+# Это умный AUTOLOAD. Ловит методов для установки/чтения полей...
+# Версия 0.2
+# ----------------------------------------------------------------------------
+sub AUTOLOAD
+{
+	my $self = shift;
+	my $attribute = $AUTOLOAD;
+
+	$attribute =~ s/.*:://;
+	return undef	unless	$attribute =~ /[^A-Z]/;		# Отключаем методы типа DESTROY
+
+	if (! exists($self->{attributes}->{$attribute}))
+	{
+		warn "Contenido Error (@NAME@::State): Вызов метода, для которого не существует обрабатываемого свойства: ->$attribute()\n";
+		return	undef;
+	}
+
+	$self->{ $attribute } = shift @_	if (scalar(@_) > 0);
+	return $self->{ $attribute };
+}
+
+
+1;

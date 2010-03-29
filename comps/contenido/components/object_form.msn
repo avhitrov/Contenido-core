@@ -1,0 +1,272 @@
+<!-- Форма для редактирования объекта -->
+<a name="top"></a>
+<form enctype="multipart/form-data" action="<% $PROTOS->{$proto}->[1] %>" method="POST" name="form" onSubmit="javascript:Save()">
+<table border="0" width="100%" cellspacing="0" cellpadding="6">
+<tr>
+<td style="font-size:110%;">
+<b><% (ref($object) && $object->id() ) ? 'Редактирование' : 'Создание' %> <% $PROTOS->{$proto}->[0] %> типа "<% $object->class_name() %>"</b>
+</td>
+<td align="right">
+% unless ( $proto eq 'sections' && $object->id == 1 ) {
+<input type="submit" value="Сохранить" class="input_btn">
+%	if (( $proto eq 'documents' ) || ( $proto eq 'sections' )) {
+<input type="submit" name="_save_and_leave" value="Сохранить и выйти" class="input_btn">
+<input type="submit" name="_save_and_again" value="Сохранить и создать новый" class="input_btn">
+%	}
+% }
+</td>
+</tr>
+</table>
+
+% if ( $m->comp_exists ('/contenido/components/object_context_menu.msn') ) {
+<div style="text-align:right;"><& '/contenido/components/object_context_menu.msn', object => $object &></div>
+% }
+
+<center>
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr>
+<td bgcolor="#999999">
+<table width="100%" cellpadding="0" cellspacing="1" border="0">
+<tr><td valign="top" width="80%" bgcolor="#ffffff">
+<center>
+<table width="98%" cellpadding="1" cellspacing="0" border="0">
+
+<%perl>
+
+	my @properties = $object->structure();
+
+	for (0..$#properties)
+	{
+
+		my $prop = $properties[$_];
+		next if ($prop->{hidden} == 1) || ($prop->{type} eq 'image') || ($prop->{type} eq 'external') || ($prop->{type} =~ /^array/i) || ($prop->{type} =~ /^image/) || ($prop->{type} eq 'multimedia') || ($prop->{type} eq 'multimedia_new') || ($prop->{type} eq 'audio');
+
+</%perl>
+<tr><td height="8"></td></tr>
+<tr><td nowrap>
+	<table cellpadding="0" cellspacing="0" border="0">
+	<tr>
+%		if( ( $prop->{type} eq 'flag' ) || ($prop->{type} eq 'checkbox') )
+%		{
+	<td><& "/contenido/components/inputs/checkbox.msn", prop => $prop, object=>$object, options=>$options, name => $prop->{attr}, check => $object->{$prop->{attr}}, id => $object->id() &></td>
+% 		}
+	<td nowrap><b><% $prop->{rusname} %></b>&nbsp;/</td>
+	<td align="right" nowrap><font color="#888888" size="-1">&nbsp;name="<% $prop->{attr} %>"</font></td>
+%		if( $prop->{readonly} )
+%		{
+	<td align="right" nowrap>&nbsp;/&nbsp;<font color="#CC0000" size="-1">Значение нельзя изменить</font></td>
+%		}
+	</tr>	
+	</table>
+</td></tr>
+%		if ($prop->{type} eq 'parent')
+%		{
+<tr><td><& "/contenido/components/inputs/$prop->{type}.msn", prop => $prop, object=>$object, options=>$options, name => $prop->{attr}, check => ($object->{$prop->{attr} } || $prop->{default} || $sect_id ), id => $object->id() &></td></tr>
+%		}
+%		elsif( ( $prop->{type} ne 'flag' ) && ($prop->{type} ne 'checkbox') )
+%		{
+<tr><td><& "/contenido/components/inputs/$prop->{type}.msn", prop => $prop, object=>$object, options => $options, name => $prop->{attr}, check => $object->{$prop->{attr}}, id => ($object->id() || 0) &></td></tr>
+%		}
+%	}
+<tr>
+<td><br>
+
+%	for (0..$#properties)
+%	{
+%		my $prop = $properties[$_];
+%		next	if ($prop->{hidden} != 1);
+%		next	if ($prop->{attr} eq 'id' && $clone);
+		<input type="hidden" name="<% $prop->{attr} %>" value="<% html_escape($object->{ $prop->{attr} }) %>">
+%	}
+<input type="hidden" name="sect_id" value="<% $sect_id %>">
+%#если класса в свойствах обьекта нет все равно надо его пробросить как hidden
+% unless (grep {$_->{attr} eq 'class'} @properties) {
+<input type="hidden" name="class" value="<% html_escape($object->{class}) %>">
+% }
+% if ( $clone ) {
+<input type="hidden" name="clone" value="<% $object->id %>">
+% }
+<input type="hidden" name="save" value="1">
+
+</td>
+</tr>
+</table>
+</center>
+
+</td>
+<td valign="top" bgcolor="#efefef">
+<div style="width:270px"><spacer type="block" width="270"></div>
+<div><iframe name="DocFinder" id="DocFinder" src="/contenido/find_document.html" frameborder="0"
+ marginheight="0" marginwidth="0" width="100%" height="0"></iframe></div>
+<table cellpadding="5" cellspacing="0" border="0"><tr><td>
+<p><font size=+1><b><nobr>Мультимедиа-объекты</nobr> к&nbsp;<% $PROTOS->{$proto}->[2] %></b></font></p>
+
+%	for (0..$#properties)
+%	{
+%		my $prop = $properties[$_];
+%
+%		if ($prop->{type} eq 'image')
+%		{
+%			my $IMAGE = $object->get_image( $prop->{attr} );
+%			if (ref($IMAGE) ne 'HASH') { next };
+<& "/contenido/components/inputs/image.msn",
+		IMAGE => $IMAGE,
+		rusname => $prop->{rusname},
+		prop => $prop, object=>$object, 
+		attr => $prop->{attr},
+		options => $options,
+ &>
+
+%		} elsif ($prop->{type} eq 'images')
+%		{
+%			my $IMAGES = $object->get_image( $prop->{attr} );
+%			if (ref($IMAGES) ne 'HASH') { next };
+%			my $MN = $IMAGES->{maxnumber}+0;
+%			for my $mn (1..$MN)
+%			{
+%				my $IMAGE = $IMAGES->{'image_'.$mn};
+
+<& "/contenido/components/inputs/image.msn",
+		rusname => $prop->{rusname},
+		prop => $prop, object=>$object,
+		attr => $prop->{attr}.'_'.$mn,
+		IMAGE => $IMAGE,
+		options => $options,
+ &>
+
+%			}
+%			for my $mn (1..5)
+%			{
+
+
+<& "/contenido/components/inputs/image.msn",
+		IMAGE => {},
+		rusname => $prop->{rusname},
+		prop => $prop, object=>$object, 
+		attr => $prop->{attr}.'_'.($MN+$mn),
+		options => $options,
+ &>
+
+%			}
+%		} elsif ($prop->{type} eq 'multimedia')
+%		{
+%			my $MULTI = $object->get_image( $prop->{attr} );
+
+<& "/contenido/components/inputs/multimedia.msn",
+		rusname => $prop->{rusname},
+		prop => $prop, object=>$object, 
+		attr => $prop->{attr},
+		MULTI => $MULTI,
+		options => $options,
+ &>
+%		} elsif ($prop->{type} eq 'multimedia_new')
+%		{
+%			my $MULTI = $object->get_image( $prop->{attr} );
+
+<& "/contenido/components/inputs/multimedia_new.msn",
+		rusname => $prop->{rusname},
+		prop => $prop, object=>$object, 
+		attr => $prop->{attr},
+		MULTI => $MULTI,
+		options => $options,
+ &>
+%		} elsif ($prop->{type} eq 'audio')
+%		{
+%			my $MULTI = $object->get_image( $prop->{attr} );
+
+<& "/contenido/components/inputs/audio.msn",
+		rusname => $prop->{rusname},
+		prop => $prop, object=>$object, 
+		attr => $prop->{attr},
+		MULTI => $MULTI,
+		options => $options,
+ &>
+%		}
+%	}
+
+</table>
+</td></tr></table>
+
+
+</td></tr>
+</table>
+
+</td></tr></table>
+</center>
+
+<script>
+<!--
+function updateList(theFild,value,text) {
+	for (var i = 0; i < theFild.options.length; i++) {
+		if (theFild.options[i].value == value) {
+			return false;
+		}
+	}
+	var option_length = theFild.options.length++;
+	eval("theFild.options[option_length].value=value");
+	eval("theFild.options[option_length].text=text");
+
+	Save(); this.form.submit();
+
+	}
+//-->
+</script>
+
+% unless ( $proto eq 'sections' && $object->id == 1 ) {
+<div align="center"><input type="submit" value="Сохранить" class="input_btn">
+%# <input type="submit" value="Сохранить изменения в <% $PROTOS->{$proto}->[3] %>" class="input_btn">
+
+%#
+%# Как же сохранять эти гребанные связи?
+%# onClick="javascript:updateList(parent.opener.links.links,'link_6_20_DefaultLink','test');" 
+%#
+
+
+%	if ($object->id > 0 && !$clone) {
+<input name="delete" type="button" value="Удалить" onClick="javascript:window.location='confirm.html?id=<% $object->id() %>&action=<% $proto %>_deletion&class=<% $object->class() %>'" class="input_btn">\
+%	}
+%	if ( ref $filter_params eq 'HASH' ) {
+%		while ( my ($key, $value) = each %$filter_params ) {
+%			next	if grep { $_->{attr} eq $key } $object->structure();
+<input type="hidden" name="<% $key %>" value="<% $value %>">
+%		}
+%	}
+<input type="hidden" name="control_charset" value="Контроль">
+%	if (( $proto eq 'documents' ) || ( $proto eq 'sections' )) {
+<input type="submit" name="_save_and_leave" value="Сохранить и выйти" class="input_btn">
+%		unless ( $clone ) {
+<input type="submit" name="_save_and_again" value="Сохранить и создать новый" class="input_btn">
+%		}
+%	}
+</div>
+% }
+</form>
+
+<%ARGS>
+
+	$proto	=> 'documents'
+	$object	=> undef
+	$clone	=> undef
+	$sect_id	=> 1
+	$filter_params	=> undef
+
+</%ARGS>
+
+<%ONCE>
+        my $PROTOS = {
+                'documents' => ['документа','document.html','документу','документе'],
+                'sections' => ['секции','section.html','секции','секции'],
+                'links' => ['связи','link.html','связи','связи'],
+                'users' => ['пользователя','users.html','пользователю','пользователе'],
+        };
+</%ONCE>
+
+<%INIT>
+	return undef		unless ref($object);
+
+	my $toopi = $project->$proto();
+	my $options = {};
+	if ($toopi && (ref($toopi) eq 'HASH') && (exists($toopi->{ $object->class }))) {
+		%{ $options } = %{ $toopi->{ $object->class } };
+	}
+</%INIT>

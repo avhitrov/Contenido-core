@@ -1,0 +1,41 @@
+<& "/contenido/components/title.msn", title => $PROTOS->{$proto}->[0] &>
+
+<br>
+<table border="0" style="font-size:100%;" width="80%">
+<tr>
+<td width="10"></td>
+<td>
+<div style="font-size:130%;"><% $PROTOS->{$proto}->[0] %></div>
+<p>
+<pre style="font-size:70%;">
+<% Data::Dumper::Dumper($PROTOS->{$proto}->[1]) %>
+</pre>
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+
+<%ARGS>
+
+	$proto => undef
+	$save => undef
+
+</%ARGS>
+<%INIT>
+
+	use vars qw($keeper $request $state $project);
+	my $PROTOS = {
+		'project' => ['Параметры проекта ($project)',$project],
+		'state' => ['Состояние проекта ($state)',$state],
+		'request' => ['Параметры запроса ($request)',$request],
+		
+	};
+
+	if (! exists($PROTOS->{$proto}))
+	{
+		return undef;
+	}
+
+</%INIT>

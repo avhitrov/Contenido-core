@@ -1,0 +1,51 @@
+%# vim:syn=mason
+<select name="<% $name %>"<% $prop->{multiple} && ' multiple' %><% $prop->{size} && ' size="'.$prop->{size}.'"' %>>
+%
+%	if ($prop->{allow_null}) {
+%
+<option value="" <% defined $check ? '' : 'selected' %>>--- не указано ---</option>
+%
+%	}
+%
+%	for my $chain (@chains) {
+%
+%		my $selected = defined $chain && ( ref $check eq 'ARRAY' ? grep { $_ eq $chain } @$check : $check eq $chain ? 1 : 0 );
+%		$found++ if $selected;
+%
+<option value="<% $chain %>"<% $selected ? ' selected' : '' %>><% $chain %></option>
+%
+%	}
+%
+%	#if used not allowed value
+%	if ( $check and not $found ) {
+%
+<option value="<% $check %>" selected style="color:red;"><% $check %></option>
+%
+%	}
+%
+</select>
+<%args>
+
+	$object  => undef
+	$prop    => undef
+	$name    => undef
+	$values  => []
+	$check   => undef
+
+</%args>
+<%init>
+
+	my $found = 0;
+	my @chains = ();
+
+	if (my $method = $prop->{planets_user_method}) {
+		my $user = $object->$method;
+		if ($user) {
+			push(@chains, "users/" . $user->login);
+            foreach my $member ($user->member_of) {
+                next if $member->{'friendly_status'} < 3;
+                push @chains, 'community/'.$member->{'login'}
+            }
+		}
+	}
+</%init>

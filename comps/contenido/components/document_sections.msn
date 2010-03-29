@@ -1,0 +1,172 @@
+<script language="JavaScript"><!--
+ var dom = (document.getElementById) ? true : false;
+ var nn4 = (document.layers) ? true : false;
+ var ie4 = (!dom && document.all) ? true : false;
+ var layerOk;
+
+ if( dom || ie4 || nn4 ) {
+	layerOk = 1;
+ } else {
+	layerOk = 0;
+ }
+
+ var layerRef, styleRef, showVar, hideVar, showDVar, hideDVar;
+ var srcOpen  = '/contenido/i/open11x11.gif';
+ var srcClose = '/contenido/i/close11x11.gif';
+
+ var imageRef;
+
+ if( nn4 ) {
+	layerRef = "document.layers.";
+	styleRef = "";
+	imageRef = "";
+	showDVar = "'block'";
+	hideDVar = "'none'";
+	showVar  = "'show'";
+	hideVar  = "'hide'";
+ } else {
+	layerRef = "document.all.";
+	imageRef = "";
+	styleRef = ".style";
+	showDVar = "'block'";
+	hideDVar = "'none'";
+	showVar  = "'visible'";
+	hideVar  = "'hidden'";
+ }
+
+ if( dom ) {
+	layerRef = "document.getElementById('";
+	styleRef = "').style";
+	imageRef = "')";
+ }
+
+function changeDiv( divID ) {
+	if( eval( layerRef+'slinks'+divID+styleRef+'.visibility' ) == 'hidden' ) {
+		showDiv( divID );
+	} else {
+		hideDiv( divID );
+	}
+}
+
+function showDiv( divID ) {
+	if( layerOk ) {
+		eval( layerRef+'slinks'+divID+styleRef+'.visibility=' + showVar );
+		eval( layerRef+'slinks'+divID+styleRef+'.display=' + showDVar );
+		eval( layerRef+'simg'+divID+imageRef+'.src = "' + srcClose + '"' );
+	}
+}
+
+function hideDiv( divID ) {
+	if( layerOk ) {
+		eval( layerRef+'slinks'+divID+styleRef+'.visibility=' + hideVar );
+		eval( layerRef+'slinks'+divID+styleRef+'.display=' + hideDVar );
+		eval( layerRef+'simg'+divID+imageRef+'.src = "' + srcOpen + '"' );
+	}
+}
+
+//-->
+</script>
+<fieldset>
+<legend>Принадлежность к рубрикам (разделам) сайта<sup>1</sup></legend>
+<table height="400" border=0><tr valign="top"><td>
+<form action="store_document_sections.html" method="POST">
+<input type="submit" value="Сохранить привязки" class="input_btn">
+%	my @sections = $document->sections();
+%	my $document_sections = @sections ? $keeper->get_sections ( id => \@sections, return_mode => 'hash_ref' ) : {};
+%	my $sections_ = {};
+%	$sections_->{$section_tree->{root}->id} = 1	if exists $section_tree->{root};
+%	for my $secti (@sections) {
+%		$sections_->{ $secti } = 1;
+%		my $sect = exists $document_sections->{$secti} ? $document_sections->{$secti} : undef;
+%		next unless ref $sect;
+%		while ( $sect->pid != 1 && (exists $section_tree->{$sect->pid} && (exists $section_tree->{root} && $section_tree->{$sect->pid} != $section_tree->{root}) || ( !exists $section_tree->{root} && $section_tree->{$sect->pid} != $section_tree->{0} ) ) ) {
+%			$sections_->{ $sect->pid } = 1;
+%			$sect = $section_tree->{$sect->pid};
+%		}
+%	}
+%	my @fullsections = keys(%{ $sections_ });
+<ul style="font-size:13px;font-family:Tahoma;">
+%	tree( $section_tree->{root}, $section_tree, \@fullsections, \@sections, 0 );
+</ul>
+
+<input type="hidden" name="id" value="<% $document->id %>">
+<input type="hidden" name="class" value="<% $document->class %>">
+<input type="submit" value="Сохранить привязки" class="input_btn">
+</form>
+</td></tr></table>
+</fieldset>
+
+<!-- Примечания -->
+<fieldset>
+<legend>Примечания</legend>
+
+        <table width="100%" cellspacing="5" cellpadding="0" class="tform" height="100">
+	<tr>
+        <th valign=top>1)</th>
+        <td width="100%">Символом <img src="/contenido/i/checkbox-14x14.gif" width="14" height="14" alt="checkbox" align="absmiddle"> показаны привязки к рубрикам (может быть несколько рубрик);<br></td>
+	</tr>
+	<tr>
+        <th valign=top>1)</th>
+        <td width="100%">Символом <img src="/contenido/i/radio-14x14.gif" width="14" height="14" alt="radio buttom" align="absmiddle"> показана главная (не обязательно корневая) рубрика.<br></td>
+	</tr>
+	</table>
+</fieldset>
+
+
+<%ARGS>
+
+	$document => undef
+
+</%ARGS>
+<%INIT>
+	return	undef	if (! ref($document));
+	return undef unless ($document->{attributes}->{sections});
+	
+	my $root_section = $keeper->get_section_by_id( $Contenido::Section::ROOT || 1, light => 1 );
+	my $section_tree = exists $request->{section_tree} ? $request->{section_tree} : $keeper->get_section_tree();
+	$request->{section_tree} ||= $section_tree;
+
+	sub tree
+	{
+		my ($sect, $section_tree, $fullsections, $sections, $depth) = @_;
+		my $count_checked = 0;
+
+		my @childs;
+
+		if (ref $sect && $sect->id) {
+			@childs = ref $section_tree && exists $section_tree->{$sect->id} ? @{ $section_tree->{$sect->id}{children} } : ();
+			my $checked = (grep {$_ == $sect->id } @{ $sections }) ? ' checked' : '';
+			my $main = ($sect->id == $sections->[0]) ? ' checked' : '';
+			$count_checked++ if( grep {$_ == $sect->{id} } @{ $fullsections } );
+
+			if( @childs && $sect->id != 1) {
+				$m->out("<a title=\"Раскрыть/закрыть\" style=\"width:22px;text-decoration:none;\" href=\"javascript:changeDiv('$sect->{id}');\"><img id=\"simg$sect->{id}\" src=\"/contenido/i/open11x11.gif\" width=\"11\" height=\"11\" border=\"0\"></a>");
+			} else {
+				$m->out( '<span style="width:22px;"></span>' );
+			}
+			$m->out("<input type=\"checkbox\" name=\"section_$sect->{id}\" value=\"1\" $checked><input type=\"radio\" name=\"main_section\" value=\"$sect->{id}\"$main>");
+			$m->out("$sect->{name}<br>\n");
+		}
+
+		if (@childs) {
+			my $check_childs = undef;
+			if( $depth > 0 ) {
+				$m->out( '<div style="visibility:hidden;display:none;" id="slinks'.$sect->id.'">'."\n" );
+			}
+			$m->out( '<ul>'."\n" );
+			foreach my $child (@childs) {
+				$check_childs += tree( $child, $section_tree, $fullsections, $sections, $depth+1 );
+			}
+			$m->out("</ul>\n");
+			if( $depth > 0 ) {
+				$m->out( '</div>'."\n" );
+			}
+			if( $check_childs > 0 && $sect->id != 1) {
+				$m->out( "<script language=\"JavaScript\"><!--\nshowDiv('$sect->{id}');\n//-->\n</script>\n" );
+			}
+		}
+
+		return $count_checked;
+	}
+
+</%INIT>

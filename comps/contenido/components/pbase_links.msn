@@ -1,0 +1,75 @@
+<style>
+<!--
+.tab { font:9pt Verdana; padding:1px 5px 2px 5px;
+ border-top:1px solid silver; border-left:1px solid silver; border-right:2px solid silver; }
+.tab a { text-decoration:none; }
+.tabi { font:9pt Verdana; padding:1px 5px 1px 5px; background: #d0d0d0;
+ border-top:1px solid #f0f0f0; border-left:1px solid #f0f0f0; border-right:2px solid silver; }
+.tabi a { text-decoration:none; }
+-->
+</style>
+<script language="javascript">
+<!--
+var Controls = [\
+% if ( ref $links eq 'ARRAY' && scalar @$links ) {
+%	for ( 0 .. (scalar(@$links)-1) ) {
+%		if ( $_ ) { $m->out(',') }
+'tab_<% $_ %>'\
+%	}
+% }
+];
+function SetActive ( sControl ) {
+  var oControl;
+  for (sC in Controls) {
+	oControl = document.getElementById(Controls[sC]);
+	oControl.style.backgroundColor = '#d0d0d0';
+	oControl.style.borderTop = '1px solid #f0f0f0';
+	oControl.style.borderLeft = '1px solid #f0f0f0';
+  }
+  oControl = document.getElementById(sControl);
+  oControl.style.backgroundColor = 'white';
+  oControl.style.borderTop = '1px solid silver';
+  oControl.style.borderLeft = '1px solid silver';
+}
+//-->
+</script>
+% if ( ref $links eq 'ARRAY' && scalar @$links ) {
+%	my $deflink = $links->[0];
+%	my $auto = '';
+%	if ( exists $deflink->{auto} && ref $deflink->{auto} eq 'HASH' ) {
+%		while ( my ($from, $to) = each %{ $deflink->{auto} } ) {
+%			$auto .= '&from='.$from.'&to='.$document->$to;
+%		}
+%	}
+<fieldset style="width:97%;">
+<legend>Зависимости этого документа</legend>
+<div style="border-bottom:2px solid gray; padding:1px 0 2px;">
+%	my $i = 0;
+%	foreach my $link ( @$links ) {
+%		my $auto = '';
+%		if ( exists $link->{auto} && ref $link->{auto} eq 'HASH' ) {
+%			while ( my ($from, $to) = each %{ $link->{auto} } ) {
+%				$auto .= '&from='.$from.'&to='.$document->$to;
+%			}
+%		}
+<span id="tab_<% $i %>" class="tab<% $i ? 'i' : ''  %>"><a onclick="SetActive('tab_<% $i %>')"
+ href="document_filter_list.html?class=<% $link->{class} %>&filter=<% $link->{filter} %>&field=<% $link->{field} %><% $auto %>&id=<% $document->id %><% exists $link->{order_by} ? '&order_by='.$link->{order_by} : '' %>"
+ target="filtered"><% $link->{name} %></a></span>\
+%		$i++;
+%	}
+</div>
+<iframe id="filtered" name="filtered" src="document_filter_list.html?class=<% $deflink->{class} %>&filter=<% $deflink->{filter} %>&field=<% $deflink->{field} %><% $auto %>&id=<% $document->id %><% exists $deflink->{order_by} ? '&order_by='.$deflink->{order_by} : '' %>"
+ width="100%" height="470" frameborder="0"></iframe>
+</fieldset>
+% }
+<%args>
+
+	$document	=> undef
+
+</%args>
+<%init>
+
+  return	unless ref $document;
+  my $links = $document->table_links;
+
+</%init>

@@ -1,0 +1,10 @@
+--- src/main/http_main.c	Wed Jul 12 12:16:05 2006
++++ src/main/http_main.c	Tue Oct 10 18:40:12 2006
+@@ -3465,6 +3465,7 @@
+ /* Don't detach for MPE because child processes can't survive the death of
+    the parent. */
+     if (do_detach) {
++        signal(SIGHUP, SIG_IGN);
+         if ((x = fork()) > 0)
+             exit(0);
+         else if (x == -1) {

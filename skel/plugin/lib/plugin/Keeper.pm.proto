@@ -1,0 +1,11 @@
+package @NAME@::Keeper;
+
+use strict;
+use warnings 'all';
+use base qw(Contenido::Keeper);
+
+
+use Contenido::Globals;
+
+
+1;

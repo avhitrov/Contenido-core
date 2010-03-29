@@ -1,0 +1,132 @@
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style>
+	body {
+		background-color: #FFFFFF;
+		margin: 0px;
+	}
+	form {
+		margin:  0px;
+		padding: 0px;
+	}
+	input, select, textarea {
+		font-family: Tahoma, Arial, sans-serif;
+		font-size:9pt;
+	}
+	a {
+		color:#0000ee;
+	}
+	a:visited.v {
+		color:#0000ee;
+	}
+
+	fieldset {padding:6px;margin-bottom:10px;border:2px solid #8093B0;}
+	fieldset legend {font-size:8pt;font-weight:bold;font-family:Tahoma;padding:3px 6px 3px 6px;margin-bottom:6px;color:#ffffff;background-color:#8093B0;}
+	
+	.tatop {font-size:70%;font-family:Tahoma;color:#ffffff;}
+	.tatop a {color:#ffffff;}
+	.npath {font-size:70%;font-family:Tahoma;padding:8px;}
+	
+	.textnorm { font-size:70%; font-family:Tahoma; }
+	.input_btn {background-color:#930300;color:#FFFFFF;height:2.4em;}
+	
+	table.tlistdocs { margin-top:10px; margin-bottom:10px; border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9; }
+	table.tlistdocs td, table.tlistdocs th { border:1px solid #d9d9d9; border-right:0px; border-bottom:0px; }
+	table.tlistdocs td {font-size:70%;font-family:Tahoma;}
+	table.tlistdocs table td {border:0px;}
+	
+	table.tform th, table.tform td {
+		font-size:   70%;
+		font-family: Tahoma;
+		text-align:  left;
+	}
+	
+	th {font-size:70%;font-family:Tahoma;text-align:left;}
+	
+	h5, .hdr5 {font-size:70%;font-family:Tahoma;font-weight:bold;padding-top:10px;padding-bottom:5px;}
+	
+
+	.hiddensect { color:#909090; }
+	.hiddensect a { color:#909090; }
+	
+	.btn {font-size:9pt;}
+
+	.bb {
+		border: solid 1px #000000;
+	}
+	.gb {
+		background-color: #D8D8D8;
+	}
+	.undo {
+		font-family: Tahoma;
+		font-size: 9pt;
+		background-color: #FFD8D8;
+	}
+	.link_string { font: 12px Tahoma; padding:5px 10px; border-bottom:1px solid gray; }
+	.link_string p { margin:0; padding:0; }
+	
+</style>
+<title>Редакторский интерфейс<% (length($title) > 0) ? " | $title" : "" %></title>
+<% $m->comp_exists('/contenido/components/custom_head.msn') ? $m->comp('/contenido/components/custom_head.msn') : '' %>
+<script language="javascript" type="text/javascript" src="/contenido/i/js/links.js"></script>
+<script language="javascript" type="text/javascript" src="/contenido/i/js/tiny_mce/tiny_mce.js"></script>
+<script language="javascript" type="text/javascript">
+var WYSIWYGControls = new Array();
+var sDocumentClass;
+var nDocumentID;
+window.onload = function()
+{
+  var sControls;
+  if ( WYSIWYGControls.length ) {
+	sControls = WYSIWYGControls.join(',');
+	tinyMCE.init({
+		theme : "advanced",
+		plugins : "safari,paste,advimage,table",
+		paste_create_paragraphs : false,
+		paste_create_linebreaks : false,
+		paste_use_dialog : true,
+		paste_auto_cleanup_on_paste : true,
+		paste_convert_middot_lists : false,
+		paste_unindented_list_class : "unindentedList",
+		paste_convert_headers_to_strong : true,
+		paste_insert_word_content_callback : "convertWord",
+		theme_advanced_buttons3_add : "pastetext,pasteword,selectall,|,forecolor,backcolor,|,tablecontrols",
+		mode : "exact",
+		elements : sControls,
+		convert_urls : false,
+
+		external_image_list_url : "/contenido/image_list.js?class=" + sDocumentClass + "&id=" + nDocumentID
+	});
+  }
+}
+function convertWord(type, content) {
+	switch (type) {
+		// Gets executed before the built in logic performes it's cleanups
+		case "before":
+			//content = content.toLowerCase(); // Some dummy logic
+			break;
+
+		// Gets executed after the built in logic performes it's cleanups
+		case "after":
+			//content = content.toLowerCase(); // Some dummy logic
+			break;
+	}
+
+	return content;
+}
+
+</script>
+</head>
+<body>
+
+<%args>
+
+	$style => undef
+	$title => undef
+
+</%args>
+<%init>
+	my $pn = $state->project_name();
+	my ($pn_name, $pn_domen) = split(/\./, $pn);
+</%init>

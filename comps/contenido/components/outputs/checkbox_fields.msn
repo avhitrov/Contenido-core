@@ -1,0 +1,26 @@
+<%args>
+
+	$name => undef
+	$SETS => undef
+
+</%args>
+<%init>
+
+	return 	undef	if (! ref($SETS));
+	return 	undef	if (! $name);
+
+	my $FIELDS = {};
+	for my $element (%{ $SETS })
+	{
+		if ($element =~ /^${name}_(\d+)\.checkboxrusname$/)
+		{
+			$FIELDS->{$name.'_'.$1} = {}		if (! exists($FIELDS->{$name.'_'.$1}));
+			$FIELDS->{$name.'_'.$1}->{rusname} = $m->comp('/contenido/components/filter.msn', str => $SETS->{$element});
+		}
+	}
+	{
+		local $Data::Dumper::Indent = 0;
+		return Data::Dumper::Dumper($FIELDS);
+	}
+
+</%init>

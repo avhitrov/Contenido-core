@@ -1,0 +1,9 @@
+package @NAME@::Keeper;
+
+use strict;
+use base 'Contenido::Keeper';
+
+#put youre custom sql code and other project dependent stuff here
+
+1;
+

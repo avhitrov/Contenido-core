@@ -1,0 +1,90 @@
+<& "/contenido/components/title.msn" &>
+<div style="font:bold 13px Verdana; margin:4px;">Класс: <span style="color:teal;"><% $class %></span>
+<span style="font:11px Verdana;">(<a href="document.html?class=<% $class %>&<% $field %>=<% $id %><% $defaults %>" target="_blank">создать новый</a>)</span></div>
+% if ( ref $docs eq 'ARRAY' && @$docs ) {
+%	if ($total > $size) {
+<div style="font-size:75%; font-family:Arial; text-align:center;">
+<& /inc/pages_.msn, p => $p, n => $size, total => $total, params => {%ARGS} &></div>
+%	}
+%	my @props = sort { $a->{column} <=> $b->{column} } grep { exists $_->{column} } $docs->[0]->required_properties;
+<table width="100%" border="0" cellpadding="4" cellspacing="0" class="tlistdocs">
+<tr bgcolor="#efefef">
+%	foreach my $prop (@props) {
+<th><% $prop->{rusname} %></th>
+%	}
+<th>&nbsp;</th>
+</tr>
+%	foreach my $doc (@$docs) {
+%		my $document_access = $user->section_accesses($user, $doc->section);
+%		my $color = $doc->contenido_status_style ? $doc->contenido_status_style : 
+%				$doc->status == 1 ? 'blue' :
+%				$doc->status == 0 ? 'gray' : 'blue';
+%		my ($a1, $a2) = $document_access == 2 ? ('<a href="document.html?id='.$doc->id.'&class='.$doc->class.'" style="'.$color.'" target="_blank">', '</a>') : ('','');
+%#		my ($stat) = grep { $_->{attr} eq 'status' } @props;
+%#		my ($case) = grep { $_->[0] == $banner->status } @{ $stat->{cases} }	if ref $stat eq 'HASH' && exists $stat->{cases};
+<tr>
+%		foreach my $prop (@props) {
+%			my $attr = $prop->{attr};
+%			if ( $attr =~ /dtime/ ) {
+<td><% $a1 %><& "/contenido/components/show_dtime.msn", dtime => $doc->$attr &><% $a2 %></td>
+%			}else{
+<td><% $a1.$doc->$attr.$a2 %></td>
+%			}
+%		}
+<td nowrap>\
+%		if ($document_access == 2) {
+<a href="document_fast_delete.html?id=<% $doc->id %>&class=<% $doc->class %>" onclick="return confirm('Удалить документ?');" title="Удалить документ"><img
+ src="/contenido/i/actions/delete.gif" width="14" height="17" alt="Удалить документ" align="absmiddle" border="0" hspace="1"></a>\
+%		}
+</td>
+</tr>
+%	}
+</table>
+% }
+%#<pre><% Dumper($docs->[0]->required_properties) %></pre>
+<%args>
+	$id	=> undef
+	$filter	=> undef
+	$field	=> undef
+	$from	=> undef
+	$to	=> undef
+	$class	=> undef
+	$order_by	=> undef
+	$p	=> 1
+</%args>
+<%init>
+
+  my ($docs, $total);
+  my $defaults = '';
+  my $size = 15;
+  if ( $id && $filter && $class ) {
+	my %opts = ();
+	$opts{$filter} = $id;
+	$opts{order_by} = $order_by	if $order_by;
+	$docs = $keeper->get_documents (
+		class		=> $class,
+		return_mode	=> 'array_ref',
+		offset		=> ($p-1)*$size,
+		limit		=> $size,
+		%opts,
+	);
+	delete $opts{order_by};
+	$total = $keeper->get_documents (
+		class		=> $class,
+		count		=> 1,
+		%opts,
+        );
+  } else {
+	return;
+  }
+  if ( defined $from && defined $to ) {
+	if ( ref $from eq 'ARRAY' && ref $to eq 'ARRAY' && (scalar @$from == scalar @$to) ) {
+		for ( 0..(scalar @$from - 1) ) {
+			$defaults .= '&'.$from->[$_].'='.$to->[$_];
+		}
+	} elsif ( !ref $from && !ref $to ) {
+		$defaults .= '&'.$from.'='.$to;
+	}
+  }
+
+</%init>

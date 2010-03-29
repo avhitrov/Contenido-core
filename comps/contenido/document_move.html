@@ -1,0 +1,39 @@
+<%ARGS>
+
+	$s		=> undef
+	$id		=> undef
+	$move		=> undef
+	$p		=> 1
+	$use_section	=> undef
+	$class		=> undef
+
+</%ARGS>
+<%INIT>
+
+	my $sect;
+	if ($s && ($s !~ /\D/) && ($s > 0)) {
+		$sect = $keeper->get_section_by_id($s);
+	}
+
+	my %filter_params;
+	$filter_params{use_section} = $ARGS{use_section}	if $ARGS{use_section};
+	$filter_params{class} = $ARGS{class}			if $ARGS{class};
+	$filter_params{alpha} = $ARGS{alpha}			if $ARGS{alpha};
+	$filter_params{alpha_search} = $ARGS{alpha_search}	if $ARGS{alpha_search};
+	$filter_params{search_by} = $ARGS{search_by}		if $ARGS{search_by};
+	$filter_params{search} = $ARGS{search}			if $ARGS{search};
+	$filter_params{p} = $ARGS{p}				if $ARGS{p} && $ARGS{p} > 1;
+	my $return_params = join ('&', map { $_.'='.$filter_params{$_} } keys %filter_params );
+
+	# Перемещение...
+	if ($move && $id && ($id !~ /\D/) && ($id > 0)) {
+		$sect->dmove($id, $move);
+		my @params;
+		push @params, 'id='.$s				if $s;
+		push @params, 'p='.$p				if $p > 1;
+		push @params, 'class='.$class			if $class;
+		push @params, 'use_section='.$use_section	if $use_section;
+		$m->redirect($s ? "sections.html?id=".$s.( $return_params ? '&'.$return_params : '' ) : 'index.html');
+	}
+
+</%INIT>

@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+use lib qw(@PERL_LIB@ @MODULES@);
+
+use Apache::Constants qw(:common);
+use Apache::SizeLimit;
+$Apache::SizeLimit::MAX_PROCESS_SIZE = @MAX_PROCESS_SIZE@;
+
+require "@CONF@/mod_perl/startup_project.pl";
+
+1;

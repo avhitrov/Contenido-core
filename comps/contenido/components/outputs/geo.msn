@@ -1,0 +1,29 @@
+%# vim:syn=mason
+<%args>
+	$object
+	$name => undef
+	$SETS => undef
+</%args>
+<%init>
+	return undef unless ref $SETS;
+	return undef unless $name;
+
+	my %geo;
+	$geo{$_} = 1 foreach $object->$name;
+	while (my ($k, $v) = each(%$SETS)) {
+		next unless $k =~ /^${name}_(add|delete)$/;
+		next unless $v;
+
+		if ($1 eq 'add') {
+			$geo{$v} = 1;
+		} elsif ($1 eq 'delete') {
+			if (ref $v eq 'ARRAY') {
+				delete $geo{$_} foreach @$v;
+			} else {
+				delete $geo{$v};
+			}
+		}
+	}
+
+	return [keys %geo];
+</%init>

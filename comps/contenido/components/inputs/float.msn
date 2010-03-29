@@ -1,0 +1,9 @@
+<input <% $prop->{readonly} ? 'readonly ' : '' %>type="text" name="<% $name %>" size="10" value="<% html_escape($val) %>" style="width:25%;font-family:arial;font-size:9pt;">
+<%args>
+	$name	=> undef
+	$check	=> undef
+	$prop	=> {}
+</%args>
+<%init>
+    my $val = $prop->{format} ? sprintf($prop->{format}, $check) : $check;
+</%init>

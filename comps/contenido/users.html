@@ -1,0 +1,108 @@
+<%args>
+	$id => undef
+	$login => undef
+	$ret => undef
+
+	$delete => undef
+	$save => undef
+
+	$class => undef
+</%args>
+<%init>
+	unless ($user->check_group(1)) {
+		$m->clear_buffer;
+		$m->abort(403);
+	}
+
+	my $luser;
+
+	# Проверка заданности класса - он должен быть задан явно...
+	if ($class)
+	{
+		my @correct_classes = (@{ $state->{available_users} }, 'Contenido::User');
+		if (! (grep { $_ eq $class } @correct_classes))
+		{
+			# Класс задан, но он не корректный
+			$class = undef;
+		}
+	}
+
+	if ($id && ($id>0)) {
+		$luser = $keeper->get_user_by_id($id, class=>$class);
+	} elsif ($login && (length $login > 0)) {
+		$luser = $keeper->get_user_by_login($login, class=>$class);
+	}
+
+	if ($class and !ref($luser)) {
+		$luser = $class->new($keeper);
+	}
+
+	# Удаление...
+	if (ref $luser && $delete == 1)
+	{
+		$luser->delete();
+
+		$r->header_out("Location", "/contenido/?set_context=profile-admin");
+		$r->status(302);
+		$r->send_http_header();
+		$m->abort();
+	}
+
+	# Сохранение ...
+	elsif (ref $luser && $save == 1)
+	{
+		my @groups = $luser->groups();
+		my $res = $m->comp('/contenido/components/set_properties.msn', object => $luser, SETS => \%ARGS);
+		if ($res != 1)
+		{
+			# Ошибка, надо бы обработать...
+			warn "Contenido Debug: set_properties.msn вернул $res\n" if ($state->debug());
+		}
+		$luser->groups(@groups);
+		$luser->store();
+
+		$r->header_out("Location", "users.html?id=".$luser->id()."&class=$class");
+		$r->status(302);
+		$r->send_http_header();
+		$m->abort();
+	}
+
+</%init>
+
+
+<& "/contenido/components/header.msn" &>
+
+<& "/contenido/components/naviline.msn" &>
+
+%	if ((!defined $luser || !$luser->login) && (!defined $class || !$class))
+%	{
+%		if (!defined $class || !$class) {
+			<!-- Блок с выбором нового пользователя для создания -->
+			<table width="50%" border="0">
+				<tr>
+					<td>
+						<fieldset>
+							<legend>Выберите тип пользователя для создания</legend>
+							<& "/contenido/components/new_objects_form.msn", proto => 'users' &>
+						</fieldset>
+					</td>
+				</tr>
+			</table>
+%		}
+%	} elsif (ref $luser) {
+		<& "/contenido/components/obj_list_js.msn", object => $luser &>
+		<& "/contenido/components/object_form.msn", object => $luser, proto => 'users' &>
+%		if ($luser->login) {
+			<!-- Доступ к секциям -->
+			<br>
+			<table width="100%" cellspacing="5" cellpadding="0" border="0">
+				<tr>
+					<td valign=top><& "/contenido/components/user_sections.msn", luser => $luser &></td>
+				</tr>
+			</table>
+			<!-- / Доступ к секциям -->
+%		}
+%	}
+
+</body>
+</html>

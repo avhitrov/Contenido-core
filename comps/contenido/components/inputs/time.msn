@@ -1,0 +1,30 @@
+<& '/contenido/components/select.msn', name => $name.'_hour',   values => \@hours,   check => $hour   &>
+<& '/contenido/components/select.msn', name => $name.'_minute', values => \@minutes, check => $minute &>
+<& '/contenido/components/select.msn', name => $name.'_second', values => \@seconds, check => $second &>
+
+<%args>
+	$prop
+	$name  => undef
+	$check => undef
+</%args>
+
+<%init>
+	# Формируем данные для select'а...
+	my @hours   = map { $_ => sprintf('%02d', $_) } (0 .. 23);
+	my @minutes = map { $_ => sprintf('%02d', $_) } (0 ..59);
+	my @seconds = map { $_ => sprintf('%02d', $_) } (0 ..59);
+
+	if ($prop->{allow_null}) {
+		unshift @hours,   '', '';
+		unshift @minutes, '', '';
+		unshift @seconds, '', '';
+	}
+
+	my ($hour, $minute, $second);
+	if ($check) {
+		$check =~ /(\d{1,2}):(\d{1,2}):(\d{1,2})/;
+		($hour, $minute, $second) = ($1 + 0, $2 + 0, $3 + 0);
+	} elsif(!$prop->{allow_null}) {
+		($second,$minute,$hour) = (localtime)[0 .. 2];
+	}
+</%init>

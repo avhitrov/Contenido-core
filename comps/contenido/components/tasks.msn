@@ -1,0 +1,31 @@
+<%init>
+
+	return (
+		{
+			'attr' => 'structure',
+			'rusname' => 'Редактирование параметров сайта',
+			'component' => 'structure.msn',
+		},
+		{
+			'attr' => 'project',
+			'rusname' => 'Редактирование параметров объектов',
+			'component' => 'project.msn',
+		},
+		{
+			'attr' => 'finder',
+			'rusname' => 'Отбор документов',
+			'component' => 'finder.msn',
+ 		},
+		{
+			'attr' => 'users',
+			'rusname' => 'Список пользователей системы',
+			'component' => 'users.msn',
+		},
+		{
+			'attr' => 'cache',
+			'rusname' => 'Очистить кэш сайта',
+			'component' => 'cache.msn',
+		},
+	);
+
+</%init>

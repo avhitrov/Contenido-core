@@ -1,0 +1,9 @@
+<!-- Copyright (c) 1996-<% (localtime())[5] + 1900 %> RAMBLER_INTERNET_HOLDING -->
+<html>
+<head>
+<link rel="SHORTCUT ICON" href="http://www.rambler.ru/favicon.ico?_URL=<!--#echo var='SERVER_NAME' -->" />
+<script language="JavaScript">
+<!--
+if(location.hostname!=''&&(location.hostname.indexOf('.park.')==-1)&&location.port!=''){function cs_err(){var cs_i1=new Image;cs_i1.src='http://counter.rambler.ru/top100.cnt?000000';return true;}if(escape('а')!='%u0430'){var cs_i2=new Image;cs_i2.src='http://counter.rambler.ru/top100.cnt?000000';}window.onerror=cs_err;}
+// <@))>>>< -->
+</script>

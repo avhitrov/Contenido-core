@@ -1,0 +1,37 @@
+<script LANGUAGE="JavaScript">
+
+function Commit_<% $name %>()
+{
+	var tmp = Array();
+	for (var j=0;j<document.form.<% $name %>_show.options.length;j++)
+	{
+		if (document.form.includers_show.options[j].selected){
+			tmp[j] = document.form.<% $name %>_show.options[j].value;
+		}
+	}
+	document.form.document.form.<% $name %>.value = tmp.join(',');
+	return true;
+}
+
+</script>
+
+<select multiple size="6" name="<% $name %>_show" style="width:25%;font-family:arial;font-size:9pt;" onChange="javascript:Commit_<% $name %>()">
+%       my @local_checks = split(/,/,$check);
+%	my %ch = map { $_ => 1 } @local_checks;
+%       for my $class (@{ $state->{available_documents} })
+%       {
+%		my $doc = new $class($keeper);
+<option value="<% $class %>" <% ($ch{$class}) ? 'selected' : '' %>><% $class.' / '.$doc->class_name.' ('.$class.')' %></option>
+%	}
+</select>
+<input type="hidden" name="<% $name %>" value="<% $check %>">
+<%ARGS>
+
+	$name => undef
+	$check => undef
+
+</%ARGS>
+<%INIT>
+
+
+</%INIT>

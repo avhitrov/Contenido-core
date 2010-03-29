@@ -1,0 +1,204 @@
+<STYLE TYPE="text/css">
+TABLE#tblCoolbar 
+	{ 
+	background-color:threedface; padding:1px; color:menutext; 
+	border-width:1px; border-style:solid; 
+	border-color:threedhighlight threedshadow threedshadow threedhighlight;
+	}
+.cbtn
+	{
+	height:18;
+	BORDER-LEFT: threedface 1px solid;
+	BORDER-RIGHT: threedface 1px solid;
+	BORDER-TOP: threedface 1px solid;
+	BORDER-BOTTOM: threedface 1px solid; 
+	}
+.txtbtn {font-family:tahoma; font-size:70%; color:menutext;}
+</STYLE>
+
+<script LANGUAGE="JavaScript">
+var SuperTexts = new Array;
+<%perl>
+
+	my $i = 0;
+
+
+	my @properties = $object->structure();
+
+	for (0..$#properties)
+	{
+		my $prop = $properties[$_];
+		if ($prop->{type} eq 'htmltext')
+		{ 
+			$m->out("SuperTexts[$i] = '$prop->{attr}';\n");
+			$i++;
+		}
+	}
+</%perl>
+function button_over(eButton)
+	{
+	eButton.style.backgroundColor = "#B5BDD6";
+	eButton.style.borderColor = "darkblue darkblue darkblue darkblue";
+	}
+function button_out(eButton)
+	{
+	eButton.style.backgroundColor = "threedface";
+	eButton.style.borderColor = "threedface";
+	}
+function button_down(eButton)
+	{
+	eButton.style.backgroundColor = "#8494B5";
+	eButton.style.borderColor = "darkblue darkblue darkblue darkblue";
+	}
+function button_up(eButton)
+	{
+	eButton.style.backgroundColor = "#B5BDD6";
+	eButton.style.borderColor = "darkblue darkblue darkblue darkblue";
+	eButton = null; 
+	}
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+var isHTMLMode = new Array();
+for (var i = 0; i < SuperTexts.length; i++)
+{
+	isHTMLMode[SuperTexts[i]] = false;
+}
+
+function document.onreadystatechange()
+	{
+		for (var i = 0; i < SuperTexts.length; i++)
+		{
+			var fr = eval("fr_" + SuperTexts[i]);
+			fr.document.designMode="On";
+		}
+		document.form.focus();
+	}
+function cmdExec(frname, cmd, opt)
+	{
+  	if (isHTMLMode[frname]){alert("Please uncheck 'Edit HTML'");return;}
+	var fr = eval("fr_" + frname);
+  	fr.document.execCommand(cmd,"",opt);
+	fr.focus();
+	}
+function setMode(frname, bMode)
+	{
+	var fr = eval("fr_" + frname);
+	var sTmp;
+  	isHTMLMode[frname] = bMode;
+  	if (isHTMLMode[frname]){sTmp=fr.document.body.innerHTML;fr.document.body.innerText=sTmp;} 
+	else {sTmp=fr.document.body.innerText;fr.document.body.innerHTML=sTmp;}
+  	fr.focus();
+	}
+function createLink(frname)
+	{
+	if (isHTMLMode[frname]){alert("Please uncheck 'Edit HTML'");return;}
+	cmdExec(frname, "CreateLink");
+	}
+function insertImage(frname)
+	{
+	if (isHTMLMode[frname]){alert("Please uncheck 'Edit HTML'");return;}
+	var sImgSrc=prompt("Insert Image File (You can use your local image file) : ", "http://");
+	if(sImgSrc!=null) cmdExec(frname, "InsertImage",sImgSrc);
+	}
+function Save() 
+{
+//	if (isHTMLMode){alert("Please uncheck 'Edit HTML'");return;}
+	for (var i = 0; i < SuperTexts.length; i++)
+	{
+		var tmp = eval("document.form." + SuperTexts[i]);
+		var fr = eval("fr_" + SuperTexts[i]);
+		tmp.value = fr.document.body.innerHTML;
+	}
+
+	document.form.submit();
+}
+	
+function foreColor(frname)
+	{
+	var arr = showModalDialog("selcolor.html","","font-family:Verdana; font-size:12; dialogWidth:30em; dialogHeight:34em" );
+	if (arr != null) cmdExec(frname, "ForeColor",arr);	
+	}
+
+function w(s,w,h) {
+        window.open( s,"remote","toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width="+(w+35)+",height="+(h+30)+"").focus();
+}
+
+function show_layer( name, xof, yof ) {
+	var layer = eval('document.all.span_' + name);
+	var rel = document.all['pos_' + name];
+	var x = rel.offsetLeft;
+	var y = rel.offsetTop;
+
+	while (rel.offsetParent != null) {
+		rel = rel.offsetParent;
+		x += rel.offsetLeft;
+		y += rel.offsetTop;
+		if (rel.tagName == 'BODY') break;
+	}
+	layer.style.left = x + (xof || 400);
+	layer.style.top = y + (yof || -50);
+	layer.style.visibility = 'visible';
+}
+
+function hide_layer(name) {
+	var layer = eval('document.all.span_' + name);
+	layer.style.visibility = 'hidden';
+}
+
+
+// object list javascripts
+
+
+
+function already_added(opts, item)
+{
+	var i = 0;
+	while ( i < opts.length)
+	{
+		if (opts[i].value == item.value || opts[i].text == item.text) return true;
+		i++;
+	}
+	return false;
+}
+
+function sel_wo_del(sobj, dobj)
+{
+//	sobj = eval('iobjs.document.form.objs');
+//	dobj = document.dform.objs;
+	var i = 0;
+		while ( i < sobj.elements.length )
+		{
+			if (sobj.elements[i].checked)
+			{
+				var item = new Option();
+				item.value = sobj.elements[i].name;
+				item.text = sobj.elements[i].value;
+				if (!already_added(dobj.options, item)) dobj.options[dobj.options.length] = item;
+				sobj.elements[i].checked = null;
+			}
+			i++;
+		}
+}
+
+function del(sobj)
+{
+	var i = 0;
+ 	while ( i < sobj.options.length )
+	{
+		if (sobj.options[i].selected && sobj.options[i].value != null)
+			sobj.options[i] = null;
+		i++;
+	}
+}
+
+</script>
+<%ARGS>
+
+	$object => undef
+
+</%ARGS>
+<%INIT>
+
+	return undef	unless ref($object);
+
+</%INIT>

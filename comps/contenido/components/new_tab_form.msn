@@ -1,0 +1,14 @@
+
+<table border="0" width="80%" class="tform">
+<tr>
+<td width="40%">Добавление нового профиля</td>
+<td>
+<form action="tabs.html" method="get">
+<input type="text" name="id" value="" style="width:50%;">&nbsp;&nbsp;<input type="submit" value="Добавить профиль" style="background-color:#930300;color:#FFFFFF;">
+</form>
+</td>
+</tr>
+
+<tr><td height="20"></td></tr>
+
+</table>

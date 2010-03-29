@@ -1,0 +1,21 @@
+<%args>
+
+	$root		=> $Contenido::Section::ROOT
+	$level		=> 3
+	$selected	=> undef
+
+</%args>
+<%init>
+
+	my $section_tree = exists $request->{section_tree} ? $request->{section_tree} : $keeper->get_section_tree();
+	$request->{section_tree} ||= $section_tree;
+
+	$m->comp('/contenido/components/select_index_tree_elem.msn', 
+		section_tree	=> $section_tree, 
+		root		=> $section_tree->{root} || $section_tree->{0}, 
+		offset		=> 0, 
+		count_offset	=> $level, 
+		selected	=> $selected
+	);
+
+</%init>

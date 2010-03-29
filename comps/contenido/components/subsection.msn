@@ -1,0 +1,28 @@
+	<fieldset>
+	<legend>Подразделы</legend>
+
+	<table width="100%" border="0" cellpadding="3" cellspacing="0" class="tlistdocs">
+	<tr bgcolor="#efefef">
+	<th align="center" width="1%">N</th>
+	<th>Название</th>
+
+<& "/contenido/components/__section_tree__.msn", root=>$section->id, level=>3, mode=>0, width_limit => 30 &>
+
+	</table>
+%	if ($section_access == 2)
+%	{
+	<div style="font-size:70%;font-family:Tahoma;margin:5px 4px 10px 4px;"><b><a href="section.html?sect_id=<% $section->id %>">Создать подраздел &raquo;</a></b></div>
+%	}	
+	<div style="font-size:70%;font-family:Tahoma;margin:5px 4px 10px 4px;"><b><a href="/contenido/?set_context=filter-<% $section->id %>">Установить в качестве фильтра &raquo;</a></b></div>
+	</fieldset>
+
+
+<%ARGS>
+
+	$section => undef
+
+</%ARGS>
+<%INIT>
+	return undef	if (! ref($section));
+	my $section_access = $user->section_accesses($user, $section->id);
+</%INIT>

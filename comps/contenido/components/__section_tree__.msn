@@ -1,0 +1,106 @@
+%# vim:syn=mason:
+%   index_tree( $sect->{$root}, 0, \$line, $level, $mode, $profile, $width_limit, $root );
+<%once>
+
+   use Encode;
+
+</%once>
+<%args>
+
+    $root => 1
+    $level => 3
+    $mode => 1
+    $width_limit => undef
+    $avail_classes	=> undef
+
+</%args>
+<%init>
+    my $profile = $m->comp('/contenido/components/context.msn', name => 'profile');
+
+    sub index_tree
+    {
+        my ($sect, $offset, $line_ref, $count_offset, $viewmode, $profile, $width_limit, $root) = @_;
+        my $section_access = $user->section_accesses($user, $sect->{id});
+
+        my $spacer = '';
+        for(my $c=1; $c<$offset; $c++)
+        {
+            $spacer = $spacer.(($c == $offset-1) ? '&nbsp;&nbsp;&raquo;&nbsp;&nbsp;' : '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+        }
+        if( ref $sect && $sect->id && ($sect->id != 1) && ($offset != 0) && $section_access > 0)
+        {
+            $$line_ref++;
+
+            my $href = 'sections.html?id='.$sect->id;
+
+            my $sname = decode("utf-8", $sect->name());
+            if ( defined $width_limit && $offset + length($sname) > $width_limit ) {
+		$sname = substr($sname, 0, $width_limit - $offset);
+		$sname .= '&nbsp;...';
+            }
+            $sname = encode("utf-8", $sname);
+	    my $statstyle = $sect->contenido_status_style ? ' style="' . $sect->contenido_status_style . '"' : '';
+	    my @properties = $sect->structure();
+	    my ($statprop) = grep { $_->{attr} eq 'status' } @properties;
+	    my ($statcase) = grep { $_->[0] == $sect->status } @{$statprop->{cases}}	if exists $statprop->{cases} && ref $statprop->{cases} eq 'ARRAY';
+	    my $statname = $statcase->[1]						if ref $statcase;
+            my $html_sect = '<span'.($statstyle).(!$sect->status ? ' class="hiddensect"' : '').'>'.($section_access ? '<a href="'.$href.'"'.$statstyle.'>' : '').$sname.($section_access ? '</a>' : '') . '&nbsp;'.($sect->status != 1 && $statname ? '&nbsp;<span style="font-size:11px;">('.$statname.')</span>' : '').'</span>';
+            my $style = ($offset == 1) ? ($viewmode ? ' style="font-size:110%;"':' style="font-size:95%;"') : '';
+
+            $m->out(<<EOT);
+<tr>
+<td align="right">&nbsp;${$line_ref}&nbsp;<a href="section.html?id=$sect->{id}&move=up&ret=$root"><img src="/contenido/i/ico-up-9x10.gif" border=0 alt="Переместить секцию на шаг вверх"></a>&nbsp;<a href="section.html?id=$sect->{id}&move=down&ret=$root"><img src="/contenido/i/ico-down-9x10.gif" border=0 alt="Переместить секцию на шаг вниз"></a></td>
+<td><table cellpadding="0" cellspacing="0" border="0">
+    <tr valign="top">
+    <td width="10">&nbsp;</td>
+    <td>$spacer</td>
+    <td nowrap $style>$html_sect</td>
+    </tr>
+    </table>
+</td>
+EOT
+
+            if ($viewmode)
+            {
+                my $fhref = '/contenido/?set_context=filter-'.$sect->id();
+                my $new_doc_class = $sect->default_document_class;
+                $m->out(qq^\n<td align="center" nowrap><a href="$fhref">уст.фильтр</a>^);
+                $m->out(qq^&nbsp;&nbsp;&nbsp;<a href="document.html?sect_id=$sect->{id}&class=$new_doc_class">доб.докум</a>^) if $section_access == 2 and $new_doc_class;
+                $m->out("</td>");
+            }
+
+            $m->out('</tr>');
+        }
+        
+        my $childs = $sect->{children} || [];
+        if( ref($childs) && @$childs && $offset < $count_offset )
+        {
+            $offset++;
+            foreach my $child (@$childs)
+            {
+                next    if (! $request->{cCLASSES}->{$child->class()});
+                index_tree( $child, $offset, $line_ref, $count_offset, $viewmode, $profile, $width_limit, $root );
+            }
+            $offset--;
+        }
+    }
+
+    $request->{cCLASSES} = {};
+    my @avail_classes;
+    if ( ref $avail_classes eq 'ARRAY' && @$avail_classes ) {
+	map { $request->{cCLASSES}->{$_} = 1 } @$avail_classes;
+	@avail_classes = @$avail_classes;
+    } elsif (ref($request->{tab}->{sections})) {
+	map { $request->{cCLASSES}->{$_} = 1 } (@{ $request->{tab}->{sections} });
+	return undef    if (scalar(keys(%{ $request->{cCLASSES} })) == 0);
+	@avail_classes = keys( %{ $request->{cCLASSES} } );
+    }
+    push @avail_classes, 'Contenido::Section'		unless exists $request->{cCLASSES}{'Contenido::Section'};
+    my $sect = $keeper->get_section_tree(root=>$root, class => \@avail_classes);
+    return undef unless ref $sect && exists $sect->{$root};
+
+    $user->get_accesses();
+
+    my $line = 0;
+
+</%init>

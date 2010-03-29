@@ -1,0 +1,41 @@
+<%args>
+
+$SETS => undef
+$field => undef
+$default => undef
+$object => undef
+$prop => undef
+$filen => undef
+
+</%args>
+
+<%init>
+
+use IO::File;
+use Contenido::Type::Audio;
+
+return undef unless defined $SETS and defined $field;
+
+# --------------------------------------------------------------------------------------
+# Аудио само за себя
+
+my $BINARY = $default;
+
+if ($SETS->{$field}) {
+    my $filename = "/binary/".($object->get_file_name() || $filen) || return;
+
+    if (ref $BINARY) {$BINARY->remove}
+    
+    my $upload = $r->upload($field);
+    my $audio_file = new Contenido::Type::Audio;
+    $audio_file->put_local($upload->filename(), $upload);
+    $audio_file->store($filename.'.'.$audio_file->{'ext'});
+    $audio_file->clean;
+    
+    $BINARY = $audio_file;
+}
+
+
+return $BINARY;
+
+</%init>

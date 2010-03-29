@@ -1,0 +1,9 @@
+<%ARGS>
+	$_URL		=> 'http://orsn.rambler.ru/consult.html'
+</%ARGS>
+
+<%ONCE>
+</%ONCE>
+
+<%INIT>
+</%INIT>

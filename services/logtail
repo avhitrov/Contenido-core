@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+
+##############################################################################
+# $HeadURL: http://svn.dev.rambler.ru/Contenido/branches/utf8/services/logtail $
+# $Id: logtail 1291 2008-11-10 13:25:19Z phoinix $
+# 
+# Удобно мониторить логи, например поставить в crontab:
+# */5  10-19  *  *  *  logtail /.../error_log ~/tmp/error_log.off
+##############################################################################
+
+use strict;
+use warnings 'all';
+
+use File::stat;
+use FindBin;
+
+
+if ($#ARGV<0 || $#ARGV>1) {
+	&usage;
+	exit 1;
+}
+
+my $log_file    = $ARGV[0];
+my $offset_file = $ARGV[1] || "$log_file.offset";
+
+my $stat = stat($log_file) or die "Can't stat $log_file - $!";
+
+my ($prev_size, $prev_ino);
+if (-f $offset_file) {
+	open OFF, "< $offset_file" or die "Can't read offset_file - $!";
+	$prev_size = <OFF>;
+	$prev_ino  = <OFF>;
+	close OFF;
+}
+$prev_size = 0 unless $prev_ino==$stat->ino && $prev_size<=$stat->size;
+
+exit if $prev_size==$stat->size;
+
+open LOG, "< $log_file" or die "Can't read log - $!";
+seek LOG, $prev_size, 0 or die "Can't seek - $!";
+my $buf;
+my $readed = read LOG, $buf, $stat->size - $prev_size;
+close LOG;
+die "Can't read log_file - $!" unless $readed;
+
+print $buf;
+
+open OFF, "> $offset_file" or die "Can't write offset_file - $!";
+print OFF $stat->size."\n".$stat->ino."\n$log_file\n".localtime()."\n";
+close OFF;
+
+
+sub usage {
+	print <<EOM;
+Usage:
+	$FindBin::Script logfile [offset.file]
+EOM
+}

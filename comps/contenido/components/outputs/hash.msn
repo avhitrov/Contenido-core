@@ -1,0 +1,20 @@
+<%args>
+        $name => undef
+        $SETS => undef
+</%args>
+
+<%init>
+        return  undef   if (! ref($SETS));
+        return  undef   if (! $name);
+
+        my $FIELDS = {};
+        while (my ($element,$value)=each %{$SETS}) {
+                if ($element =~ /^${name}_key_(\d+)$/ && $SETS->{"${name}_value_$1"}) {
+                        $FIELDS->{$value}=$SETS->{"${name}_value_$1"};
+                }
+        }
+        {
+                local $Data::Dumper::Indent = 0;
+                return Data::Dumper::Dumper($FIELDS);
+        }
+</%init>

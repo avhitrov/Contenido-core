@@ -1,0 +1,15 @@
+--- DBI.pm	Mon Dec  2 01:36:54 2002
++++ DBI.pm	Mon Nov 17 21:00:52 2003
+@@ -1315,10 +1315,8 @@
+ 
+     sub begin_work {
+ 	my $dbh = shift;
+-	return $dbh->DBI::set_err(1, "Already in a transaction")
+-		unless $dbh->FETCH('AutoCommit');
+-	$dbh->STORE('AutoCommit', 0); # will croak if driver doesn't support it
+-	$dbh->STORE('BegunWork',  1); # trigger post commit/rollback action
++	return $dbh->DBI::set_err(1, "Transaction impossible with AutoCommit enabled")	if $dbh->FETCH('AutoCommit');
++	$dbh->_not_impl('begin');
+     }
+     sub commit {
+ 	shift->_not_impl('commit');

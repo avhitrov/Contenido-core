@@ -1,0 +1,30 @@
+<& "/contenido/components/header.msn", style => 'index' &>
+<& "/contenido/components/naviline.msn" &>
+
+<table width="100%" cellspacing="0" cellpadding="0" border="0">
+<tr valign="top">
+<td width="35%">
+
+%	my @LEFT = $m->comp('/contenido/components/tasks.msn');
+%	my %LEFTh = map { $_->{attr} => $_ } (@LEFT);
+%	if (ref($request->{tab}->{lefts}))
+%	{
+%		for my $left (@{ $request->{tab}->{lefts} })
+%		{
+%			next	if (! exists($LEFTh{$left}));
+<& 'components/'.$LEFTh{$left}->{component}, %ARGS &>
+%		}
+%	}
+
+</td>
+<td width="2%" nowrap>&nbsp;</td>
+<td width="63%">
+
+<& "/contenido/components/index_tree.msn", root => $Contenido::Section::ROOT, level => $request->{tab}{level} || 3 &>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>

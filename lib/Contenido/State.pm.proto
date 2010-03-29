@@ -1,0 +1,299 @@
+package Contenido::State;
+
+# ----------------------------------------------------------------------------
+# Contenido::State - класс, описывающий текущее состояние проекта. 
+# Объект этого класса создается при старте Apache-сервера и заполняется 
+# данными из handler.pl или startup.pl. Конкретные данные (порт, URL, 
+# стадию и т.д.) изменяются в startup.pl с помощью стандартного механизма 
+# sandbox (@@PORT@@). 
+# ----------------------------------------------------------------------------
+
+use strict;
+use vars qw($VERSION $AUTOLOAD);
+$VERSION = '4.2';
+
+use Utils;
+use Contenido::Globals;
+
+use @MEMCACHED_BACKEND@;
+
+sub new
+{
+    my ($proto) = shift;
+    my $class = ref($proto) || $proto;
+    my $self = {};
+    bless($self, $class);
+
+    $self->{project} = '@PROJECT@';
+    $self->{project_version} = '@PROJECT_VERSION@';
+    $self->{core_version} = '@CORE_VERSION@';
+
+    $self->{db_type} = lc('@DB_TYPE@') || 'single';
+    $self->{db_keepalive} = (lc('@PERSISTENT_CONN@') eq 'no') ? 0:1;
+    $self->{db_host} = (($self->{db_type} eq 'remote') and '@BASE_HOST@') ? lc('@BASE_HOST@') : 'localhost';
+    $self->{db_name} = '@PGSQL_BASE@';
+    $self->{db_user} = '@BASE_USER@';
+    $self->{db_password} = '@BASE_PASSWD@';
+    $self->{db_port} = '@PGSQL_PORT@';
+    $self->{db_prepare} = lc('@PGSQL_REAL_PREPARE@') eq 'yes' ? 1 : 0;
+    $self->{db_enable_utf8} = lc('@PGSQL_ENABLE_UTF@') eq 'yes' ? 1 : 0;
+    $self->{db_client_encoding} = '@PGSQL_CLIENT_ENCODING@';
+
+    $self->{db_encode_data} = '@PGSQL_ENCODE_DATA@';
+    $self->{db_decode_data} = '@PGSQL_DECODE_DATA@' || 'utf-8';
+
+    $self->{master_db_host}     = (($self->{db_type} eq 'remote') and '@MASTER_BASE_HOST@') ? lc('@MASTER_BASE_HOST@') : 'localhost';
+    $self->{master_db_name}     = '@MASTER_BASE_NAME@';
+    $self->{master_db_user}     = '@MASTER_BASE_USER@';
+    $self->{master_db_password} = '@MASTER_BASE_PASSWD@';
+    $self->{master_db_port}     = '@MASTER_BASE_PORT@';
+
+    $self->{session_dir} = '@SESSIONS@';
+    $self->{session_directory} = '@SESSIONS@';
+
+    $self->{crosslinks_dir} = '@CROSSLINKS@';
+    $self->{crosslinks_directory} = '@CROSSLINKS@';
+
+    $self->{httpd_port} = '@HTTPD_PORT@';
+    $self->{httpd_server} = '@HTTPD_SERVER@';
+    $self->{httpd_root} = 'http://'.$self->{httpd_server}.'/';
+
+    $self->{plugins} = '@PLUGINS@';
+
+    $self->{prefix} = '@PREFIX@';
+
+    $self->{images_directory} = '@IMAGES@';
+    $self->{images_dir} = '@IMAGES@';
+    
+    $self->{proxy_image_location} = '@PROXY_IMAGE_LOCATION@';
+    $self->{proxy_image_secret} = '@PROXY_IMAGE_SECRET@';
+
+
+    $self->{binary_directory} = '@BINARY@';
+    $self->{binary_dir} = '@BINARY@';
+
+    {
+        my $files_dir = '@FILES@';
+        $self->{files_dir} = [split /\s+/ms, $files_dir];
+    }
+
+    $self->{convert_binary} = '@CONVERT@';
+
+    $self->{core_src} = '@CORE_SRC@';
+    $self->{plug_src} = '@PLUG_SRC@';
+    $self->{proj_src} = '@PROJ_SRC@';
+
+    $self->{log_dir} = '@PROJECT_LOG@';
+    $self->{run_dir} = '@PROJECT_RUN@';
+    $self->{tmp_dir} = '@PROJECT_TMP@';
+    $self->{usr_dir} = '@PROJECT_USR@';
+
+    $self->{var_dir} = '@PROJECT_VAR@';
+    $self->{data_dir} = $self->{var_dir};
+    $self->{data_directory} = $self->{var_dir};
+
+    $self->{preview} = '@PREVIEW@';
+    $self->{mason_comp} = '@MASON_COMP@';
+
+    $self->{auth_cookie} = '@AUTH_COOKIE@';
+
+    $self->{is_dev_server} = lc('@DEVELOPMENT@') eq 'yes';
+    $self->{development}    = lc('@DEVELOPMENT@') eq 'yes';
+
+    $self->{contenido_version} = '@CONTENIDO_VERSION@' + 0;
+    $self->{version} = $self->{contenido_version};
+
+    $self->{__debug__} = (lc('@DEBUG@') eq 'yes');
+    $self->{__debug_format__} = '@DEBUG_FORMAT@';
+    $self->{__debug_stack_trace__} = lc('@DEBUG_STACK_TRACE@') eq 'yes';
+    $self->{__debug_min_level__} = '@DEBUG_MIN_LEVEL@';
+    $self->{__debug_max_level__} = '@DEBUG_MAX_LEVEL@';
+    $self->{__sql_debug__} = lc('@DEBUG_SQL@') eq 'yes';
+
+    $self->{project_name} = '@PROJECT_NAME@';
+    $self->{multidomain} = lc('@MULTIDOMAIN@') eq 'yes';
+    $self->{stage} = 'REAL';
+
+    $state->{readonly} = (lc('@READONLY@') eq 'yes');
+
+    $self->{store_method} = lc('@STORE_METHOD@');
+    $Contenido::Globals::store_method = $self->{store_method};
+
+    $self->{cascade} = (lc('@CASCADE@') eq 'yes');
+
+    $self->{locale} = '@LOCALE@';
+
+    # Конфигурационные параметры memcached
+    $self->{memcached_backend}  = '@MEMCACHED_BACKEND@';
+    $self->{memcached_enable}   = lc( '@MEMCACHED_ENABLE@' ) eq 'yes' ? 1 : 0;
+    $self->{memcached_select_timeout} = '@MEMCACHED_SELECT_TIMEOUT@' || 0.2;
+    $self->{memcached_servers}  = [ split(/\s+/, '@MEMCACHED_SERVERS@') ];
+    $self->{memcached_enable_compress}  = lc( '@MEMCACHED_ENABLE_COMPRESS@' ) eq 'yes' ? 1 : 0;
+    $self->{memcached_delayed}      = lc('@MEMCACHED_DELAYED@') eq 'yes' ? 1 : 0;
+    $self->{memcached_set_mode} = lc('@MEMCACHED_SET_MODE@') eq 'add' ? 'add' : 'set';
+    $self->{memcached_namespace} = lc( $self->{'project'} ).'|';
+
+    $self->{memcached_object_expire} = undef;
+
+    $self->{options_expire} = '@OPTIONS_EXPIRE@';
+
+	$self->{preamble_handler} = '@PREAMBLE_HANDLER@';
+	$self->{preamble_handler_path} = '@PREAMBLE_HANDLER_PATH@';
+
+    $self->_refresh_();
+    $self->_init_();
+
+    my @plugins = split(/\s+/, $self->plugins());
+    for my $plugin ($self->{project}, @plugins) {
+        $self->{lc($plugin)} = {};
+        $self->{attributes}->{lc($plugin)} = 'SCALAR';
+
+        my $class = $plugin.'::State';
+        eval ("use $class");
+        
+        if ( $@ ) {
+            warn "Contenido Error: Не могу определить состояние плагина $plugin ($class) по причине '$@'.\n";
+        } else {
+            warn "Contenido Init: Загружен класс $class для плагина $plugin.\n"         if ($self->debug());
+            eval {
+                $self->{lc($plugin)} = $class->new();
+            };
+            if ( $@ ) {
+                warn "Contenido Error: Не могу выполнить инициализацию состояния плагина $plugin ($class) по причине '$@'.\n";
+            }
+        }
+    }
+
+
+
+
+    return $self;   
+}
+
+
+
+sub _refresh_
+{
+    my $self = shift;
+    $self->{debug} = $self->{__debug__};
+    #выставляем $DEBUG и $DEBUG_SQL в правильные значения!!!
+    $DEBUG_SQL = $self->{__sql_debug__};
+    $DEBUG = $self->{__debug__};
+}
+
+
+# ----------------------------------------------------------------------------
+# Вывод информации об объекте...
+# ----------------------------------------------------------------------------
+sub info
+{
+    my $self = shift;
+    return undef        unless ref($self);
+
+    $log->info("Объект Contenido::State заполнен следующими параметрами:");
+    foreach my $attribute (sort (keys( %{ $self->{attributes} } )))
+    {
+        my $la = length($attribute);
+        warn "\t".$attribute.("\t" x (2-int($la/8))).": ".$self->{$attribute}."\n";
+    }
+
+    my @plugins = split(/\s+/, $self->plugins());
+    for my $plugin ($self->{project}, @plugins) {
+        if (ref($self->{lc($plugin)})) {
+            eval {
+                $self->{lc($plugin)}->info();
+            };
+        }
+    }
+}
+
+
+
+# ----------------------------------------------------------------------------
+# Инициализация.
+#  - Создает внутри объекта хэш с типами полей - это нужно для быстрой
+#   работы метода AUTOLOAD...
+# ----------------------------------------------------------------------------
+sub _init_
+{
+    my $self = shift;
+
+    foreach my $attribute ( qw(
+                project project_version
+
+                httpd_port httpd_server httpd_root
+                data_directory data_dir
+                images_directory images_dir
+                session_directory session_dir
+                binary_directory binary_dir
+                crosslinks_directory crosslinks_dir
+
+                stage
+                db_keepalive db_host db_name db_user db_password db_port db_type db_client_encoding db_enable_utf8
+
+                db_encode_data db_decode_data
+
+                mason_comp
+		multidomain
+                project_name
+                preview
+                
+                proxy_image_location
+                proxy_image_secret
+
+                debug
+                auth_cookie
+
+                plugins
+
+                development
+                is_dev_server
+
+                contenido_version version
+
+                store_method cascade
+
+                readonly
+
+                locale
+
+                memcached_enable memcached_servers
+		memcached_select_timeout
+                memcached_backend memcached_enable_compress
+                memcached_set_mode
+                memcached_object_expire
+		memcached_namespace
+                convert_binary
+             ) )
+    {
+        $self->{attributes}->{ $attribute } = 'SCALAR';
+    }
+}
+
+
+
+# ----------------------------------------------------------------------------
+# Это умный AUTOLOAD. Ловит методов для установки/чтения полей...
+# Версия 0.2
+# ----------------------------------------------------------------------------
+
+sub AUTOLOAD
+{
+    my $self = shift;
+    my $attribute = $AUTOLOAD;
+
+    $attribute =~ s/.*:://;
+    return undef    unless  $attribute =~ /[^A-Z]/;     # Отключаем методы типа DESTROY
+
+    if (! exists($self->{attributes}->{$attribute}))
+    {
+        $log->error("Вызов метода, для которого не существует обрабатываемого свойства: ->$attribute()");
+        return  undef;
+    }
+
+    $self->{ $attribute } = shift @_    if (scalar(@_) > 0);
+    return $self->{ $attribute };
+}
+
+
+1;

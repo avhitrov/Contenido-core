@@ -1,0 +1,19 @@
+<& "/contenido/components/header.msn", title => "Версии" &>
+
+<div style="padding-left: 20px;">
+<pre>
+core, rev.<% $state->{core_version} %>
+---------------------------------
+<% `svn info $state->{core_src}` %>
+project '<% $state->{project} %>', rev.<% $state->{project_version} %>
+---------------------------------
+<% `svn info $state->{proj_src}/$state->{project}` %>
+% for (split /\s+/, $state->{plugins}) {
+plugin '<% $_ %>', rev.<% `svnversion $state->{plug_src}/$_` %>---------------------------------
+<% `svn info $state->{plug_src}/$_` %>
+% }
+</pre>
+</div>
+
+</body>
+</html>

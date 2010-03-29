@@ -1,0 +1,179 @@
+<%once>
+
+  my @attypes = ( 'multimedia_new', 'image', 'images', 'audio' );
+
+</%once>
+<%args>
+
+	$object	=> undef
+	$source	=> undef
+
+</%args>
+<%init>
+
+  return	unless ref $object;
+  return	unless ref $source;
+
+  local $Data::Dumper::Indent = 0;
+  my @properties = $source->structure();
+  for (0..$#properties) {
+	my $prop = $properties[$_];
+	my $name = $prop->{attr};
+	my $type = $prop->{type};
+	next	unless grep { $_ eq $type } @attypes;
+	my $attachment = $source->get_image( $name );
+	warn "\nClone: $type | $name\n"				if $DEBUG;
+	if (ref $attachment) {
+		if ( $prop->{type} eq 'image' ) {
+			## Отдельная картинка
+			##############################################################
+			if ( exists $attachment->{filename} ) {
+				my $img;
+				my $source_name;
+				my $ext;
+				my $new_name = '/images/'.$object->get_file_name();
+				warn "Clone img put from: $source_name to $new_name.$ext\n"			if $DEBUG;
+				my $stored = 0;
+				foreach my $source ( @{ $state->{files_dir} } ) {
+					$source_name = $source.$attachment->{filename};
+					$ext = $1	if $source_name =~ /\.(\w+)$/;
+					$stored = Contenido::File::store ($new_name.'.'.$ext, $source_name);
+					last	if $stored;
+				}
+				if ( $stored ) {
+					$img = { 
+						filename => $new_name.'.'.$ext,
+						width	=> $attachment->{width},
+						height	=> $attachment->{height},
+						alt	=> $attachment->{alt},
+						atext	=> $attachment->{atext} };
+					if ( exists $attachment->{mini} ) {
+						my $source_mini;
+						my $main_size = $attachment->{mini}{width}.'x'.$attachment->{mini}{height};
+						my $mini_name = $new_name.'.'.$main_size;
+						my $stored = 0;
+						foreach my $source ( @{ $state->{files_dir} } ) {
+							$source_mini = $source.$attachment->{mini}{filename};
+							$stored = Contenido::File::store ($mini_name.'.'.$ext, $source_mini);
+							last	if $stored;
+						}
+						if ( $stored ) {
+							$img->{mini} = { 
+								filename => $mini_name.'.'.$ext,
+								width	=> $attachment->{mini}{width},
+								height	=> $attachment->{mini}{height},
+							};
+							$img->{mini}->{$main_size} = { 
+								filename => $mini_name.'.'.$ext,
+								width	=> $attachment->{mini}{width},
+								height	=> $attachment->{mini}{height},
+							};
+						}
+						foreach my $key ( keys %{ $attachment->{mini} } ) {
+							next	if $key =~ /file|width|height/;
+							next	if $key eq $main_size;
+							my $source_mini;
+							my $size = $attachment->{mini}{$key}{width}.'x'.$attachment->{mini}{$key}{height};
+							my $mini_name = $new_name.'.'.$size;
+							my $stored = 0;
+							foreach my $source ( @{ $state->{files_dir} } ) {
+								$source_mini = $source.$attachment->{mini}{$key}{filename};
+								$stored = Contenido::File::store ($mini_name.'.'.$ext, $source_mini);
+								last	if $stored;
+							}
+							if ( $stored ) {
+								$img->{mini}->{$key} = { 
+									filename => $mini_name.'.'.$ext,
+									width	=> $attachment->{mini}{$key}{width},
+									height	=> $attachment->{mini}{$key}{height},
+								};
+							}
+						}
+					}
+				}
+				$object->$name(Dumper($img));
+				warn "\nClone img complete: ".Dumper($img)."\n"				if $DEBUG;
+			}
+		} elsif ( $prop->{type} eq 'images' ) {
+			## Куча картинков
+			##############################################################
+			my $PICTURE;
+			for ( 1 .. $attachment->{maxnumber} ) {
+				my $picture = 'image_'.$_;
+				if ( exists $attachment->{$picture}{filename} ) {
+					my $img;
+					my $source_name = $state->{files_dir}->[0].$attachment->{$picture}{filename};
+					my $ext = $1	if $source_name =~ /\.(\w+)$/;
+					my $new_name = '/images/'.$object->get_file_name();
+					warn "Clone pics put from: $source_name to $new_name.$ext\n"			if $DEBUG;
+					if ( Contenido::File::store ($new_name.'.'.$ext, $source_name) ) {
+						$img = { 
+							filename => $new_name.'.'.$ext,
+							width	=> $attachment->{$picture}{width},
+							height	=> $attachment->{$picture}{height},
+							alt	=> $attachment->{$picture}{alt},
+							atext	=> $attachment->{$picture}{atext} };
+						if ( exists $attachment->{$picture}{mini} ) {
+							my $source_mini = $state->{files_dir}->[0].$attachment->{$picture}{mini}{filename};
+							my $main_size = $attachment->{$picture}{mini}{width}.'x'.$attachment->{$picture}{mini}{height};
+							my $mini_name = $new_name.'.'.$main_size;
+							if ( Contenido::File::store ($mini_name.'.'.$ext, $source_mini) ) {
+								$img->{mini} = { 
+									filename => $mini_name.'.'.$ext,
+									width	=> $attachment->{$picture}{mini}{width},
+									height	=> $attachment->{$picture}{mini}{height},
+								};
+								$img->{mini}->{$main_size} = { 
+									filename => $mini_name.'.'.$ext,
+									width	=> $attachment->{$picture}{mini}{width},
+									height	=> $attachment->{$picture}{mini}{height},
+								};
+							}
+							foreach my $key ( keys %{ $attachment->{$picture}{mini} } ) {
+								next	if $key =~ /file|width|height/;
+								next	if $key eq $main_size;
+								my $source_mini = $state->{files_dir}->[0].$attachment->{$picture}{mini}{$key}{filename};
+								my $size = $attachment->{$picture}{mini}{$key}{width}.'x'.$attachment->{$picture}{mini}{$key}{height};
+								my $mini_name = $new_name.'.'.$size;
+								if ( Contenido::File::store ($mini_name.'.'.$ext, $source_mini) ) {
+									$img->{mini}->{$key} = { 
+										filename => $mini_name.'.'.$ext,
+										width	=> $attachment->{$picture}{mini}{$key}{width},
+										height	=> $attachment->{$picture}{mini}{$key}{height},
+									};
+								}
+							}
+						}
+					}
+					$PICTURE->{$picture} = $img;
+				}
+
+			}
+			if ( $attachment->{maxnumber} ) {
+				$PICTURE->{maxnumber} = $attachment->{maxnumber};
+				$object->$name(Dumper($PICTURE));
+			}
+			warn "\nClone pics complete: ".Dumper($PICTURE)."\n"				if $DEBUG;
+		} elsif ( $prop->{type} eq 'multimedia_new' ) {
+			## Произвольный бинарник
+			##############################################################
+			if ( exists $attachment->{filename} ) {
+				my $img;
+				my $source_name = $state->{files_dir}->[0].$attachment->{filename};
+				my $ext = $1	if $source_name =~ /\.(\w+)$/;
+				my $new_name = '/images/'.$object->get_file_name();
+				if ( Contenido::File::store ($new_name.'.'.$ext, $source_name) ) {
+					$img = { 
+						filename => $new_name.'.'.$ext,
+						atext	=> $attachment->{atext}
+						};
+				}
+				$object->$name(Dumper($img));
+				warn "\nClone binary complete: ".Dumper($img)."\n"				if $DEBUG;
+			}
+		}
+	}
+  }
+
+
+</%init>

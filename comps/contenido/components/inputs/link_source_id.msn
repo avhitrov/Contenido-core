@@ -1,0 +1,11 @@
+<input type="hidden" name="<% $name %>" value="<% $check %>">
+"<% $local_object->{name} %>"<br>
+
+<%args>
+	$name => undef
+	$check => undef
+</%args>
+<%init>
+	my ($id) = split(',', $check);
+	my $local_object = $keeper->get_document_by_id($id);
+</%init>

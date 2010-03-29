@@ -1,0 +1,47 @@
+
+	<fieldset>
+	<legend>Параметры раздела</legend>
+	<table cellspacing="2" cellpadding="0" border="0" class="tform">
+	<tr><td height="3"></td></tr>
+	<tr><td align="right">Название:&nbsp;</td><td><b><% $section->name %></b></td></tr>
+	<tr><td align="right">Тип секции:&nbsp;</td><td><b><% $section->class_name %></b></td></tr>
+% if ($section->alias) {
+	<tr><td align="right">Веб алиас:&nbsp;</td><td><b><% $section->alias %></b></td></tr>
+% }
+	<tr><td align="right">Статус:&nbsp;</td><td><b><% $status %></b></td></tr>
+	<tr><td align="right">ID:&nbsp;</td><td><b><% $section->id %></b></td></tr>
+	<tr><td align="right">Class:&nbsp;</td><td><b><% $section->class %></b></td></tr>
+	<tr><td height="5"></td></tr>
+% if ($section_access == 2) {
+	<tr><td colspan="2"><b><a href="section.html?id=<% $section->id %>">Изменить параметры &raquo;</a></b></td></tr>
+% }
+	<tr><td height="5"></td></tr>
+	</table>
+	</fieldset>
+
+<%args>
+	$section => undef
+</%args>
+
+<%init>
+	return undef	if (! ref($section));	
+	my $section_access = $user->section_accesses($user, $section->id);
+
+	my $prop;
+	foreach ($section->structure()) {
+		if ($_->{attr} eq 'status') {
+			$prop = $_;
+			last;
+		}
+	}
+	my $status_map = ref $prop->{cases} eq 'ARRAY' ? $prop->{cases} : $keeper->default_status();
+
+	my $status;
+	foreach (@$status_map) {
+		if ($_->[0] == $section->status) {
+			$status = $_->[1];
+			last;
+		}
+	}
+	$status ||= '<font color="red">Unknown!!!</font>';
+</%init>

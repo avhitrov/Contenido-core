@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings 'all';
+use locale;
+
+use Getopt::Std;
+use FindBin;
+
+
+my %opts;
+getopts('hd:km', \%opts);
+
+&usage if $opts{h} || $#ARGV || ! -d $ARGV[0];
+$ARGV[0]=~s/\/+$/\//;
+
+my $md5;
+if ($opts{m}) {
+	$md5 = (`which md5`=~/(.*)/)[0] || (`which md5sum`=~/(.*)/)[0] || die "No md5 binary found\n";
+	$md5 .= ($md5=~/md5$/ ? ' -r ' : '');
+}
+
+my %snap;
+for (grep {$_} map {chomp; s/^$ARGV[0]\///; $_} `find $ARGV[0]`) {
+	unless (-f "$ARGV[0]/$_") {
+		$snap{$_} = undef;
+		next;
+	}
+
+	if ($opts{m}) {
+		$snap{$_} = (`$md5 $ARGV[0]/$_ | awk '{print \$1}'`=~/(.*)/)[0];
+	} else {
+		$snap{$_} = join(':', (stat("$ARGV[0]/$_"))[1,9]) or die $!;
+	}
+}
+
+unless ($opts{d}) {
+	print 'STATE='.($opts{m} ? 'MD5' : 'MTIME')."\n";
+	print $_.($snap{$_} ? ' STATE='.$snap{$_} : '')."\n" for sort keys %snap;
+	exit;
+}
+
+my %base;
+open BASE, "<$opts{d}" or die $!;
+$_ = <BASE>;
+/^STATE=(MD5|MTIME)$/ or die "Unknown STATE line: $_\n";
+die "Incompatible mode: $1\n" unless ($opts{m} && $1 eq 'MD5') || (!$opts{m} && $1 eq 'MTIME');
+for (map {chomp; $_} <BASE>) {
+	if (/^(.+)\s+STATE=(.+)$/) {
+		$base{$1} = $2;
+		next;
+	}
+	$base{$_} = undef;
+}
+close BASE;
+
+print 'STATE='.($opts{m} ? 'MD5' : 'MTIME')."\n";
+for (sort keys %snap) {
+	next if exists $base{$_} && ($base{$_}||'') eq ($snap{$_}||'');
+	print $_.($snap{$_} ? ' STATE='.$snap{$_} : '')."\n";
+}
+
+unlink $opts{d} unless $opts{k};
+
+sub usage {
+	print <<EOM;
+Usage: $FindBin::RealScript [options] directory
+
+Options:
+    -d file        Deltify relative to file content
+    -h             Print this message
+    -k             Keep file specified with -d option
+    -m             Use MD5 sum instead mtime checking
+
+EOM
+	exit;
+}

@@ -1,0 +1,107 @@
+<& "/contenido/components/title.msn" &>
+<style>
+<!--
+fieldset { font:11px Verdana; }
+fieldset table { font:11px Verdana; }
+fieldset table td { padding:1px 4px; }
+fieldset table th { font:bold 10px Verdana; padding:1px 2px;  }
+div.pad_active { font-weight:bold; padding:3px 4px; border-bottom:2px solid gray; float:left;
+	border-right:1px solid gray; background:#f0f0f0; border-top:1px solid #f0f0f0; border-left:1px solid #f0f0f0; }
+div.pad_passive { padding:3px 4px; border-bottom:2px solid gray; float:left;
+	border-right:1px solid gray; background:#d0d0d0; border-top:1px solid #f0f0f0; border-left:1px solid #f0f0f0; };
+-->
+</style>
+<script type="text/javascript">
+<!--
+function switch_div (sName) {
+  var oDiv = document.getElementById(sName);
+  var oDivPrompt = document.getElementById(sName + '_hidden');
+  if ( oDiv.style.display == 'block' ) {
+	oDiv.style.display = 'none';
+	oDivPrompt.style.display = 'block';
+  } else {
+	oDiv.style.display = 'block';
+	oDivPrompt.style.display = 'none';
+  }
+}
+//-->
+</script>
+% if ($document) {
+%	if ( @sources ) {
+%		my $show = (@sources && $link_class && grep { $_ eq $link_class } @sources) || ((@sources && @destinations) || !@destinations) ? 1 : 0;
+%		my $lclass = $link_class;
+%		if ( $link_class && grep { $_ eq $link_class } @destinations ) {
+%			$show = 0;
+%			$lclass = undef;
+%		}
+<fieldset>
+<legend>&rarr; <a href="javascript:switch_div('div_source')" style="color:white;"
+ onclick="switch_div('div_source'); return false;">Связи, ведущие от этого документа:</a></legend>
+<div id="div_source" style="display:<% $show ? 'block' : 'none' %>">
+<& "/contenido/components/document_links_block.msn", 
+	document => $document, lclasses => \@sources, class => $lclass, p => $p,
+	link_id_name => 'source_id',
+	link_class_name => 'source_class'
+&>
+</div>
+<div id="div_source_hidden" style="display:<% $show ? 'none' : 'block' %>; padding:5px;"><a href="javascript:switch_div('div_source')"
+ onclick="switch_div('div_source'); return false;">Содержимое скрыто</a></div>
+</fieldset>
+%	}
+%	if ( @destinations ) {
+%		my $show = (@destinations && $link_class && grep { $_ eq $link_class } @destinations ) || !@sources ? 1 : 0;
+%		my $lclass = $link_class;
+%		if ( $link_class && grep { $_ eq $link_class } @sources ) {
+%			$show = 0;
+%			$lclass = undef;
+%		}
+<fieldset>
+<legend>&larr; <a href="javascript:switch_div('div_destination')" style="color:white;"
+ onclick="switch_div('div_destination'); return false;">Связи, ведущие к этому документу:</a></legend>
+<div id="div_destination" style="display:<% $show ? 'block' : 'none' %>">
+<& "/contenido/components/document_links_block.msn",
+	document => $document, lclasses => \@destinations, class => $lclass, p => $p,
+	link_id_name => 'dest_id',
+	link_class_name => 'dest_class'
+&>
+</div>
+<div id="div_destination_hidden" style="display:<% $show ? 'none' : 'block' %>; padding:5px;"><a href="javascript:switch_div('div_destination')"
+ onclick="switch_div('div_destination'); return false;">Содержимое скрыто</a></div>
+</fieldset>
+%	}
+% } else {
+<p><font color="red">Не могу получить документ по данным id=<% $id %> и class=<% $class %></font></p>
+% }
+</body>
+</html>
+
+<%ARGS>
+
+	$p	=> 1
+	$class	=> undef
+	$id	=> undef
+	$link_class	=> undef
+
+</%ARGS>
+
+<%INIT>
+	return unless ($state->{available_links} and @{$state->{available_links}});
+	my $document;
+	my (@sources, @destinations);
+	if ($id && ($id !~ /\D/) && ($id > 0)) {
+		$document = $keeper->get_document_by_id($id, class=>$class);
+	}
+	if ( ref $document ) {
+		foreach my $classlink ( @{ $state->{available_links} } ) {
+			my $sources = $classlink->available_sources;
+			if ( ref $sources eq 'ARRAY' && @$sources ) {
+				push @sources, $classlink	if grep { $document->class eq $_ } @$sources;
+			}
+			my $dests = $classlink->available_destinations;
+			if ( ref $dests eq 'ARRAY' && @$dests ) {
+				push @destinations, $classlink	if grep { $document->class eq $_ } @$dests;
+			}
+		}
+	}
+</%INIT>
+

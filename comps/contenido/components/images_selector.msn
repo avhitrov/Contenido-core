@@ -1,0 +1,256 @@
+%
+%	unless ($request->{images_staff_printed}) { # print that stuff only once per request ...
+%		$request->{images_staff_printed} = 1;
+%
+<style>
+div.toolbar {
+	text-align: right;
+	height: 20px;
+	padding: 0 4px;
+	width:95%;
+	font-family: Arial;
+	font-size: 9pt
+}
+div.img_popup {
+	border: 1px solid <% $pr->{main_border_color} %>;
+	background: #fff;
+	font: 10px Arial;
+	text-align: center;
+}
+div.img_popup h1 {
+	font: 11px Tahoma, Arial;
+	margin: 0;
+	height: <% $pr->{title_h} %>px;
+	padding: 2px 4px;
+	background: <% $pr->{main_border_color} %>;
+	color: white;
+	font-weight: bold;
+	letter-spacing:1px;
+}
+div.img_popup div {
+	height: <% $pr->{h} + $pr->{img_padd}*2 %>;
+}
+div.img_popup img {
+	border: 0;
+	margin: <% $pr->{img_padd} %>px;
+	cursor: hand;
+}
+div.img_popup ul {
+	padding: 2px;
+	margin: 0;
+	margin-bottom: 0px;
+	height: <% $pr->{nav_h} %>;
+}
+div.img_popup ul li {
+	padding: 1px 4px;
+	margin: 0 3px;
+	display: inline;
+	border: 1px solid <% $pr->{nav_border_color} %>;
+	background: #fff;
+	cursor: hand;
+}
+div.img_popup ul li.a {
+	background: #ddd;
+}
+div.img_popup input {
+	margin: 0 5px 10px 5px;
+	height: <% $pr->{butt_h} %>;
+	width: 60px;
+    border: 1px solid <% $pr->{butt_border_color} %>;
+    background: #ddd;
+}
+</style>
+
+<script>
+function storeCaret(element) {
+	if (document.selection && document.selection.createRange) {
+		element.caretPos = document.selection.createRange().duplicate();
+	}
+}
+
+function insertText(text, el) {
+	if (el && el.caretPos) {
+		el.caretPos.text=text;
+	} else if (el && el.caretPos && el.selectionStart+1 && el.selectionEnd+1) {
+		el.value=el.value.substring(0,element.selectionStart)+text+el.value.substring(el.selectionEnd,el.value.length);
+	} else if (el) {
+		// in Mozilla and clones works only that...
+		el.value = text + el.value;
+	}
+}
+
+function img_popup(name, meta) {
+	// try to restore popup ...
+	var popup = document.getElementById("img_" +name);
+	if (popup) {
+		if (popup.style.display != 'none') {
+			hide_obj(popup);
+		} else {
+			show_obj(popup);
+		}
+	// or create new one ...
+	} else {
+		img_popup_create(name, meta);
+	}
+}
+
+function img_popup_create(name, meta) {
+	// current text field ...
+	var textarea = eval('document.form.' + name);
+
+	// create popup ...
+	var popup = document.createElement('div');
+	document.body.appendChild(popup);
+	popup.className = 'img_popup';
+	popup.setAttribute("id", "img_" + name);
+	var st = popup.style;
+
+	// allocate popup in text field area ...
+	var origin = textarea, p_top = 0, p_left = 0, p_width = 0, p_height = 0;
+	while (origin) {
+		p_top     += origin.offsetTop;
+		p_left    += origin.offsetLeft;
+		origin   = origin.offsetParent;
+	}
+	// calculate coords ...
+	p_width = <% $pr->{w} + $pr->{img_padd}*2 + 2 %>;
+	p_height = <% $pr->{h} + $pr->{img_padd}*2 + 12 + $pr->{title_h} + $pr->{nav_h} + $pr->{butt_h} %>;
+	p_left += (textarea.offsetWidth - p_width)/2;
+	p_top += 20;
+
+	// apply coords ...
+	st.width = p_width + 'px';
+	st.height = p_height + 'px';
+	st.left = p_left + 'px';
+    st.position = 'absolute';
+    st.top = p_top + 'px';
+
+	// create content of popup ...
+
+	var img = eval('imgs_for_' + name);
+
+	var img_html = '<img id="img_src_' + name + '" src="' + img[0][0] + '" alt="' + img[0][4] + '" title="Вставить код картинки">';
+
+	var html = '<h1>Вставка картинки</h1>' + '<div>' + img_html + '</div>' + '<ul>';
+	for (i=0;i<img.length;i++) {
+		html += '<li class="' + (i == 0 ? 'a' : '') + '" id="li_' + name + i + '"onclick="ch_img(this, \'' + name + '\', ' + i + ')">' + (i+1) + '</li>';
+		if (i == 7 || i == 15) {html += '</ul><ul>'}
+	}
+	html += '</ul><input type="button" id="insert_' + name + '" value="Вставить" title="Вставить код картинки"><input type="button"  id="cancel_' + name + '" value="Отмена" title="Закрыть окно"><input type="hidden" id="' + name + '_curr_img" value="0">';
+
+	// push content intop popup ...
+	popup.innerHTML = html;
+
+	// add iteractivity ...
+	var img_tag = document.getElementById("img_src_" + name);
+	var insert = document.getElementById("insert_" + name);
+	var cancel = document.getElementById("cancel_" + name);
+	add_handler(textarea, 'click', function () { hide_obj(popup) });
+	add_handler(cancel,   'click', function () { hide_obj(popup) });
+	add_handler(insert,   'click', function () { insert_img_code(name, textarea, meta); hide_obj(popup) });
+	add_handler(img_tag,  'click', function () { insert_img_code(name, textarea, meta); hide_obj(popup) });
+}
+
+function insert_img_code(name, textarea, meta) {
+	var img = eval('imgs_for_' + name);
+	var hidden = document.getElementById(name + '_curr_img');
+	if (hidden && textarea) {
+		var n = hidden.value; n = eval(n);
+		var text = meta ? '<img name="' + img[n][5] + '_' + eval(n+1) + '">' : '<img src="' + img[n][1] + '" width="' + img[n][2] + '" height="' + img[n][3] + '" alt="' + img[n][4] + '">';
+		insertText(text, textarea);
+	}
+}
+
+function add_handler(element, event_type, func) {
+	if (element.attachEvent) {                  // IE
+		element.attachEvent('on' + event_type, func);
+	} else if (element.addEventListener) {      // W3C
+		element.addEventListener(event_type, func, false);
+	} else {                                    // should not happen
+		element['on' + event_type] = func;
+	}
+}
+
+function show_obj(obj) {
+	obj.style.display = 'block'; obj.hidden = false;
+}
+
+function hide_obj(obj) {
+	obj.style.display = 'none'; obj.hidden = true;
+}
+
+function ch_img(li, name, n) {
+	var img = eval('imgs_for_' + name);
+	// unselect all image selectors ...
+	for (i=0;i<img.length;i++) {var l = document.getElementById('li_' + name + i); l.className = "";}
+	// select current selector ...
+	li.className = "a";
+	// change image ...
+	var i = document.getElementById("img_src_" + name); i.src = img[n][0]; i.alt = img[n][4];
+	// store current selected image ...
+	var hidden = eval(name + '_curr_img');	hidden.value = n;
+}
+
+</script>
+%
+%	}
+%
+<script>
+var imgs_for_<% $name %> = [<% join ", ", map {'["'.$_->mname.'", "'.$_->name.'", '.$_->w.', '.$_->h.', "'.$_->alt.'", "'.$_->{main_attr}.'"]'} @images %>];
+</script>
+<div class="toolbar">[&nbsp;<a href="" onclick="img_popup('<% $name %>', <% $meta ? 1 : 0 %>); return false">Вставить картинку</a>&nbsp;]</div>
+%
+<%args>
+
+	$object	=> undef
+	$name	=> undef
+	$attrs	=> undef
+	$meta	=> undef
+
+</%args>
+<%init>
+
+	return unless ref $object;
+
+	# needed images ...
+	my %attrs = map {$_ => 1} ref $attrs eq 'ARRAY' ? @{$attrs} : ($attrs);
+
+	my @struct = grep {$attrs{$_->{attr}}} $object->structure;
+
+	my @images;
+	# get an images ...
+	for my $prop (@struct) {
+		if ($prop->{type} eq 'images') {
+			my @i = $object->get_pics($prop->{attr});
+			$_->{main_attr} = $prop->{attr} for @i;
+			push @images, @i;
+		} elsif ($prop->{type} eq 'image') {
+			my $i = $object->get_pic($prop->{attr}); next unless ref $i;
+			$i->{main_attr} = $prop->{attr};
+			push @images, $i;
+		}
+	}
+
+	return unless @images;
+
+	# max dimensions of image (for calculating popup size) ...
+	my ($w, $h);
+	for my $img (@images) {
+		$w = $img->mw if $img->mw > $w;
+		$h = $img->mh if $img->mh > $h;
+	}
+
+	# properties ...
+	my $pr = {
+		w					=> $w,
+		h					=> $h,
+		img_padd			=> 10,
+		title_h				=> 20,
+		nav_h				=> 30,
+		butt_h				=> 20,
+		main_border_color	=> '#777',
+		nav_border_color	=> '#aaa',
+		butt_border_color	=> '#999',
+	};
+
+</%init>

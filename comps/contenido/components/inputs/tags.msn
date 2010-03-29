@@ -1,0 +1,24 @@
+%# vim:syn=mason
+
+<textarea <% $prop->{readonly} ? 'readonly ' : '' %> name="<% $name %>" id="<% $name %>_text" style="width: 95%;" rows="10"><% html_escape($tags) %></textarea>
+
+<%args>
+	$object
+	$name => undef
+	$check => undef
+	$prop => {}
+</%args>
+<%init>
+	use locale;
+
+	my $tags = '';
+    my $i = 0;
+    while ($i < 100) {
+        my ($err, $msg) = $rpc_client->id->get_tags_by_ids($object->$name);
+        if ($err->{success} and ref($msg) eq 'HASH') {
+            $tags = join(', ', sort values %$msg);
+            $i = 101;
+        }
+        $i++;
+    }
+</%init>

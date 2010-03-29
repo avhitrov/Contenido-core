@@ -1,0 +1,18 @@
+<%args>
+
+	$id	=> undef
+	$class	=> undef
+
+</%args>
+<%init>
+
+   my $referer = $r->header_in("Referer");
+   my $doc = $keeper->get_document_by_id( $id, class => $class );
+
+   my $document_access = $user->section_accesses($user, $doc->section);
+   if ($document_access == 2) {
+	$doc->delete;
+   }
+   $m->redirect($referer);
+
+</%init>

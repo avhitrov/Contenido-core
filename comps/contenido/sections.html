@@ -177,7 +177,7 @@
 	$filter_params{p} = $p				if $p > 1;
 	$filter_params{s} = $id				if $id;
 
-	# æÉÌØÔÒÙ ÒÁÂÏÔÁÀÔ × ÌÀÂÏÍ ÓÌÕÞÁÅ...
+	# Ð¤Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹ Ñ€Ð°Ð±Ð¾Ñ‚Ð°ÑŽÑ‚ Ð² Ð»ÑŽÐ±Ð¾Ð¼ ÑÐ»ÑƒÑ‡Ð°Ðµ...
 	my $filter = $m->comp('/contenido/components/context.msn', name => 'filter');
 	my $profile = $m->comp('/contenido/components/context.msn', name => 'profile');
 
@@ -291,7 +291,7 @@
 		if ( $doc_class ) {
 			my @props = $doc_class->new( $keeper )->structure();
 			my ($prop) = grep { $_->{attr} eq $search_by } @props	if @props;
-			if ( ref $prop && $prop->{type} eq 'integer' ) {
+			if ( ref $prop && ($prop->{type} eq 'integer' || $prop->{type} eq 'checkbox') ) {
 				$filter{$search_by} = int($search);
 			} else {
 				$filter{$search_by}='%'.$search.'%';

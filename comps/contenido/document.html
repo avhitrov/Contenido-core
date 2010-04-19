@@ -86,6 +86,8 @@
 	$deactivate	=> undef
 </%ARGS>
 <%INIT>
+
+	&abort404	unless $class;
 	my $error='';
         ### !!! При добавлении переменных в ARGS их надо внести в список исключений в структуре ниже
 
@@ -111,6 +113,7 @@
 			}
 		}
 	}
+	&abort404	unless ref $document;
 
 	my @props = $document->structure();
 	my %filter_params;

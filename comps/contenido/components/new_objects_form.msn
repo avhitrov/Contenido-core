@@ -12,9 +12,9 @@
 %	}
 
 <td width="100%">
-<& "/contenido/components/select.msn", name=>'class', values=>$classes, check=>$default, style=>'width:100%;' &>
+<& "/contenido/components/select.msn", name=>'class', values=>$classes, check=>$default, style=>'width:100%;', onChange => "set_create_button(this, 'create_$btn_id')" &>
 </td>
-<td><input type="submit" value="Создать"></td>
+<td><input id="create_<% $btn_id %>" type="submit" value="Создать"<% $default ? '' : ' disabled="disabled"' %>></td>
 <td><input type="hidden" name="sect_id" value="<% $sect_id %>"></td>
 </tr></table>
 
@@ -36,4 +36,5 @@
 		'links' => ['Новая&nbsp;связь','link.html'],
 		'users' => ['Новый&nbsp;пользователь','users.html'],
 	};
+	my $btn_id = int(rand(10000));
 </%INIT>

@@ -68,19 +68,58 @@
 	
 </style>
 <title>Редакторский интерфейс<% (length($title) > 0) ? " | $title" : "" %></title>
+<script language="javascript" type="text/javascript" src="/contenido/i/js/jquery-1.3.2.min.js"></script>
 <% $m->comp_exists('/contenido/components/custom_head.msn') ? $m->comp('/contenido/components/custom_head.msn') : '' %>
 <script language="javascript" type="text/javascript" src="/contenido/i/js/links.js"></script>
-<script language="javascript" type="text/javascript" src="/contenido/i/js/tiny_mce/tiny_mce.js"></script>
+<script language="javascript" type="text/javascript" src="/contenido/i/js/tiny_mce/jquery.tinymce.js"></script>
 <script language="javascript" type="text/javascript">
 var WYSIWYGControls = new Array();
 var sDocumentClass;
 var nDocumentID;
-window.onload = function()
-{
+$().ready(function() {
   var sControls;
+	$('textarea.tinymce').tinymce({
+			// Location of TinyMCE script
+			script_url : '/contenido/i/js/tiny_mce/tiny_mce.js',
+
+			// General options
+			theme : "advanced",
+			plugins : "style,layer,table,advhr,advimage,advlink,inlinepopups,preview,media,contextmenu,paste,noneditable,visualchars,nonbreaking,template,advlist",
+
+			// Theme options
+			theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,formatselect,fontselect,fontsizeselect,|,forecolor,backcolor,|,undo,redo,|,preview,help,code",
+			theme_advanced_buttons2 : "cut,copy,paste,pastetext,pasteword,|,bullist,numlist,|,outdent,indent,blockquote,|,link,unlink,anchor,image,|,tablecontrols",
+			theme_advanced_buttons3 : "cleanup,removeformat,visualaid,|,sub,sup,|,charmap,media,hr,advhr,|,insertlayer,moveforward,movebackward,absolute,|,styleprops,|,visualchars,nonbreaking",
+			theme_advanced_toolbar_location : "top",
+			theme_advanced_toolbar_align : "left",
+			theme_advanced_statusbar_location : "bottom",
+			theme_advanced_resizing : true,
+
+			convert_urls : false,
+
+			paste_create_paragraphs : false,
+			paste_create_linebreaks : false,
+			paste_auto_cleanup_on_paste : true,
+			paste_convert_middot_lists : false,
+
+			// Example content CSS (should be your site CSS)
+			//content_css : "css/content.css",
+
+			// Drop lists for link/image/media/template dialogs
+			//template_external_list_url : "lists/template_list.js",
+			//external_link_list_url : "lists/link_list.js",
+			//external_image_list_url : "lists/image_list.js",
+			//media_external_list_url : "lists/media_list.js"
+			external_image_list_url : "/contenido/image_list.js?class=" + sDocumentClass + "&id=" + nDocumentID
+
+	});
+<%doc>
   if ( WYSIWYGControls.length ) {
 	sControls = WYSIWYGControls.join(',');
-	tinyMCE.init({
+	$('textarea.tinymce').tinymce({
+		// Location of TinyMCE script
+		script_url : '/contenido/i/js/tiny_mce/tiny_mce.js',
+
 		theme : "advanced",
 		plugins : "safari,paste,advimage,table",
 		paste_create_paragraphs : false,
@@ -92,14 +131,14 @@ window.onload = function()
 		paste_convert_headers_to_strong : true,
 		paste_insert_word_content_callback : "convertWord",
 		theme_advanced_buttons3_add : "pastetext,pasteword,selectall,|,forecolor,backcolor,|,tablecontrols",
-		mode : "exact",
-		elements : sControls,
 		convert_urls : false,
 
 		external_image_list_url : "/contenido/image_list.js?class=" + sDocumentClass + "&id=" + nDocumentID
 	});
   }
-}
+</%doc>
+});
+<%doc>
 function convertWord(type, content) {
 	switch (type) {
 		// Gets executed before the built in logic performes it's cleanups
@@ -115,6 +154,7 @@ function convertWord(type, content) {
 
 	return content;
 }
+</%doc>
 
 </script>
 </head>

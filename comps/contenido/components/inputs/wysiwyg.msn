@@ -8,7 +8,7 @@
 //-->
 </script>
 
-<textarea id="<% $name %>" \
+<textarea id="<% $name %>" class="tinymce" \
 % if ($request->{images_staff_printed}) {
 onclick="storeCaret(this)" onkeyup="storeCaret(this)" onselect="storeCaret(this)" \
 % }

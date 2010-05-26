@@ -268,7 +268,7 @@
   $s .= ",$filter"        if ($filter > 0);
 
   my %filter=();
-  my %order = (not $link_class and $owner->order_by) ? (order_by => $owner->order_by) : (order => ['date','direct']);
+  my %order = (not $link_class and $owner->order_by) ? (order_by => $owner->order_by) : (order_by => 'id desc');
   if ($alpha) {
 	$filter{ilike}=1;
 	$filter{ $alpha_search || 'name' }="$alpha%";

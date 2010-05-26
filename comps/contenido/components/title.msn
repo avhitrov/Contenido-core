@@ -97,6 +97,8 @@ $().ready(function() {
 
 			convert_urls : false,
 
+			extended_valid_elements : "iframe[src|width|height|name|align|noresize|scrolling|frameBorder|marginWidth|marginHeight]",
+
 			paste_create_paragraphs : false,
 			paste_create_linebreaks : false,
 			paste_auto_cleanup_on_paste : true,

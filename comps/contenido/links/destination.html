@@ -76,14 +76,11 @@ function CheckSource ()
 <table class="tform" width="100%">
 <tr><td>
 <form action="link_add.html" name="sourceform" target="_top" method="post" onsubmit="return CheckSource();">
-<select multiple name="sources" size="20" style="width:100%">
-</select>
-<p>К данной цели будут привязаны только выделенные документы.</p>
+<div id="link_list"></div>
+
 <input type="hidden" name="class" value="<% $class %>">
 <input type="hidden" name="dest_id" value="<% $dest_id %>">
 <input type="hidden" name="dest_class" value="<% $dest_class %>">
-<input type="button" value="Выделить все" onclick="SelectAllSources();">
-<input type="button" value="Удалить лишнее" onclick="DeleteSource();">
 <input type="submit" value="Связать выбранное">
 </form>
 </td></tr>

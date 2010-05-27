@@ -4,6 +4,11 @@
 <tr>
 <th>Удалить</th>
 <th>Документ</th>
+% if ( @props ) {
+%	foreach my $prop ( @props ) {
+<th><% $prop->{shortname} || $prop->{rusname} %></th>
+%	}
+% }
 <th>Связь</th>
 </tr>
 % my $i = 0;
@@ -12,11 +17,17 @@
 <tr bgcolor="<% $i++ % 2 ? 'white' : '#f0f0f0' %>">
 %	if ( ref $doc ) {
 %		my $style = $link->status ? '' : ' color:#606060;';
-<td><input type="checkbox" name="links" value="link_<% $link->id %>_<% $doc->id %>_<% $link->class %>"></td>
+<td style="width:40px; text-align:center;"><input type="checkbox" name="links" value="link_<% $link->id %>_<% $doc->id %>_<% $link->class %>"></td>
 <td><a href="document.html?class=<% $doc->class %>&id=<% $doc->id %>" target="_blank" style="<% $style %>"><% $doc->name %></a></td>
 %	} else {
 <td><input type="checkbox" name="links" value="link_<% $link->id %>_<% ref $destination ? $link->source_id : $link->dest_id %>_<% $link->class %>"></td>
-<td><% ref $doc ? $doc->name : '!!!висячая связь!!!' %></td>
+<td>!!!висячая связь!!!</td>
+%	}
+%	if ( @props ) {
+%		foreach my $prop ( @props ) {
+%			my $field = $prop->{attr};
+<td><% $link->$field %></td>
+%		}
 %	}
 <td><a href="link.html?class=<% $link->class %>&id=<% $link->id %>" target="_blank">редактировать</a></td>
 </tr>
@@ -49,5 +60,7 @@
   return	unless ref $links eq 'ARRAY' && @$links;
 
   my $document = $destination || $source;
+  my @props = $links->[0]->structure;
+  @props = sort { $a->{column} <=> $b->{column} } grep { $_->{attr} ne 'class' && $_->{type} =~ /string|integer/ } grep { $_->{column} } @props;
 
 </%init>

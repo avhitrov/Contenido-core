@@ -48,7 +48,7 @@ function AppendDest ( nID, sClass, sName ) {
 	if ( oD && oC ) {
 		count++;
 		if ((oD.value == nID) && (oC.value == sClass)) {
-			alert ('Элемент уже присутствует в списке');
+			alert ('п╜п╩п╣п╪п╣п╫я┌ я┐п╤п╣ п©я─п╦я│я┐я┌я│я┌п╡я┐п╣я┌ п╡ я│п©п╦я│п╨п╣');
 			return false;
 		}
 	} else {
@@ -148,7 +148,7 @@ function AppendSource ( nID, sClass, sName ) {
 	if ( oD && oC ) {
 		count++;
 		if ((oD.value == nID) && (oC.value == sClass)) {
-			alert ('Элемент уже присутствует в списке');
+			alert ('п╜п╩п╣п╪п╣п╫я┌ я┐п╤п╣ п©я─п╦я│я┐я┌я│я┌п╡я┐п╣я┌ п╡ я│п©п╦я│п╨п╣');
 			return false;
 		}
 	} else {

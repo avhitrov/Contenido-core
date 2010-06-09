@@ -4,33 +4,80 @@
 	$class	=> undef
 	$source_class	=> undef
 	$dest_class	=> undef
+	$update	=> undef
 
 </%ARGS>
 
 
 <%init>
-	if ($id)
-	{
+	if ($id) {
 		my $document = $keeper->get_document_by_id($id, class=>$class);
 
-		my @link_args = ();
-		if ( exists $ARGS{links} && ref $ARGS{links} eq 'ARRAY' ) {
-			@link_args = @{ $ARGS{links} }
-		} elsif ( exists $ARGS{links} ) {
-			@link_args = ( $ARGS{links} );
-		}
+		if ( $update ) {
 
-		my %nlinks = ();
-		foreach my $name (@link_args)
-		{
-			if ($name =~ /^link_(\d+)_(\d+)_(.*)$/)
+			my %updated;
+			while ( my ($field, $value) = each %ARGS ) {
+				if ( $field =~ /^update_(\d+)_(\w+)$/ ) {
+					my $oid = $1;
+					my $attr = $2;
+					$updated{$oid}{$attr} = $value;
+				}
+			}
+			my %classes = map { $_->{class} => 1 } values %updated;
+			foreach my $update_class ( keys %classes ) {
+				my @ids;
+				while ( my ($oid, $attr) = each %updated) {
+					push @ids, $oid		if $attr->{class} eq $update_class;
+				}
+				my @objects = $keeper->get_links (
+						id      => \@ids,
+						class   => $update_class
+					)			if @ids;
+				foreach my $object ( @objects ) {
+					my $fields = $updated{$object->id};
+					my @props = grep { exists $_->{inline} && $_->{inline} } $object->structure;
+					if ( ref $fields eq 'HASH' ) {
+						foreach my $prop ( @props ) {
+							my $attr = $prop->{attr};
+							my $value = ref $fields && exists $fields->{$attr} ? $fields->{$attr} : undef;
+							if ( $prop->{db_type} eq 'float' ) {
+								for ( $value ) {
+									s/\,/\./;
+									s/^\s+//;
+									s/\s+$//;
+								}
+							}
+							if ( $prop->{type} eq 'checkbox' ) {
+								$value = $value ? 1 : undef;
+							}
+
+							$object->$attr($value);
+						}
+						$object->store;
+					}
+				}
+			}
+
+		} else {
+			my @link_args = ();
+			if ( exists $ARGS{links} && ref $ARGS{links} eq 'ARRAY' ) {
+				@link_args = @{ $ARGS{links} }
+			} elsif ( exists $ARGS{links} ) {
+				@link_args = ( $ARGS{links} );
+			}
+
+			my %nlinks = ();
+			foreach my $name (@link_args)
 			{
-				my ($id, $dest_id, $lclass) = ($1, $2, $3);
-				if ( $id && $lclass ) {
-					my $link = $keeper->get_link_by_id ($id,
-						class   => $lclass,
-					);
-					$link->delete		if ref $link;
+				if ($name =~ /^link_(\d+)_(\d+)_(.*)$/)
+				{
+					my ($id, $dest_id, $lclass) = ($1, $2, $3);
+					if ( $id && $lclass ) {
+						my $link = $keeper->get_link_by_id ($id,
+							class   => $lclass,
+						);
+						$link->delete		if ref $link;
+					}
 				}
 			}
 		}

@@ -72,20 +72,14 @@ function CheckDest () {
 <fieldset>
 <legend>Список связей</legend>
 
-<form action="link_add.html" name="destform" target="_top" method="post" onsubmit="return CheckDest();">
-<div id="link_list"></div>
-
 <table class="tform" width="100%">
 <tr><td>
 <form action="link_add.html" name="destform" target="_top" method="post" onsubmit="return CheckDest();">
-<select multiple name="destinations" size="20" style="width:100%">
-</select>
-<p>К источнику будут привязаны только выделенные документы.</p>
+<div id="link_list"></div>
+
 <input type="hidden" name="class" value="<% $class %>">
 <input type="hidden" name="source_id" value="<% $source_id %>">
 <input type="hidden" name="source_class" value="<% $source_class %>">
-<input type="button" value="Выделить все" onclick="SelectAllDest();">
-<input type="button" value="Удалить лишнее" onclick="DeleteDest();">
 <input type="submit" value="Связать выбранное">
 </td></tr>
 </table>

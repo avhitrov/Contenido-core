@@ -26,11 +26,49 @@
 %	if ( @props ) {
 %		foreach my $prop ( @props ) {
 %			my $field = $prop->{attr};
+%			if ( exists $prop->{inline} ) {
+%				$inline_status = 1;
+%				if ( $prop->{type} =~ /^(string|integer|float)$/ ) {
+<td><input type="text" name="<% 'update_'.$link->id.'_'.$field %>" value="<% $link->$field |h %>" style="<% $prop->{inline_width} ? 'width:'.$prop->{inline_width}.'px;' : 'width:65px; ' %> <% $prop->{inline_style} || '' %>"></td>
+%				} elsif ($prop->{type} eq 'checkbox') {
+%					my $checked = $link->$field ? ' checked' : '';
+<td align="center"><input type="checkbox" name="<% 'update_'.$link->id.'_'.$field %>"<% $checked %>>
+%				} elsif ($prop->{type} eq 'select') {
+%					my $options = {};
+%					if ($toopi && (ref($toopi) eq 'HASH') && (exists($toopi->{$link->class}))) {
+%						%{ $options } = %{ $toopi->{$link->class} };
+%					}
+%					my $values = $options->{$prop->{attr}};
+<td><select name="<% 'update_'.$link->id.'_'.$field %>">
+%					if ( ref $values eq 'ARRAY' ) {
+%						foreach my $val ( @$values ) {
+%							my $selected = $val eq $link->$field ? ' selected' : '';
+<option value="<% $val %>"<% $selected %>><% $val %>
+%						}
+%					}
+</select>
+%				} elsif ($prop->{type} eq 'status') {
+%					my $cases = $prop->{cases};
+%					if ( ref $cases eq 'ARRAY' ) {
+<td><select name="<% 'update_'.$link->id.'_'.$field %>" style="<% $prop->{inline_width} ? 'width:'.$prop->{inline_width}.'px;' : '' %> <% $prop->{inline_style} || '' %>">
+%						foreach my $case ( @$cases ) {
+%							my $selected = $case->[0] eq $link->$field ? ' selected' : '';
+<option value="<% $case->[0] %>"<% $selected %>><% $case->[1] %>
+%						}
+</select>
+%					}
+
+%				}
+%			} else {
 <td><% $link->$field %></td>
+%			}
 %		}
 %	}
-<td><a href="link.html?class=<% $link->class %>&id=<% $link->id %>" target="_blank">редактировать</a></td>
-</tr>
+<td><a href="link.html?class=<% $link->class %>&id=<% $link->id %>" target="_blank">редактировать</a>
+%	if ( $inline_status ) {
+<input type="hidden" name="update_<% $link->id %>_class" value="<% $link->class %>">
+%	}
+</td></tr>
 % }
 </table>
 % if ( @$links ) {
@@ -41,6 +79,9 @@
 <input type="hidden" name="source_class" value="<% $links->[0]->class %>">
 %	} else {
 <input type="hidden" name="dest_class" value="<% $links->[0]->class %>">
+%	}
+%	if ( $inline_status ) {
+<input type="submit" name="update" value="Сохранить изменения" class="input_btn">
 %	}
 <input type="submit" value="Удалить выбранные связи документа" class="input_btn"></div>
 % }
@@ -59,8 +100,10 @@
   return	unless ref $docs;
   return	unless ref $links eq 'ARRAY' && @$links;
 
+  my $inline_status = 0;
   my $document = $destination || $source;
   my @props = $links->[0]->structure;
   @props = sort { $a->{column} <=> $b->{column} } grep { $_->{attr} ne 'class' && $_->{type} =~ /string|integer/ } grep { $_->{column} } @props;
+  my $toopi = $project->links();
 
 </%init>

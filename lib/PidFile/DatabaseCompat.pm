@@ -12,7 +12,7 @@ use POSIX qw(strftime);
 sub new {
 	my ($class, $keeper, %opts) = @_;
 
-	my ($crc1, $crc2) = map {abs unpack 'j',$_} grep {$_} split /(.{8})/, md5(($opts{pid_name}||$FindBin::RealScript).($opts{per_host} ? $opts{host} : ''));
+	my ($crc1, $crc2) = unpack 'LL', md5(($opts{pid_name}||$FindBin::RealScript).($opts{per_host} ? $opts{host} : ''));
 
 	my $self = {
 		dbh      => $keeper->create_db_t_connect,

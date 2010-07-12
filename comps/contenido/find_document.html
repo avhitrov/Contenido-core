@@ -66,11 +66,8 @@ function FillFields (ID, Name) {
 <input type="hidden" maxlength="255" name="nf" value="<% $nf %>">
 <input type="hidden" maxlength="255" name="vf" value="<% $vf %>">
 <input type="hidden" maxlength="255" name="show" value="<% $show %>">
-%	if ( $class ) {
-<input type="hidden" maxlength="255" name="class" value="<% $class %>">
-%	}
-%	if ( $s ) {
-<input type="hidden" maxlength="255" name="s" value="<% $s %>">
+%	while ( my ($param, $value) = each %params ) {
+<input type="hidden" maxlength="255" name="<% $param %>" value="<% $value %>">
 %	}
 <input type="hidden" maxlength="255" name="search_by" value="<% $search_by %>">
 </p></form></div>
@@ -86,8 +83,7 @@ params => {
 		nf	=> $nf,
 		vf	=> $vf,
 		show	=> $show,
-		$class ? ( class => $class ) : (),
-		$s ? ( s => $s ) : (),
+		%params,
 		$search_by ? ( search_by => $search_by ) : (),
 		$search ? ( search => $search ) : (),
 	} &>
@@ -111,11 +107,7 @@ params => {
 </html>
 <%args>
 
-	$search_by	=> undef
-	$search		=> undef
-	$class		=> undef
 	$show		=> 'name'
-	$s		=> undef
 	$nf		=> undef
 	$vf		=> undef
 	$p		=> 1
@@ -124,13 +116,20 @@ params => {
 <%init>
 
   return	unless $nf && $vf;
-  my ($docs, $total, %params);
+  my ($docs, $total);
   my $size = 20;
 
-  $params{s} = $s		if $s;
-  $params{class} = $class	if $class;
+  my %params = %ARGS;
+  delete $params{nf};
+  delete $params{vf};
+  delete $params{show};
+  delete $params{p};
+
+  my $search_by = delete $params{search_by};
+  my $search = delete $params{search};
+
   if ( $search_by && $search ) {
- 	$params{$search_by} = '%'.$search.'%';
+	$params{$search_by} = '%'.$search.'%';
 	$params{ilike} = 1;
   }
 

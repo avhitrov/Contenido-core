@@ -1,0 +1,74 @@
+<%args>
+
+	$email	=> undef
+
+</%args>
+<%init>
+
+  return	unless ref $email;
+
+  use MIME::Lite;
+  use MIME::Base64;
+
+  my $subject = $email->{subject};
+  $subject = MIME::Base64::encode($subject);
+  $subject =~ s/\s+$//si;
+  $subject = '=?utf-8?B?'.$subject.'?=';
+
+  my $emailfrom;
+  my ($from, $efrom) = $email->{from} =~ /^(.*?)<(.*?)>/ ? ($1, $2) : $email->{from} =~ /<(.*?)>/ ? ('',$1) : ('',$email->{from});
+  if ( $from ) {
+	$from = MIME::Base64::encode($from);
+	$from =~ s/\s+$//si;
+	$from = '=?utf-8?B?'.$from.'?=';
+	$emailfrom = $from.' <'.$efrom.'>';
+  } else {
+	$emailfrom = $efrom;
+  }
+
+  my $emailto;
+  my ($to, $eto) = $email->{to} =~ /^(.*?)<(.*?)>/ ? ($1, $2) : $email->{to} =~ /<(.*?)>/ ? ('',$1) : ('',$email->{to});
+  if ( $to ) {
+	$to = MIME::Base64::encode($to);
+	$to =~ s/\s+$//si;
+	$to = '=?utf-8?B?'.$to.'?=';
+	$emailto = $to.' <'.$eto.'>';
+  } else {
+	$emailto = $eto;
+  }
+  my $ccmail;
+  if ( exists $email->{cc} && ref $email->{cc} eq 'ARRAY' ) {
+	foreach my $cc ( @{ $email->{cc} } ) {
+		my ($cce, $ecce) = $cc =~ /^(.*?)<(.*?)>/ ? ($1, $2) : $cc =~ /<(.*?)>/ ? ('',$1) : ('',$cc);
+		$cc = $ecce;
+	}
+	$ccmail = join ', ', @{$email->{cc}};
+  } elsif ( exists $email->{cc} && $email->{cc} ) {
+	my ($cce, $ecce) = $email->{cc} =~ /^(.*?)<(.*?)>/ ? ($1, $2) : $email->{cc} =~ /<(.*?)>/ ? ('',$1) : ('',$email->{cc});
+	$ccmail = $ecce;
+  }
+
+
+  my $body = $email->{body};
+  warn Dumper($email);
+  my $dt = Contenido::DateTime->new;
+  $dt->set_locale('en_EN');
+  my $pdate = $dt->strftime("%a, %d %b %Y %H:%M:%S %z");
+  my $msg = MIME::Lite->new(
+		To      => $emailto,
+		From	=> $emailfrom,
+		$ccmail ? ( Cc => $ccmail ) : (),
+		Subject => $subject,
+		Encoding=> 'binary',
+		Date	=> $pdate,
+		Type    => 'multipart/related;type="multipart/alternative";charset="utf-8"',
+	);
+  $msg->attach(
+		'Type' => 'text/html;charset="utf-8"',
+		'Data' => $body,
+		'Disposition'	=> '',
+	);
+
+  $msg->send();
+
+</%init>

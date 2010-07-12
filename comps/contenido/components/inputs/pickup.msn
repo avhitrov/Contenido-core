@@ -88,9 +88,11 @@
 		$doc = $keeper->get_document_by_id ( $check, %{$prop->{lookup_opts}} );
 	}
 	$lookup_string = '/contenido/find_document.html?nf='.$name.'_docname&vf='.$name.'_value';
-	$lookup_string .= '&class='.$prop->{lookup_opts}->{class}		if exists $prop->{lookup_opts}->{class};
-	$lookup_string .= '&s='.$prop->{lookup_opts}->{s}			if exists $prop->{lookup_opts}->{s};
-	$lookup_string .= '&search_by='.$prop->{lookup_opts}->{search_by}	if exists $prop->{lookup_opts}->{search_by};
+	if ( exists $prop->{lookup_opts} && ref $prop->{lookup_opts} eq 'HASH' ) {
+		while ( my ($param, $value) = each %{ $prop->{lookup_opts} } ) {
+			$lookup_string .= '&'.$param.'='.$value;
+		}
+	}
   } else {
 	$error = 'Похоже неверное описание lookup_opts в документе';
   }

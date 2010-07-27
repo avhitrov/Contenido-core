@@ -115,7 +115,7 @@ sub request_init {
 
 sub is_valid_request {
     my $r = shift;
-    if ($r->uri =~ /^(?:\/i\/|\/images\/|\/binary\/)/ or ($r->content_type && $r->content_type !~ m#(?:^text/|javascript|json|^httpd/unix-directory)#i)) {
+    if ($r->uri =~ /^(?:\/i\/|\/images\/|\/binary\/)/ or ($r->content_type && !($r->content_type =~ m#(?:^text/|javascript|json|^httpd/unix-directory)#i || $r->content_type =~ /rss/i)) ) {
         return 0;            
     } else {
         return 1;

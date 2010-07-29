@@ -71,8 +71,19 @@
 
 
 <& "/contenido/components/header.msn" &>
-
 <& "/contenido/components/naviline.msn" &>
+
+<script type="text/javascript">
+<!--
+function set_create_button( oSelect, sBtnID ) {
+	if ( oSelect.value == '' ) {
+		$('#'+sBtnID).attr('disabled','disabled');
+	} else {
+		$('#'+sBtnID).removeAttr('disabled');
+	}
+}
+//-->
+</script>
 
 %	if ((!defined $luser || !$luser->login) && (!defined $class || !$class))
 %	{

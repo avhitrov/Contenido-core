@@ -21,13 +21,17 @@ my $IMAGE = $default;
 
 if ($SETS->{$field}) {
 
-    my $preview = $prop->{'preview'} || $keeper->{'preview'};
-    my @preview = ref $preview && ref $preview eq 'ARRAY' ? @{$preview} : ref $preview ? ($keeper->{'preview'}) : ($preview);
+    my @preview = exists $prop->{'preview'} && ref $prop->{'preview'} eq 'ARRAY' ? @{$prop->{'preview'}} : exists $prop->{'preview'} && $prop->{'preview'} ? ($prop->{'preview'}) : ();
+    my @crops = exists $prop->{'crop'} && ref $prop->{'crop'} eq 'ARRAY' ? @{$prop->{'crop'}} : exists $prop->{'crop'} && $prop->{'crop'} ? ($prop->{'crop'}) : ();
+    my @shrinks = exists $prop->{'shrink'} && ref $prop->{'shrink'} eq 'ARRAY' ? @{$prop->{'shrink'}} : exists $prop->{'shrink'} && $prop->{'shrink'} ? ($prop->{'shrink'}) : ();
+    warn Dumper(\@crops);
 
-    if (ref $IMAGE eq 'HASH') {
-        foreach my $suffix (@preview) {
-            Contenido::File::remove(${$IMAGE->{mini}}{$suffix}->{'filename'}) if ${$IMAGE->{mini}}{$suffix} and ${$IMAGE->{mini}}{$suffix}->{'filename'};
-        }
+    if (ref $IMAGE eq 'HASH' && exists $IMAGE->{mini} && ref $IMAGE->{mini} eq 'HASH') {
+	foreach my $val ( values %{$IMAGE->{mini}} ) {
+		if ( ref $val && exists $val->{filename} && $val->{filename} ) {
+			Contenido::File::remove($val->{'filename'});
+		}
+	}
     }
 
     my $filename = '/images/'.$object->get_file_name() || return;
@@ -39,24 +43,24 @@ if ($SETS->{$field}) {
         my $fh = $upload->fh();
         my $size = (stat $fh)[7];
     
-        my $fh_tmp = IO::File->new('>'.$filename_tmp.'.'.$extension) || die 'Can\'t open temporary file';
+	my $fh_tmp = IO::File->new('>'.$filename_tmp.'.'.$extension) || die 'Can\'t open temporary file';
     
-        my $buffer;
+	my $buffer;
     
-        sysread $fh, $buffer, $size;
-        syswrite $fh_tmp, $buffer, $size;
+	sysread $fh, $buffer, $size;
+	syswrite $fh_tmp, $buffer, $size;
     
-        undef $fh_tmp;
+	undef $fh_tmp;
     
-        if (Contenido::File::store($filename.'.'.$extension, $filename_tmp.'.'.$extension)) {
+	if (Contenido::File::store($filename.'.'.$extension, $filename_tmp.'.'.$extension)) {
             if (ref $IMAGE eq 'HASH' and $IMAGE->{'filename'}) {
-                Contenido::File::remove($IMAGE->{'filename'});
+		Contenido::File::remove($IMAGE->{'filename'});
             }
     
             # hashref slice assigning - жжесть
             @{$IMAGE}{'filename', 'width', 'height'} = (
-                $filename.'.'.$extension,
-                Image::Size::imgsize($filename_tmp.'.'.$extension),
+		$filename.'.'.$extension,
+		Image::Size::imgsize($filename_tmp.'.'.$extension),
             );
             foreach my $suffix (@preview) {
                 
@@ -67,19 +71,94 @@ if ($SETS->{$field}) {
                     warn 'Contenido Error: При вызове "'.$c_line.'" произошла ошибка "'.$result.'" ('.$@.")\n";
                     return undef;
                 }
-                @{$IMAGE->{'mini'}{$suffix}}{'filename', 'width', 'height'} = (
-                    $filename.'.'.$suffix.'.'.$extension,
-                    Image::Size::imgsize($filename_tmp.'.'.$suffix.'.'.$extension),
-                );
-                Contenido::File::store($filename.'.'.$suffix.'.'.$extension, $filename_tmp.'.'.$suffix.'.'.$extension);
+		@{$IMAGE->{'mini'}{$suffix}}{'filename', 'width', 'height'} = (
+			$filename.'.'.$suffix.'.'.$extension,
+			Image::Size::imgsize($filename_tmp.'.'.$suffix.'.'.$extension),
+		);
+		%{$IMAGE->{'resize'}{$suffix}} = %{$IMAGE->{'mini'}{$suffix}};
+		Contenido::File::store($filename.'.'.$suffix.'.'.$extension, $filename_tmp.'.'.$suffix.'.'.$extension);
+		unlink $filename_tmp.'.'.$suffix.'.'.$extension if -e $filename_tmp.'.'.$suffix.'.'.$extension;
             }
-            @{$IMAGE->{'mini'}}{'filename', 'width', 'height'} = @{$IMAGE->{'mini'}{$preview[0]}}{'filename', 'width', 'height'};
+	    if ( @preview ) {
+		@{$IMAGE->{'mini'}}{'filename', 'width', 'height'} = @{$IMAGE->{'mini'}{$preview[0]}}{'filename', 'width', 'height'};
+		@{$IMAGE->{'resize'}}{'filename', 'width', 'height'} = @{$IMAGE->{'mini'}{$preview[0]}}{'filename', 'width', 'height'};
+	    }
+
+	    ########## CROPS
+            foreach my $suffix (@crops) {
+                
+		my $shave_string;
+		my ($nwidth, $nheight) = $suffix =~ /(\d+)x(\d+)/i ? ($1, $2) : (0, 0);
+		if ( ($IMAGE->{width} / $IMAGE->{height}) > ($nwidth / $nheight) ) {
+			my $shave_pixels = (($IMAGE->{width} / $IMAGE->{height}) - ($nwidth / $nheight)) * $IMAGE->{height};
+			$shave_string = ' -shave '.int($shave_pixels / 2).'x0';
+		} elsif ( ($IMAGE->{height} / $IMAGE->{width}) > ($nheight / $nwidth) ) {
+			my $shave_pixels = (($IMAGE->{height} / $IMAGE->{width}) - ($nheight / $nwidth)) * $IMAGE->{width};
+			$shave_string = ' -shave 0x'.int($shave_pixels / 2);
+		}
+		if ( $shave_string ) {
+			my $c_line = $state->{"convert_binary"}." $shave_string $filename_tmp.$extension $filename_tmp.shaved.$extension";
+			warn "CROP!!! [$c_line]\n\n";
+			my $result = `$c_line`;
+			if (length $result  > 0) {
+				print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";
+			} else {
+				unlink $filename_tmp.".".$suffix;
+				$filename_tmp .= ".shaved";
+			}
+		}
+
+                my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality 80 '.$filename_tmp.'.'.$extension.' '.$filename_tmp.'.'.$suffix.'.'.$extension;
+                my $result = `$c_line`;
+        
+                if (length $result > 0) {
+                    warn 'Contenido Error: При вызове "'.$c_line.'" произошла ошибка "'.$result.'" ('.$@.")\n";
+                    return undef;
+                }
+		@{$IMAGE->{'mini'}{$suffix}}{'filename', 'width', 'height'} = (
+			$filename.'.'.$suffix.'.'.$extension,
+			Image::Size::imgsize($filename_tmp.'.'.$suffix.'.'.$extension),
+		);
+		%{$IMAGE->{'crop'}{$suffix}} = %{$IMAGE->{'mini'}{$suffix}};
+		Contenido::File::store($filename.'.'.$suffix.'.'.$extension, $filename_tmp.'.'.$suffix.'.'.$extension);
+		unlink $filename_tmp.'.'.$suffix.'.'.$extension if -e $filename_tmp.'.'.$suffix.'.'.$extension;
+            }
+	    if ( @crops ) {
+		if ( !exists $IMAGE->{'mini'}{'filename'} ) {
+			@{$IMAGE->{'mini'}}{'filename', 'width', 'height'} = @{$IMAGE->{'mini'}{$crops[0]}}{'filename', 'width', 'height'};
+		}
+		@{$IMAGE->{'crop'}}{'filename', 'width', 'height'} = @{$IMAGE->{'crop'}{$crops[0]}}{'filename', 'width', 'height'};
+	    }
+
+	    ########## SHRINKS
+            foreach my $suffix (@shrinks) {
+                
+                my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality 80 '.$filename_tmp.'.'.$extension.' '.$filename_tmp.'.'.$suffix.'.'.$extension;
+                my $result = `$c_line`;
+        
+		if (length $result > 0) {
+			warn 'Contenido Error: При вызове "'.$c_line.'" произошла ошибка "'.$result.'" ('.$@.")\n";
+			return undef;
+		}
+		@{$IMAGE->{'mini'}{$suffix}}{'filename', 'width', 'height'} = (
+			$filename.'.'.$suffix.'.'.$extension,
+			Image::Size::imgsize($filename_tmp.'.'.$suffix.'.'.$extension),
+		);
+		%{$IMAGE->{'shrink'}{$suffix}} = %{$IMAGE->{'mini'}{$suffix}};
+		Contenido::File::store($filename.'.'.$suffix.'.'.$extension, $filename_tmp.'.'.$suffix.'.'.$extension);
+		unlink $filename_tmp.'.'.$suffix.'.'.$extension if -e $filename_tmp.'.'.$suffix.'.'.$extension;
+            }
+	    if ( @shrinks && !exists $IMAGE->{'mini'}{'filename'} ) {
+		if ( !exists $IMAGE->{'mini'}{'filename'} ) {
+			@{$IMAGE->{'mini'}}{'filename', 'width', 'height'} = @{$IMAGE->{'mini'}{$shrinks[0]}}{'filename', 'width', 'height'};
+		}
+		@{$IMAGE->{'shrink'}}{'filename', 'width', 'height'} = @{$IMAGE->{'shrink'}{$shrinks[0]}}{'filename', 'width', 'height'};
+	    }
+
+
         }
     
-        unlink $filename_tmp.'.'.$extension if -e $filename_tmp.'.'.$extension;
-        foreach my $suffix (@preview) {    
-            unlink $filename_tmp.'.'.$suffix.'.'.$extension if -e $filename_tmp.'.'.$suffix.'.'.$extension;
-        }
+	unlink $filename_tmp.'.'.$extension if -e $filename_tmp.'.'.$extension;
     } else {
         warn 'ERROR in incoming POST form: "'.$field.' is not file upload (value: "'.$SETS->{$field}.'")';
     }

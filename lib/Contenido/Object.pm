@@ -651,7 +651,7 @@ sub delete {
 		}
 	}
     }
-    do { $log->warning("÷ÙÚÏ× ÍÅÔÏÄÁ delete() ÂÅÚ ÕËÁÚÁÎÉÑ ÉÄÅÎÔÉÆÉËÁÔÏÒÁ ÄÌÑ ÕÄÁÌÅÎÉÑ"); return undef }
+    do { $log->warning("Ð’Ñ‹Ð·Ð¾Ð² Ð¼ÐµÑ‚Ð¾Ð´Ð° delete() Ð±ÐµÐ· ÑƒÐºÐ°Ð·Ð°Ð½Ð¸Ñ Ð¸Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð° Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ"); return undef }
                                                 unless ($self->{id});
     $keeper->t_connect() || do { $keeper->error(); return undef; };
     $keeper->TSQL->do("DELETE FROM ".$self->class_table->db_table." WHERE id = ?", {}, $self->id) || return $self->t_abort();
@@ -666,7 +666,7 @@ sub delete {
 		}
 		my $dests = $classlink->available_destinations;
 		if ( ref $dests eq 'ARRAY' && @$dests ) {
-			$document_links{$classlink->class_table->db_table}{dest} = 1		if grep { $self->class eq $_ } @$sources;
+			$document_links{$classlink->class_table->db_table}{dest} = 1		if grep { $self->class eq $_ } @$dests;
 		}
 	}
 	foreach my $tablename ( keys %document_links ) {

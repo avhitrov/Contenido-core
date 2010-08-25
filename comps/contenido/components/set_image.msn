@@ -24,7 +24,6 @@ if ($SETS->{$field}) {
     my @preview = exists $prop->{'preview'} && ref $prop->{'preview'} eq 'ARRAY' ? @{$prop->{'preview'}} : exists $prop->{'preview'} && $prop->{'preview'} ? ($prop->{'preview'}) : ();
     my @crops = exists $prop->{'crop'} && ref $prop->{'crop'} eq 'ARRAY' ? @{$prop->{'crop'}} : exists $prop->{'crop'} && $prop->{'crop'} ? ($prop->{'crop'}) : ();
     my @shrinks = exists $prop->{'shrink'} && ref $prop->{'shrink'} eq 'ARRAY' ? @{$prop->{'shrink'}} : exists $prop->{'shrink'} && $prop->{'shrink'} ? ($prop->{'shrink'}) : ();
-    warn Dumper(\@crops);
 
     if (ref $IMAGE eq 'HASH' && exists $IMAGE->{mini} && ref $IMAGE->{mini} eq 'HASH') {
 	foreach my $val ( values %{$IMAGE->{mini}} ) {
@@ -98,7 +97,6 @@ if ($SETS->{$field}) {
 		}
 		if ( $shave_string ) {
 			my $c_line = $state->{"convert_binary"}." $shave_string $filename_tmp.$extension $filename_tmp.shaved.$extension";
-			warn "CROP!!! [$c_line]\n\n";
 			my $result = `$c_line`;
 			if (length $result  > 0) {
 				print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";

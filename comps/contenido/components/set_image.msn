@@ -100,13 +100,10 @@ if ($SETS->{$field}) {
 			my $result = `$c_line`;
 			if (length $result  > 0) {
 				print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";
-			} else {
-				unlink $filename_tmp.".".$suffix;
-				$filename_tmp .= ".shaved";
 			}
 		}
 
-                my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality 80 '.$filename_tmp.'.'.$extension.' '.$filename_tmp.'.'.$suffix.'.'.$extension;
+                my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality 80 '.$filename_tmp.'.shaved.'.$extension.' '.$filename_tmp.'.'.$suffix.'.'.$extension;
                 my $result = `$c_line`;
         
                 if (length $result > 0) {
@@ -119,7 +116,8 @@ if ($SETS->{$field}) {
 		);
 		%{$IMAGE->{'crop'}{$suffix}} = %{$IMAGE->{'mini'}{$suffix}};
 		Contenido::File::store($filename.'.'.$suffix.'.'.$extension, $filename_tmp.'.'.$suffix.'.'.$extension);
-		unlink $filename_tmp.'.'.$suffix.'.'.$extension if -e $filename_tmp.'.'.$suffix.'.'.$extension;
+		unlink $filename_tmp.'.shaved.'.$extension	if -e $filename_tmp.'.shaved.'.$extension;
+		unlink $filename_tmp.'.'.$suffix.'.'.$extension	if -e $filename_tmp.'.'.$suffix.'.'.$extension;
             }
 	    if ( @crops ) {
 		if ( !exists $IMAGE->{'mini'}{'filename'} ) {

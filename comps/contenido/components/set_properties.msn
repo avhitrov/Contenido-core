@@ -1,36 +1,34 @@
 <%ARGS>
 
-    $object => undef
-    $SETS => undef
+	$object	=> undef
+	$SETS	=> undef
 
 </%ARGS>
 <%INIT>
-  use Contenido::File;
+
+    use Contenido::File;
     use vars qw($keeper $request );
 
     $request->{local_codepage} = 'UTF8';
-    $request->{local_codepage} = 'WIN' if Convert::Cyrillic::cstocs('WIN', 'UTF8', $SETS->{control_charset}) eq 'Контроль';
-    $request->{local_codepage} = 'KOI8' if Convert::Cyrillic::cstocs('KOI8', 'UTF8', $SETS->{control_charset}) eq 'Контроль';
+    $request->{local_codepage} = 'WIN'	if Convert::Cyrillic::cstocs('WIN', 'UTF8', $SETS->{control_charset}) eq 'Контроль';
+    $request->{local_codepage} = 'KOI8'	if Convert::Cyrillic::cstocs('KOI8', 'UTF8', $SETS->{control_charset}) eq 'Контроль';
 
     warn "Contenido Debug: Форма для редактирования пришла в кодировке ".$request->{local_codepage}."\n"        if ($state->debug());
 
     my @properties = $object->structure();
     for (0..$#properties)
     {
-        my $prop = $properties[$_];
-        my $name = $prop->{attr};
-                my $type = $prop->{type};
+	my $prop = $properties[$_];
+	my $name = $prop->{attr};
+	my $type = $prop->{type};
 
-        next    if ($name eq 'sections');
-        next     if ($name eq 'id');
+	next	if ($name eq 'sections');
+	next	if ($name eq 'id');
 
-        my $component = '/contenido/components/outputs/'.$prop->{attr}.'.msn';
-        if ($m->comp_exists($component)) {
-            $object->{$name} = $m->comp($component, SETS => $SETS, name => $name, object => $object );
-                } elsif ($m->comp_exists("/contenido/components/outputs/$type.msn")) {
-            $object->{$name} = $m->comp("/contenido/components/outputs/$type.msn", SETS => $SETS, name => $name, object => $object );
-        } elsif ( $prop->{type} eq 'image' )
-        {
+	if ($m->comp_exists("/contenido/components/outputs/$type.msn")) {
+		$object->{$name} = $m->comp("/contenido/components/outputs/$type.msn", SETS => $SETS, name => $name, object => $object );
+
+	} elsif ( $prop->{type} eq 'image' ) {
             # --------------------------------------------------------------------------------------
             # Добавление одной, отдельно стоящей картинки...
 
@@ -59,9 +57,8 @@
                     $object->{$name} = Data::Dumper::Dumper($IMAGE);
                 }
             }
-        }
-        elsif ($prop->{type} =~ /^images/)
-        {
+
+	} elsif ($prop->{type} =~ /^images/) {
             # --------------------------------------------------------------------------------------
             # А вот это уже сложнее - составление блока из всех картинок...
 
@@ -128,9 +125,7 @@
                 $object->{$name} = Data::Dumper::Dumper($IMAGES);
             }
 
-        }
-        elsif ( $prop->{type} eq 'multimedia' )
-        {
+	} elsif ( $prop->{type} eq 'multimedia' ) {
             # --------------------------------------------------------------------------------------
             # Добавление одного объект Мультимедиа
 
@@ -154,9 +149,7 @@
                 }
             }
 
-        }
-        elsif ( $prop->{type} eq 'multimedia_new' )
-        {
+	} elsif ( $prop->{type} eq 'multimedia_new' ) {
             # --------------------------------------------------------------------------------------
             # Добавление одного объект Мультимедиа
 
@@ -180,9 +173,7 @@
                 }
             }
 
-        }
-        elsif ( $prop->{type} eq 'audio' )
-        {
+	} elsif ( $prop->{type} eq 'audio' ) {
             # --------------------------------------------------------------------------------------
             # Добавление одного объект Мультимедиа
 
@@ -210,10 +201,8 @@
                 }
             }
 
-        }
-        else 
-        {
-            $object->{$name} = $m->comp('/contenido/components/filter.msn', str => $SETS->{$name} );
+	} else {
+		$object->{$name} = $m->comp('/contenido/components/filter.msn', str => $SETS->{$name} );
         }
 
     }

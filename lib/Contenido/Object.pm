@@ -612,15 +612,12 @@ sub delete {
 				if ( ref $att && exists $att->{filename} && $att->{filename} ) {
 					Contenido::File::remove( $att->{filename} );
 				}
-				if ( exists $prop->{preview} && exists $att->{mini} ) {
-					if ( ref $prop->{preview} eq 'ARRAY' ) {
-						foreach my $size ( @{ $prop->{preview} } ) {
-							if ( exists $att->{mini}{$size}{filename} && $att->{mini}{$size}{filename} ) {
-								Contenido::File::remove( $att->{mini}{$size}{filename} );
-							}
+				if ( exists $att->{mini} && ref $att->{mini} eq 'HASH' ) {
+					Contenido::File::remove( $att->{mini}{filename} )	if exists $att->{mini}{filename};
+					foreach my $val ( values %{ $att->{mini} } ) {
+						if ( ref $val && exists $val->{filename} && $val->{filename} && ($val->{filename} ne $att->{mini}{filename}) ) {
+							Contenido::File::remove( $val->{filename} );
 						}
-					} else {
-						Contenido::File::remove( $att->{mini}{filename} );
 					}
 				}
 				
@@ -631,15 +628,12 @@ sub delete {
 					if ( ref $img && exists $img->{filename} && $img->{filename} ) {
 						Contenido::File::remove( $img->{filename} );
 					}
-					if ( exists $prop->{preview} && exists $img->{mini} ) {
-						if ( ref $prop->{preview} eq 'ARRAY' ) {
-							foreach my $size ( @{ $prop->{preview} } ) {
-								if ( exists $img->{mini}{$size}{filename} && $img->{mini}{$size}{filename} ) {
-									Contenido::File::remove( $img->{mini}{$size}{filename} );
-								}
+					if ( exists $img->{mini} && ref $img->{mini} eq 'HASH' ) {
+						Contenido::File::remove( $img->{mini}{filename} )	if exists $img->{mini}{filename};
+						foreach my $val ( values %{ $img->{mini} } ) {
+							if ( ref $val && exists $val->{filename} && $val->{filename} && ($val->{filename} ne $img->{mini}{filename}) ) {
+								Contenido::File::remove( $val->{filename} );
 							}
-						} else {
-							Contenido::File::remove( $img->{mini}{filename} );
 						}
 					}
 				}
@@ -652,7 +646,7 @@ sub delete {
 	}
     }
     do { $log->warning("Вызов метода delete() без указания идентификатора для удаления"); return undef }
-                                                unless ($self->{id});
+						unless ($self->{id});
     $keeper->t_connect() || do { $keeper->error(); return undef; };
     $keeper->TSQL->do("DELETE FROM ".$self->class_table->db_table." WHERE id = ?", {}, $self->id) || return $self->t_abort();
 
@@ -716,7 +710,7 @@ sub links {
     $opts{$check} = $self->id();
 
     if (defined($lclass) && (length($lclass) > 0)) {
-        $opts{class} = $lclass;
+	$opts{class} = $lclass;
     }
 
     my @links = $self->keeper->get_links(%opts);
@@ -767,14 +761,14 @@ sub set_link {
     $link->source_class($self->class());
     
     while (my ($k,$v) = each %opts) {
-        $link->{$k} = $v;
+	$link->{$k} = $v;
     }
 
     if ($link->store())
     {
-        return $link->id;
+	return $link->id;
     } else {
-        return undef;
+	return undef;
     }
 }
 
@@ -789,7 +783,7 @@ sub prepare_for_cache {
     my $hash = {};
 
     foreach ( $self->structure() ) {
-        $hash->{$_->{attr}} = $self->{$_->{attr}} if defined $self->{$_->{attr}};
+	$hash->{$_->{attr}} = $self->{$_->{attr}} if defined $self->{$_->{attr}};
     }
     bless $hash, $self->class();
     return $hash;

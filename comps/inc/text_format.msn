@@ -6,6 +6,7 @@
 	$text	=> undef
 	$imagefield	=> 'pictures'
 	$imageclass	=> ''
+	$pclass		=> undef
 	$rel		=> undef
 	$target		=> undef
 	$onclick	=> undef
@@ -18,9 +19,10 @@
   my $body = $text || $doc->$field;
   $body =~ s/\r//sgi;
   $body =~ s/[\n\t\ ]*$//sgi;
+  $pclass = $pclass ? ' class="'.$pclass.'"' : '';
   if ($body !~ /(<br|<p)/i) {
         $body =~ s/([^\n])\n([^\n])/$1<br>\n$2/gi;
-        $body =~ s/\n{2,}/<\/p>\n\n<p>/gi;
+        $body =~ s/\n{2,}/<\/p>\n\n<p$pclass>/gi;
   }
   $body =~ s/\[br\]/<br>/gi;
   if ( ref $doc ) {

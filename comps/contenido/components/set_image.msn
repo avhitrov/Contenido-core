@@ -101,15 +101,21 @@ if ($SETS->{$field}) {
 			if (length $result  > 0) {
 				print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";
 			}
+		} else {
+			my $c_line = "cp $filename_tmp.$extension $filename_tmp.shaved.$extension";
+			my $result = `$c_line`;
+			if (length $result  > 0) {
+				print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";
+			}
 		}
 
-                my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality 80 '.$filename_tmp.'.shaved.'.$extension.' '.$filename_tmp.'.'.$suffix.'.'.$extension;
-                my $result = `$c_line`;
+		my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality 80 '.$filename_tmp.'.shaved.'.$extension.' '.$filename_tmp.'.'.$suffix.'.'.$extension;
+		my $result = `$c_line`;
         
-                if (length $result > 0) {
-                    warn 'Contenido Error: При вызове "'.$c_line.'" произошла ошибка "'.$result.'" ('.$@.")\n";
-                    return undef;
-                }
+		if (length $result > 0) {
+			warn 'Contenido Error: При вызове "'.$c_line.'" произошла ошибка "'.$result.'" ('.$@.")\n";
+			return undef;
+		}
 		@{$IMAGE->{'mini'}{$suffix}}{'filename', 'width', 'height'} = (
 			$filename.'.'.$suffix.'.'.$extension,
 			Image::Size::imgsize($filename_tmp.'.'.$suffix.'.'.$extension),

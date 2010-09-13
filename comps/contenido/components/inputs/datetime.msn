@@ -9,6 +9,7 @@
 % } else {
 <& '/contenido/components/select.msn', name => $name.'_second', values => \@seconds, check => $second &>
 % }
+% if ( ref $prop && exists $prop->{attr} ) {
 <span style="padding-left:20px;"><a href="javascript:void(0)" onclick="set_<% $prop->{attr} %>_now()" style="color:red;">Сейчас!</a></span>
 <script type="text/javascript">
 <!--
@@ -18,12 +19,13 @@ function set_<% $prop->{attr} %>_now () {
 	document.forms['form'].elements['<% $prop->{attr} %>_year'].value = '<% $now->year %>';
 	document.forms['form'].elements['<% $prop->{attr} %>_hour'].value = '<% $now->hour %>';
 	document.forms['form'].elements['<% $prop->{attr} %>_minute'].value = '<% $now->minute %>';
-% unless ( $prop->{noseconds} ) {
+%	unless ( $prop->{noseconds} ) {
 	document.forms['form'].elements['<% $prop->{attr} %>_second'].value = '<% $now->second %>';
-% }
+%	}
 }
 //-->
 </script>
+% }
 <%args>
 	$prop
 	$name  => undef

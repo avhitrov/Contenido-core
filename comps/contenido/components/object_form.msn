@@ -135,7 +135,9 @@
  &>
 
 %			}
-%			for my $mn (1..5)
+%			my $ME = exists $prop->{empty_slots} ? $prop->{empty_slots} : 5;
+%			$ME = ($ME + $IMAGES->{maxnumber}) >= 100 ? 0 : (100 - $IMAGES->{maxnumber} < $ME ? 100 - $IMAGES->{maxnumber} : $ME );
+%			for my $mn (1..$ME)
 %			{
 
 

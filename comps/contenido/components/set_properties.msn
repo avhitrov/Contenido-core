@@ -121,6 +121,11 @@
 
             if ( scalar(keys(%{ $IMAGES })) > 0)
             {
+		my $maxnumber = 0;
+		for ( 1..100 ) {
+			$maxnumber = $_		if exists $IMAGES->{"image_$_"} && $_ > $maxnumber;
+		}
+		$IMAGES->{maxnumber} = $maxnumber;
                 local $Data::Dumper::Indent = 0;
                 $object->{$name} = Data::Dumper::Dumper($IMAGES);
             }

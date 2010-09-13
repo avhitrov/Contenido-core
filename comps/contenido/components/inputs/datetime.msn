@@ -4,8 +4,26 @@
 &nbsp;&nbsp;
 <& '/contenido/components/select.msn', name => $name.'_hour',   values => \@hours,   check => $hour   &>
 <& '/contenido/components/select.msn', name => $name.'_minute', values => \@minutes, check => $minute &>
+% if ( $prop->{noseconds} ) {
+<input type="hidden" name="<% $prop->{attr} %>_second" value="0">
+% } else {
 <& '/contenido/components/select.msn', name => $name.'_second', values => \@seconds, check => $second &>
-
+% }
+<span style="padding-left:20px;"><a href="javascript:void(0)" onclick="set_<% $prop->{attr} %>_now()" style="color:red;">Сейчас!</a></span>
+<script type="text/javascript">
+<!--
+function set_<% $prop->{attr} %>_now () {
+	document.forms['form'].elements['<% $prop->{attr} %>_day'].value = '<% $now->day %>';
+	document.forms['form'].elements['<% $prop->{attr} %>_month'].value = '<% $now->mon %>';
+	document.forms['form'].elements['<% $prop->{attr} %>_year'].value = '<% $now->year %>';
+	document.forms['form'].elements['<% $prop->{attr} %>_hour'].value = '<% $now->hour %>';
+	document.forms['form'].elements['<% $prop->{attr} %>_minute'].value = '<% $now->minute %>';
+% unless ( $prop->{noseconds} ) {
+	document.forms['form'].elements['<% $prop->{attr} %>_second'].value = '<% $now->second %>';
+% }
+}
+//-->
+</script>
 <%args>
 	$prop
 	$name  => undef
@@ -21,8 +39,13 @@
 	my @months  = @{ $m->comp('/contenido/components/get_months.msn') };
 	my @years   = map { $_ => $_ } ( $localtime[5] - 5 .. $localtime[5] + 5);
 	my @hours   = map { $_ => sprintf('%02d', $_) } (0 .. 23);
-	my @minutes = map { $_ => sprintf('%02d', $_) } (0 ..59);
-	my @seconds = map { $_ => sprintf('%02d', $_) } (0 ..59);
+	my @minutes = map { $_ => sprintf('%02d', $_) } (0 .. 59);
+	my @seconds;
+	if ( exists $prop->{seconds_step} && $prop->{seconds_step} > 1 ) {
+		@seconds = grep { ($_ % $prop->{seconds_step}) == 0 } map { $_ => sprintf('%02d', $_) } (0 .. 59);
+	} else {
+		@seconds = map { $_ => sprintf('%02d', $_) } (0 .. 59);
+	}
 
 	if ($prop->{allow_null}) {
 		unshift @days,    '', '';
@@ -40,4 +63,6 @@
 	} elsif(!$prop->{allow_null}) {
 		($second,$minute,$hour,$day,$month,$year) = @localtime[0 .. 5];
 	}
+	my $now = Contenido::DateTime->new;
+
 </%init>

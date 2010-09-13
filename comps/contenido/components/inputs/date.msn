@@ -27,8 +27,20 @@
 	} elsif(!$prop->{allow_null}) {
 		($day,$month,$year) = @localtime[3 .. 5];
 	}
+	my $now = Contenido::DateTime->new;
+
 </%init>
 
 <& "/contenido/components/select.msn",  name => $name.'_day', values => \@days, check => $day &><& 
 	'/contenido/components/select.msn', name => $name.'_month', values => $months, check => $month &><& 
 	'/contenido/components/select.msn', name => $name.'_year', values => \@years, check => $year &> 
+<span style="padding-left:20px;"><a href="javascript:void(0)" onclick="set_<% $prop->{attr} %>_now()" style="color:red;">Сейчас!</a></span>
+<script type="text/javascript">
+<!--
+function set_<% $prop->{attr} %>_now () {
+   document.forms['form'].elements['<% $prop->{attr} %>_day'].value = '<% $now->day %>';
+   document.forms['form'].elements['<% $prop->{attr} %>_month'].value = '<% $now->mon %>';
+   document.forms['form'].elements['<% $prop->{attr} %>_year'].value = '<% $now->year %>';
+}
+//-->
+</script>

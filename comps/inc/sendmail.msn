@@ -1,6 +1,7 @@
 <%args>
 
 	$email	=> undef
+	$etype	=> 'mixed'
 
 </%args>
 <%init>
@@ -59,9 +60,9 @@
 		From	=> $emailfrom,
 		$ccmail ? ( Cc => $ccmail ) : (),
 		Subject => $subject,
-		Encoding=> 'binary',
+#		Encoding=> 'binary',
 		Date	=> $pdate,
-		Type    => 'multipart/related;type="multipart/alternative";charset="utf-8"',
+		Type    => ($etype eq 'mixed' ? 'multipart/mixed' : $etype eq 'related' ? 'multipart/related;type="multipart/alternative";charset="koi8-r"' : $etype),
 	);
   $msg->attach(
 		'Type' => 'text/html;charset="utf-8"',

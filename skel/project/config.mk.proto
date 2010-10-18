@@ -18,6 +18,7 @@ BASE_PASSWD =
 
 # sample how to add required modules to project
 # PROJECT_REQUIRED +=		P-WebFetcher
+# PROJECT_REQUIRED +=		MIME-Lite
 
 # sample how to setup rsync for static data
 # RSYNC_DIRS =			i www/css

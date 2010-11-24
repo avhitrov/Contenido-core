@@ -80,7 +80,6 @@
 	if ($p > 1)
 	{
 		$params->{$pname} = $p-1;
-		push(@parts, "<a title=\"Предыдущая страница\" href=\"$href?".join('&', map { "$_=$params->{$_}" } keys %$params)."\">&lt;&lt;</a>");
 		push(@parts, "<a title=\"Предыдущая страница\" href=\"$href?$pname=".($p-1).(@params ? '&'.join('&', @params) : '')."\">&lt;&lt;</a>");
 	}
 

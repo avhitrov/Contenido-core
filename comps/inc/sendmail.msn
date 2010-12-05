@@ -13,7 +13,7 @@
 
   my $subject = $email->{subject};
   $subject = MIME::Base64::encode($subject);
-  $subject =~ s/\s+$//si;
+  $subject =~ s/\s//sgi;
   $subject = '=?utf-8?B?'.$subject.'?=';
 
   my $emailfrom;

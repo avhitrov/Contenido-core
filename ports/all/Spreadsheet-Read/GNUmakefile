@@ -5,7 +5,7 @@
 
 include ../../etc/perl.mk
 
-PORTVERSION		= 0.35
+PORTVERSION		= 0.41
 DISTFILE		= ${PORTNAME}-${PORTVERSION}.tgz
 WRKSRC			= ${WRKDIR}/${DISTFILE:%.tgz=%}
 PERL_MAKEMAKER  = yes

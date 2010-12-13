@@ -2,7 +2,7 @@
 # $HeadURL: svn://cvs1.rambler.ru/Contenido/trunk/ports/all/MP3-Info/GNUmakefile $
 ###############################################################################
 
-PORTVERSION =		1.22
+PORTVERSION =		1.24
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	MP3
 

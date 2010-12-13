@@ -3,7 +3,7 @@
 # $Id: GNUmakefile 375 2006-08-23 08:47:17Z abavykin $
 ###############################################################################
 
-PORTVERSION =		1.0
+PORTVERSION =		1.1
 PORT_DEPENDS =		libwww
 
 do-configure:	;

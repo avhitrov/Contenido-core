@@ -5,7 +5,7 @@
 
 include ../../etc/perl.mk
 
-PORTVERSION =           3.3
+PORTVERSION =           3.4
 PERL_MAKEMAKER =        yes
 MASTER_CPAN_SUBDIR =   	../../authors/id/M/ML/MLEHMANN
 

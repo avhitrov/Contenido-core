@@ -20,6 +20,7 @@ CORE_REQUIRED +=		apache13
 CORE_REQUIRED +=		libapreq
 CORE_REQUIRED +=		PerlMagick
 CORE_REQUIRED +=		IO-stringy
+CORE_REQUIRED +=		DateTime
 CORE_REQUIRED +=		DateTime-Format-Pg
 CORE_REQUIRED +=		Cache-Memcached
 CORE_REQUIRED +=		cronolog

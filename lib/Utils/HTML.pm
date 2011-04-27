@@ -269,8 +269,7 @@ sub limit_words {
     $t1 = $t2 = join ' ', @words[0 .. $args{max_words}-1];
 
 #   magic !
-    my @wds = split ' ', $t1;
-    return $t1 if $t1 =~ s/^(.+[\w»")]{3,}[.!?])+\s?[А-ЯA-Z«"].+?$/$1/ and scalar(@wds) > $args{min_words};
+    s/^(.+\w{3,}[»")]?[.!?]+)\s*[А-ЯA-Z«"].+?$/$1/s and (()=/(\s+)/g)>$args{min_words} and return$_ for $t1;
 
     $t2 =~ s/[.,:;!?\s—-]+$//;
     $t2.($args{ending} || '');

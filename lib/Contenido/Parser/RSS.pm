@@ -4,9 +4,11 @@ use strict;
 use warnings;
 use locale;
 
-use Contenido::Parser::Util;
+use base 'Contenido::Parser';
+
+use Contenido::Globals;
 use Utils::HTML;
-#use Time::ParseDate;
+use Time::ParseDate;
 #use Date::Parse;
 use Data::Dumper;
 use Digest::MD5 qw(md5_hex);
@@ -33,12 +35,20 @@ sub new {
 sub parse {
     my ($self, %opts) = @_;
 
-    my $content    = delete $opts{content};
-    my $base_url   = delete $opts{base_url};
-    my $strip_html = delete $opts{strip_html};
+    my $content;
+    if ( $opts{content} ) {
+	$content = delete $opts{content};
+	delete $self->{content};
+    } elsif ( $self->{success} || $self->{content} ) {
+	$content = delete $self->{content};
+    } else {
+	$self->{success} = 0;
+	return $self;
+    }
+    my $base_url   = delete $self->{base_url} || delete $opts{base_url};
     my $allow_global_fulltext = delete $opts{allow_fulltext} || 0;
     my $content_global_type = delete $opts{content_type} || 1;
-    my $debug = delete $opts{debug};
+    my $debug = $DEBUG;
     my $gui = delete $opts{gui};
     my $description_as_fulltext = delete $opts{description_as_fulltext};
     warn "Parser Rools: [".$opts{parser_rss}."]\n"				if $debug;
@@ -56,8 +66,9 @@ sub parse {
             my $content_type = $content_global_type;
             my $allow_fulltext = $allow_global_fulltext;
             $self->__check_rewrite ( item => $item, rools => $rss_rools );
-            my $date = Time::ParseDate::parsedate($item->{pubdate});
-            my $pubdate = Class::Date::localdate(Date::Parse::str2time($item->{pubdate}));
+            my $date = $self->__parse_date($item->{pubdate});
+            my $pubdate = Contenido::DateTime->new( epoch => $date );
+            $pubdate = $pubdate->ymd('-').' '.$pubdate->hms;
             next	if ref $item->{title};
             next	if ref $item->{description};
             $self->__check_ignore ( item => $item, rools => $rss_rools );
@@ -154,8 +165,8 @@ sub parse {
                 my @att = ref $item->{enclosure} eq 'ARRAY' ? @{ $item->{enclosure} } : ( $item->{enclosure} )	if exists $item->{enclosure};
                 @att = grep { ref $_ eq 'HASH' && $_->{type} =~ /image/ } @att;
                 @images = map {
-                        my $img = rchannel::Image->new($_);
-                        $img->src($base_url.($img->src =~ m|^/| ? '' : '/').$img->src) unless $img->src =~ /^http:/; $img;
+                        my $img = $_;
+                        $img->{src} = $base_url.($img->{src} =~ m|^/| ? '' : '/').$img->{src}   unless $img->{src} =~ /^http:/; $img;
                     } map { {src => $_->{url}, $_->{width} ? (width => $_->{width}) : (), $_->{height} ? (height => $_->{height}) : (), $_->{title} ? (title => $_->{title}) : ()} } grep { ref $_ eq 'HASH' && exists $_->{url} } @src, @att;
             }
             my @videos;
@@ -201,6 +212,18 @@ sub parse {
                 }
             }
             @videos = grep { exists $_->{type} && lc($_->{type}) eq 'video/x-flv' && $_->{src} =~ /\.flv$/i } @videos;
+            my @inlined_images;
+            for ( $description, $fulltext ) {
+		my $field = $_;
+		while ( $field =~ /<img ([^>]+)>/sgi ) {
+			my $image = $self->__parse_params( $1 );
+			push @inlined_images, $image	if ref $image && exists $image->{src} && $image->{src};
+		}
+            }
+            if ( @inlined_images ) {
+		my %images = map { $_->{src} => $_ } @images, @inlined_images;
+		@images = values %images;
+            }
             push @items, {
                 'checksum'		=> md5_hex(encode_utf8($title.$description)),
                 'ignore'		=> $item->{ignore}	|| 0,
@@ -228,11 +251,11 @@ sub parse {
             };
         }
     } else {
-        $self->error_message($@ || 'Something wrong while parsing content');
+        warn ($@ || 'Something wrong while parsing content');
         return $self->is_success(0);
     }
 
-    $self->items(\@items);
+    $self->{items} = \@items;
     return $self->is_success(1);
 }
 
@@ -1023,9 +1046,10 @@ sub __field_prepare {
     my ($self, $text) = @_;
 
 #    $text =~ s/^[\n\r\x20\t]+//;
+    $text =~ s/[\n\r\x20\t]+$//;
     $self->__cdata (\$text);
     $self->__extchar (\$text);
-    $text = HTML::Entities::decode_entities($text);
+#    $text = HTML::Entities::decode_entities($text);
 
     # Remove linebreaks inside incorrectly breaked paragraphs
     if (length($text) > 100) {
@@ -1048,8 +1072,8 @@ sub __field_prepare {
     $text =~ s/<br[^>]*>/\n/sgi;
     $text =~ s/<p\s*>/\n\n/sgi;
     $text =~ s/<\/p\s*>//sgi;
-    $text = rchannel::Parser::Util::strip_html($text);
-    $text = rchannel::Parser::Util::text_cleanup($text);
+#    $text = Contenido::Parser::Util::strip_html($text);
+#    $text = Contenido::Parser::Util::text_cleanup($text);
     return $text;
 }
 
@@ -1060,19 +1084,20 @@ sub __extchar {
     for ( $$textref ) {
         s/&#38;/\&/sg;
         s/\&amp;/\&/sgi;
-        s/&#171;/«/sg;
-        s/&#187;/»/sg;
-        s/&#163;/£/sg;
-        s/&#150;/&ndash;/sg;
-        s/&#151;/&mdash;/sg;
-        s/&#132;/"/sg;
-        s/&#147;/"/sg;
-        s/&#148;/"/sg;
-        s/&#180;/'/sg;
-        s/&#133;/\.\.\./sg;
-        s/&#13;/\n/sg;
-        s/&#34;/"/sg;
-        s/\xA0/\x20/sg;
+        s/\&amp;/\&/sgi;
+        s/\&quot;/"/sgi;
+        s/\&#171;/«/sg;
+        s/\&#187;/»/sg;
+        s/\&#163;/£/sg;
+        s/\&#150;/&ndash;/sg;
+        s/\&#151;/&mdash;/sg;
+        s/\&#132;/"/sg;
+        s/\&#147;/"/sg;
+        s/\&#148;/"/sg;
+        s/\&#180;/'/sg;
+        s/\&#133;/\.\.\./sg;
+        s/\&#13;/\n/sg;
+        s/\&#34;/"/sg;
     }
 #    $$textref =~ s/&#(\d+);/{'&#'.__normalise($1).';'}/eg;
 #    $$textref =~ s/&gt;/>/sgi;
@@ -1200,6 +1225,21 @@ sub __parse_related {
 
     return $result;
 }
+
+
+sub __parse_date {
+    my $self = shift;
+    my $str = shift;
+
+    if ($str=~/(\d{2})(\d{2})(\d{4})T(\d{2})(\d{2})(\d{2})/){
+	return parsedate ("$3-$2-$1 $4:$5:$6");
+    } elsif ($str=~/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/){
+	return parsedate ("$1 $2");
+    } else {
+	return parsedate($str);
+    }
+}
+
 
 
 # TODO IMAGES:

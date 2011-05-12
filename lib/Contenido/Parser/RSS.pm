@@ -1045,8 +1045,8 @@ sub __item_cut_single_elements {
 sub __field_prepare {
     my ($self, $text) = @_;
 
-#    $text =~ s/^[\n\r\x20\t]+//;
-    $text =~ s/[\n\r\x20\t]+$//;
+    $text =~ s/^[\n\r\ \t]+//;
+    $text =~ s/[\n\r\ \t]+$//;
     $self->__cdata (\$text);
     $self->__extchar (\$text);
 #    $text = HTML::Entities::decode_entities($text);
@@ -1085,6 +1085,8 @@ sub __extchar {
         s/&#38;/\&/sg;
         s/\&amp;/\&/sgi;
         s/\&amp;/\&/sgi;
+        s/\&lt;/</sgi;
+        s/\&gt;/>/sgi;
         s/\&quot;/"/sgi;
         s/\&#171;/«/sg;
         s/\&#187;/»/sg;
@@ -1100,9 +1102,6 @@ sub __extchar {
         s/\&#34;/"/sg;
     }
 #    $$textref =~ s/&#(\d+);/{'&#'.__normalise($1).';'}/eg;
-#    $$textref =~ s/&gt;/>/sgi;
-#    $$textref =~ s/&lt;/</sgi;
-#    $$textref =~ s/&quot;/"/sgi;
 #    $$textref =~ s/&laquo;/«/sgi;
 #    $$textref =~ s/&raquo;/»/sgi;
 #    $$textref =~ s/&copy;/©/sgi;

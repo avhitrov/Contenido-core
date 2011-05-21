@@ -68,7 +68,7 @@ sub parse {
             $self->__check_rewrite ( item => $item, rools => $rss_rools );
             my $date = $self->__parse_date($item->{pubdate});
             my $pubdate = Contenido::DateTime->new( epoch => $date );
-            $pubdate = $pubdate->ymd('-').' '.$pubdate->hms;
+#            $pubdate = $pubdate->ymd('-').' '.$pubdate->hms;
             next	if ref $item->{title};
             next	if ref $item->{description};
             $self->__check_ignore ( item => $item, rools => $rss_rools );
@@ -99,6 +99,7 @@ sub parse {
             $link = $base_url.($link =~ m|^/| ? '' : '/' ).$link		if $base_url && ($link !~ /^http:/);
             $item->{description} = $self->__field_prepare ($item->{description});
             $self->__check_filter ( gui => $gui, field => 'description', item => $item, rools => $rss_rools );
+            my %image_href;
             my $description = $item->{description};
             if ( exists $item->{'rambler:fulltext'} && $item->{'rambler:fulltext'} ) {
                 $allow_fulltext = 1;
@@ -214,11 +215,17 @@ sub parse {
             @videos = grep { exists $_->{type} && lc($_->{type}) eq 'video/x-flv' && $_->{src} =~ /\.flv$/i } @videos;
             my @inlined_images;
             for ( $description, $fulltext ) {
-		my $field = $_;
-		while ( $field =~ /<img ([^>]+)>/sgi ) {
-			my $image = $self->__parse_params( $1 );
-			push @inlined_images, $image	if ref $image && exists $image->{src} && $image->{src};
-		}
+                my $field = $_;
+                while ( $field =~ /<img ([^>]+)>/sgi ) {
+                    my $image = $self->__parse_params( $1 );
+                    push @inlined_images, $image	if ref $image && exists $image->{src} && $image->{src};
+                }
+                while ( $field =~ /<a ([^>]+)>/sgi ) {
+                    my $anchor = $self->__parse_params( $1 );
+                    if ( $anchor->{href} && $anchor->{href} =~ /\.(jpe?g|gif|png)$/ ) {
+                        push @inlined_images, { src => $anchor->{href} };
+                    }
+                }
             }
             if ( @inlined_images ) {
 		my %images = map { $_->{src} => $_ } @images, @inlined_images;
@@ -1044,6 +1051,7 @@ sub __item_cut_single_elements {
 
 sub __field_prepare {
     my ($self, $text) = @_;
+    return	unless $text;
 
     $text =~ s/^[\n\r\ \t]+//;
     $text =~ s/[\n\r\ \t]+$//;

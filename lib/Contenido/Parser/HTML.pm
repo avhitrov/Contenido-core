@@ -10,7 +10,7 @@ use Contenido::Globals;
 use Utils::HTML;
 use Data::Dumper;
 use utf8;
-
+use Encode;
 
 my @PICNAME = qw ( top menu topmenu home line dot mail razdel button find search srch delivery
  head bar label phone bottom bottommenu ico icon post left right service caption arr arrow cart
@@ -53,10 +53,10 @@ sub parse {
 
     my $content;
     if ( $opts{content} ) {
-	$content = delete $opts{content};
+	$content = decode('utf-8', delete $opts{content});
 	delete $self->{content};
     } elsif ( $self->{success} || $self->{content} ) {
-	$content = delete $self->{content};
+	$content = decode('utf-8', delete $self->{content});
     } else {
 	$self->{success} = 0;
 	return $self;
@@ -66,8 +66,10 @@ sub parse {
     my $strip_html = delete $opts{strip_html};
     my $debug = $DEBUG;
     my $gui = delete $opts{gui};
-    my $header = delete $opts{header};
-    my $description = delete $opts{description};
+    my $header = decode('utf-8', delete $opts{header});
+    warn "Header length: ".length($header)."\n";
+    my $description = decode('utf-8', delete $opts{description});
+    warn "Description length: ".length($description)."\n";
     my $minimum = delete $opts{min} || length $description;
 
     my $pre_rools =	$self->__parse_rools (delete $opts{parser_pre});
@@ -120,7 +122,6 @@ sub parse {
                 $self->{error_message} = 'Nothing was found at all!!! Check your MINIMUM value';
                 return $self->is_success(0)		unless $gui;
         }
-	@$chosen = sort { $a->{id} <=> $b->{id} } @$chosen;
         if ( $description ) {
             my @use_rools = grep { $_->{command} eq 'use' && $_->{subcommand} eq 'element' } @$parse_rools		if ref $parse_rools eq 'ARRAY';
             $chosen = $self->__check_description ($chosen, $description, $debug)	unless @use_rools;
@@ -165,12 +166,15 @@ sub parse {
                 }
             }
             $self->{text} = ref $chosen eq 'ARRAY' ? $chosen->[0] : $chosen;
-            $self->{html} = $content;
-            $self->{tree} = $shortcuts;
+#            $self->{html} = $content;
+#            $self->{tree} = $shortcuts;
+            $self->{tree} = $tree;
             $self->{chosen} = $chosen;
         } else {
             $self->__post_rool ($chosen->[0], $post_rools, $description);
             $self->{text} = Contenido::Parser::Util::text_cleanup($chosen->[0]->{text});
+            $self->{chosen} = $chosen;
+            map { $_->{parent} = undef } @$chosen		if ref $chosen eq 'ARRAY';
             $tree = undef;
             foreach my $key ( keys %$shortcuts ) {
                 delete $shortcuts->{$key};
@@ -360,12 +364,14 @@ sub __make_tree {
                     $last_text_tag->{type} = 'text';
                     $last_text_tag->{parent} = $current;
                     $last_text_tag->{level} = $level+1;
+                    $last_text_tag->{text} = $tag->{content};
                     $elem_hash{$last_text_tag->{id}} = $last_text_tag;
                     push @{$current->{children}}, $last_text_tag;
                     $current->{text_count}++;
                 }
 		$current->{text_value} += $tag->{count};
                 splice @elems, 0, $tag->{count};
+#		warn "Tag opened. Next text: [".join('',$elems[0..10])."]\n";
             } elsif ( ref $tag ) {
                 if ( ($current->{type} eq 'td' || $current->{type} eq 'tr' ) && $tag->{type} eq 'tr' ) {
 #                    warn "!!!! Error: HTML validation. ID=[$current->{id}]. Stack rollback till table begin... !!!!\n" if $debug;
@@ -391,8 +397,9 @@ sub __make_tree {
                 $tag->{parent} = $current;
                 $tag->{level} = ++$level;
                 $elem_hash{$tag->{id}} = $tag;
+		push @{$current->{children}}, $tag;
                 push @stack, $current;
-                warn "Open type: $tag->{type}. ID=[$tag->{id}]. Name: ".($tag->{params}{name}||'').". Class: ".($tag->{params}{class}||'').". Level: $tag->{level}. Stack depth: ".scalar(@stack)."\n";
+#                warn "Open type: $tag->{type}. ID=[$tag->{id}]. Name: ".($tag->{params}{name}||'').". Class: ".($tag->{params}{class}||'').". Level: $tag->{level}. Stack depth: ".scalar(@stack)."\n";
                 $current = $tag;
                 splice @elems, 0, $tag->{count};
             } else {
@@ -411,6 +418,7 @@ sub __make_tree {
                     $last_text_tag->{id} = $id++;
                     $last_text_tag->{type} = 'text';
                     $last_text_tag->{parent} = $current;
+                    $last_text_tag->{text} = $tag->{content};
                     $last_text_tag->{level} = $level+1;
                     $elem_hash{$last_text_tag->{id}} = $last_text_tag;
                     push @{$current->{children}}, $last_text_tag;
@@ -466,6 +474,7 @@ sub __make_tree {
                 $last_text_tag->{text} .= shift @elems;
                 $last_text_tag->{count}++;
             } else {
+                $last_text_tag = {};
                 $last_text_tag->{text} = shift @elems;
                 $last_text_tag->{count} = 1;
                 $last_text_tag->{id} = $id++;
@@ -490,7 +499,7 @@ sub __try_tag {
     my $i = 1;
     my %tag;
     my $tag = $content->[0];
-    while ( $content->[$i] ne '<' && $content->[$i] ne '>' && $i < scalar @$content ) {
+    while ( $i < (scalar @$content - 1) && $content->[$i] ne '<' && $content->[$i] ne '>' ) {
         $tag .= $content->[$i];
         $i++;
     }
@@ -500,41 +509,43 @@ sub __try_tag {
             content	=> $tag,
             count	=> $i,
         };
-    } else {
-        if ( $tag =~ /^<(div|table|tr|td|body|html)\s*(.*)/i ) {
-            my $val = $1;
-            if ( $tag =~ /^<($val)\s*(.*)/i ) {
-                $tag{type} = lc($1);
-                my $args = $2;
-                $tag{count} = $i+1;
-                my %args;
-                while ( $tag =~ /([a-zA-z]+)\x20*?=\x20*?"([^"]+)"/g ) {
-                    $args{lc($1)} = $2;
-                }
-                while ( $tag =~ /([a-zA-z]+)\x20*?=\x20*?'([^']+)'/g ) {
-                    $args{lc($1)} = $2;
-                }
-                while ( $tag =~ /([a-zA-z]+)=(\w+)/g ) {
-                    $args{lc($1)} = $2;
-                }
-                foreach my $arg ( qw( name id class width align ) ) {
-                    $tag{params}{$arg} = $args{$arg}		if exists $args{$arg};
-                }
-                return \%tag;
-            } else {
-                return {
-                    type	=> 'text',
-                    content	=> $tag,
-                    count	=> $i,
-                };
+    }
+    $tag .= $content->[$i++];
+#    warn "TAG: [$tag]\n";
+
+    if ( $tag =~ /^<(div|table|tr|td|body|html)\s*(.*)/i ) {
+        my $val = $1;
+        if ( $tag =~ /^<($val)\s*(.*)/i ) {
+            $tag{type} = lc($1);
+            my $args = $2;
+            $tag{count} = $i;
+            my %args;
+            while ( $tag =~ /([a-zA-z]+)\x20*?=\x20*?"([^"]+)"/g ) {
+                $args{lc($1)} = $2;
             }
-	} else {
+            while ( $tag =~ /([a-zA-z]+)\x20*?=\x20*?'([^']+)'/g ) {
+                $args{lc($1)} = $2;
+            }
+            while ( $tag =~ /([a-zA-z]+)=(\w+)/g ) {
+                $args{lc($1)} = $2;
+            }
+            foreach my $arg ( qw( name id class width align ) ) {
+                $tag{params}{$arg} = $args{$arg}		if exists $args{$arg};
+            }
+            return \%tag;
+        } else {
             return {
                 type	=> 'text',
                 content	=> $tag,
                 count	=> $i,
             };
         }
+    } else {
+        return {
+            type	=> 'text',
+            content	=> $tag,
+            count	=> $i,
+        };
     }
 }
 
@@ -544,7 +555,7 @@ sub __try_end {
     my $i = 2;
     my %tag;
     my $tag = $content->[0].$content->[1];
-    while ( $content->[$i] ne '<' && $content->[$i] ne '>' && $i < scalar @$content ) {
+    while ( $content->[$i] ne '<' && $content->[$i] ne '>' && $i < (scalar @$content-1) ) {
         $tag .= $content->[$i];
         $i++;
     }
@@ -554,12 +565,14 @@ sub __try_end {
             content	=> $tag,
             count	=> $i,
         };
-    } else {
-        if ( $tag =~ /^<\/(div|table|tr|td|body|html)/i ) {
+    }
+    $tag .= $content->[$i++];
+#    warn "TAG END: [$tag]\n";
+    if ( $tag =~ /^<\/(div|table|tr|td|body|html)/i ) {
             my $val = $1;
-            if ( $tag =~ /^<\/($val)\s*?$/i ) {
+            if ( $tag =~ /^<\/($val)[\s>]/i ) {
                 $tag{type} = lc($1);
-                $tag{count} = $i+1;
+                $tag{count} = $i;
                 return \%tag;
             } else {
                 return {
@@ -568,13 +581,12 @@ sub __try_end {
                      count	=> $i,
                 };
             }
-	} else {
+    } else {
             return {
                 type	=> 'text',
                 content	=> $tag,
                 count	=> $i,
             };
-        }
     }
 }
 
@@ -583,8 +595,7 @@ sub __extract_img {
     my ($self, $structure, $base_url, $debug) = @_;
     return	unless ref $structure eq 'HASH';
 
-    foreach my $tag ( values %$structure ) {
-        next		unless ref $tag && exists $tag->{text} && $tag->{text};
+    foreach my $tag ( grep { ref $_ && $_->{type} eq 'text' && $_->{text} } values %$structure ) {
         my $text = $tag->{text};
         while ( $text =~ /<img (.*?)>/sgi  ) {
 #            warn "Image for extract_img found [$1]. Tag ID: $tag->{id}\n";
@@ -592,8 +603,8 @@ sub __extract_img {
             my $img = {};
             if ( $params =~ /src\x20*?=\x20*?["'](.*?)["']/ || $params =~ /src=([^\x20]+)/ ) {
                 $img->{url} = $1;
-                $img->{url} =~ s/[\r\t\n\x20]+$//;
-                $img->{url} =~ s/^[\r\t\n\x20]+//;
+                $img->{url} =~ s/[\r\t\n\ ]+$//;
+                $img->{url} =~ s/^[\r\t\n\ ]+//;
                 $img->{url} = $base_url.'/'.$img->{url}		unless $img->{url} =~ /^http:/;
                 $img->{url} =~ s/\/+/\//sgi;		
                 $img->{url} =~ s/http:\//http:\/\//sgi;		
@@ -616,8 +627,7 @@ sub __extract_headers {
     my ($self, $structure, $debug) = @_;
     return	unless ref $structure eq 'HASH';
 
-    foreach my $tag ( values %$structure ) {
-        next		unless ref $tag && exists $tag->{text} && $tag->{text};
+    foreach my $tag ( grep { ref $_ && $_->{type} eq 'text' && $_->{text} } values %$structure ) {
         my $text = $tag->{text};
         while ( $text =~ /<h([\d])[^>]*?>([^<]+)<\/h[\d]>/sgi ) {
             my $header_level = $1;
@@ -648,55 +658,60 @@ sub __dig_big_texts {
     }
 
     my @ret;
-    foreach my $tid ( sort { $a <=> $b } keys %$structure ) {
-        my $tag = $structure->{$tid};
-        next		unless ref $tag && exists $tag->{text} && $tag->{text};
-        next		if $self->__exclude_rools($tag, \@exclude_rools);
+    foreach my $tag ( sort { $a->{id} <=> $b->{id} } grep { ref $_ && $_->{type} eq 'text' && $_->{text} } values %$structure ) {
+        next		if $self->__exclude_rools($tag->{parent}, \@exclude_rools);
 
         if ( @rools ) {
             my $choose = 0;
             foreach my $rool ( @rools ) {
                 my $matched = 1;
                 foreach my $cond ( @{$rool->{condition}} ) {
-                    unless ( exists $tag->{params}{$cond->{param}} && $tag->{params}{$cond->{param}} eq $cond->{value} ) {
+                    unless ( exists $tag->{parent}{params}{$cond->{param}} && $tag->{parent}{params}{$cond->{param}} eq $cond->{value} ) {
                         $matched = 0;
                     }
                 }
                 $choose ||= $matched; 
             }
             if ( $choose ) {
-                $tag->{text} =~ s/^[\t\ \n\r]+//s;
-                $tag->{text} =~ s/[\t\ \n\r]+$//s;
-                $tag->{text} =~ s/[\t\ ]+/\ /sg;
-                $tag->{text} =~ s/\r//sg;
-                $tag->{text} =~ s/\n{2,}/\n\n/sg;
-                $tag->{text} =~ s/<a.*?>//sgi;
-                $tag->{text} =~ s/<\/a.*?>//sgi;
-                $tag->{text} =~ s/\&\\x(\d+)//sgi;
+                for ( $tag->{text} ) {
+                    s/^[\t\ \n\r]+//s;
+                    s/[\t\ \n\r]+$//s;
+                    s/[\t\ ]+/\ /sg;
+                    s/\r//sg;
+                    s/\n{2,}/\n\n/sg;
+                    s/\&\\x(\d+)//sgi;
+                }
 
                 my $text = $tag->{text};
                 $text =~ s/<a.*?href.*?<\/a[^>]*?>//sgi;
-#                $text = Contenido::Parser::Util::strip_html($text);
+                $text = Contenido::Parser::Util::strip_html($text);
+                $tag->{text_weight} = length($text);
                 if ( length($text) >= $minimum ) {
-                   push @ret, $tag;
+                    for ( $tag->{text} ) {
+                        s/<a.*?>//sgi;
+                        s/<\/a.*?>//sgi;
+                    }
+                    push @ret, $tag;
                 }
             }
         } else {
+            for ( $tag->{text} ) {
+                s/^[\t\ \n\r]+//s;
+                s/[\t\ \n\r]+$//s;
+                s/[\t\ ]+/\ /sg;
+                s/\r//sg;
+                s/\n{2,}/\n\n/sg;
+            }
             my $text = $tag->{text};
-            $text =~ s/^[\t\ \n\r]+//s;
-            $text =~ s/[\t\ \n\r]+$//s;
-            $text =~ s/[\t\ ]+/\ /sg;
-            $text =~ s/\r//sg;
-            $text =~ s/\n{2,}/\n\n/sg;
-#            It does wrong job:
-#            $text =~ s/([,!\?])(\S)/$1\ $2/sg;
-            $tag->{text} = $text;
             $text =~ s/<a.*?href.*?<\/a[^>]*?>//sgi;
-#            $text = Contenido::Parser::Util::strip_html($text);
+            $text = Contenido::Parser::Util::strip_html($text);
+            $tag->{text_weight} = length($text);
             if ( length($text) >= $minimum ) {
-                $tag->{text} =~ s/<a.*?>//sgi;
-                $tag->{text} =~ s/<\/a.*?>//sgi;
-                $tag->{text} =~ s/\&\\x(\d+)//sgi;
+                for ( $tag->{text} ) {
+                    s/<a.*?>//sgi;
+                    s/<\/a.*?>//sgi;
+                    s/\&\\x(\d+)//sgi;
+                }
                 push @ret, $tag;
             }
         }
@@ -836,17 +851,17 @@ sub __strip_html {
 #        $unit->{text} = HTML::Entities::decode_entities($unit->{text});
 #        $unit->{text} = Contenido::Parser::Util::strip_html($unit->{text});
         for ( $unit->{text} ) {
-            s/^[\x20\t\r\n]+//si;
+            s/^[\ \t\r\n]+//si;
             s/^(\d+)\.(\d+)\.(\d+)//si;
-            s/^[\x20\t\r\n]+//si;
+            s/^[\ \t\r\n]+//si;
             s/^(\d+):(\d+)//si;
-            s/^[\x20\t\r\n]+//si;
+            s/^[\ \t\r\n]+//si;
         }
         if ( lc(substr ($unit->{text}, 0, length($header) )) eq lc($header) ) {
             substr $unit->{text}, 0, length($header), '';
-            $unit->{text} =~ s/^[\.\x20\t\r\n]+//sgi;
+            $unit->{text} =~ s/^[\.\ \t\r\n]+//sgi;
         }
-        $unit->{text} =~ s/[\x20\t\r\n]+$//sgi;
+        $unit->{text} =~ s/[\ \t\r\n]+$//sgi;
     }
 }
 
@@ -928,12 +943,12 @@ sub __get_images {
                 push @images, @img;
             }
         } else {
-            next	if ($tag->{level}+1) < $chosen->{level};
-            next	if $image_depth && ( $tag->{level} > ($chosen->{level} + $image_depth) );
+            next	if ($tag->{level}+1) < $chosen->{parent}{level};
+            next	if $image_depth && ( $tag->{level} > ($chosen->{parent}{level} + $image_depth) );
 
             my $ok = 0;
-            my $uphops = $tag->{level} > $chosen->{level} ? 1 : 2;
-            my $hops = $image_depth ? $image_depth : $tag->{level} - $chosen->{level} + $uphops;
+            my $uphops = $tag->{level} > $chosen->{parent}{level} ? 1 : 2;
+            my $hops = $image_depth ? $image_depth : $tag->{level} - $chosen->{parent}{level} + $uphops;
             next	if ($hops - $uphops) > 4;
             my @img_parents = ($tag->{id});
             my $parent = $tag;
@@ -941,7 +956,7 @@ sub __get_images {
                 $parent = $parent->{parent};
                 push @img_parents, $parent->{id};
             }
-            $parent = $chosen;;
+            $parent = $chosen->{parent}{parent};
             for ( 0..$uphops ) {
                 if ( grep { $parent->{id} == $_ } @img_parents ) {
                     $ok = 1;
@@ -951,8 +966,8 @@ sub __get_images {
             }
             if ( $ok ) {
                 my @img = grep { $self->__img_is_valid ($_) } map {
-                                 my $img = rchannel::Image->new($_);
-                                 $img->src($base_url.($img->src =~ m|^/| ? '' : '/').$img->src) unless $img->src =~ /^http:/;
+                                 my $img = $_;
+                                 $img->{src} = $base_url.($img->{src} =~ m|^/| ? '' : '/').$img->{src}	unless $img->{src} =~ /^http:/;
                                  $img;
                               } map { {src => $_->{url}, width => $_->{w}, height => $_->{h}, alt => $_->{alt}, title => $_->{alt}} } @{ $tag->{images} };
 
@@ -972,7 +987,7 @@ sub __get_images {
 sub __img_is_valid {
     my ($self, $img) = @_;
 
-#    return 1;
+    return 1;
     if ( $img->check_online ) {
         my $delim = 0;
         my $w = $img->width;

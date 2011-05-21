@@ -26,4 +26,19 @@ sub text_cleanup {
     return join "\n\n", grep length $_, @paragfs;
 }
 
+sub strip_html {
+    my $text = shift;
+
+    if ( ref $text ) {
+        for ( $$text ) {
+            s/<\/?[^>]+>//sgi;
+        }
+    } else {
+        for ( $text ) {
+            s/<\/?[^>]+>//sgi;
+        }
+        return $text;
+    }
+}
+
 1;

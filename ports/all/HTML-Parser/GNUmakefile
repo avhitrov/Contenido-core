@@ -5,7 +5,7 @@
 
 #include ../../etc/perl.mk
 
-PORTVERSION =		3.54
+PORTVERSION =		3.68
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	HTML
 PORT_DEPENDS =		HTML-Tagset	\

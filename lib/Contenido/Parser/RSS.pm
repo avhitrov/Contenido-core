@@ -97,7 +97,7 @@ sub parse {
             }
             $link = $self->__field_prepare ($link);
             $link = $base_url.($link =~ m|^/| ? '' : '/' ).$link		if $base_url && ($link !~ /^http:/);
-            $item->{description} = $self->__field_prepare ($item->{description});
+            $item->{description} = encode('utf-8', $self->__field_prepare (decode('utf-8', $item->{description})));
             $self->__check_filter ( gui => $gui, field => 'description', item => $item, rools => $rss_rools );
             my %image_href;
             my $description = $item->{description};

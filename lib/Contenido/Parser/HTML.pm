@@ -155,8 +155,8 @@ sub parse {
                 debug => $debug,
         );
         if ( ref $images eq 'ARRAY' && @$images ) {
-            $self->images($images);
-            $self->image($images->[0]);
+            $self->{images} = $images;
+            $self->{image} = $images->[0];
         }
 
         if ( $gui ) {
@@ -216,6 +216,8 @@ sub __clean_tags {
         $$content =~ s/<input([^>]*?)>//sgi;
     } else {
         $$content =~ s/<form(.*?)<\/form>//sgi;
+        $$content =~ s/<textarea(.*?)<\/textarea([^>]*?)>//sgi;
+        $$content =~ s/<select(.*?)<\/select([^>]*?)>//sgi;
     }
     foreach my $rool ( @clean_off_rools ) {
         next		unless $rool->{condition}{param} eq 'tag';
@@ -786,9 +788,9 @@ sub __str_compare {
 
     foreach my $word ( %$Bl ) {
         if ( exists $Al->{$word} ) {
-            $df += $Al->{$word}
+            $df += $Al->{$word} || 0;
         } else {
-            $df -= $Bl->{$word}
+            $df -= $Bl->{$word} || 0;
         }
     }
 

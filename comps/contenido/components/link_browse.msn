@@ -23,7 +23,7 @@
 %			foreach my $dclass ( @desired_class ) {
 %				$m->out (', ')	if $i++;
 %				if ( $restrict_class eq $dclass ) {
-<b style="color:olive;"><% $desired_class[0] %></b>
+<b style="color:olive;"><% $dclass %></b>
 %				} else {
 <a href="?class=<% $class %>&restrict_class=<% $dclass %>"><% $dclass %></a>
 %				}

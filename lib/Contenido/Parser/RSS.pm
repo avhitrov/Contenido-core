@@ -51,11 +51,11 @@ sub parse {
     my $debug = $DEBUG;
     my $gui = delete $opts{gui};
     my $description_as_fulltext = delete $opts{description_as_fulltext};
-    warn "Parser Rools: [".$opts{parser_rss}."]\n"				if $debug;
+    warn "Parser Rools: [".$opts{parser_rss}."]\n"				if $debug && $opts{parser_rss};
 
     my $rss_rools =     $self->__parse_rools (delete $opts{parser_rss});
 
-    warn "RSS Rools: ".Dumper ($rss_rools)					if $debug;
+    warn "RSS Rools: ".Dumper ($rss_rools)					if $debug && $rss_rools;
 
     my @items;
     my $feed = $self->__parse_content(\$content);
@@ -215,6 +215,7 @@ sub parse {
             @videos = grep { exists $_->{type} && lc($_->{type}) eq 'video/x-flv' && $_->{src} =~ /\.flv$/i } @videos;
             my @inlined_images;
             for ( $description, $fulltext ) {
+		next	unless $_;
                 my $field = $_;
                 while ( $field =~ /<img ([^>]+)>/sgi ) {
                     my $image = $self->__parse_params( $1 );
@@ -1065,7 +1066,7 @@ sub __field_prepare {
         while ($text =~ /<p>(.+?)(?=<\/?p>|$)/sgi) {
             my $p = $1;
             if (length $p > 50) {
-                my ($dcount, $ndcount) = ();
+                my ($dcount, $ndcount) = (0,0);
                 # Count sentences normally ended vs breaked
                 $dcount++ while $p =~ /(\.|\?|\!)['"]?\s*[\r\n]+/g;
                 $ndcount++ while $p =~ /([^\.\?\!\s])\s*[\r\n]+/g;

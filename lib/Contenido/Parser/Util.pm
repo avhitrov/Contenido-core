@@ -30,13 +30,9 @@ sub strip_html {
     my $text = shift;
 
     if ( ref $text ) {
-        for ( $$text ) {
-            s/<\/?[^>]+>//sgi;
-        }
+        $$text =~  s/<\/?[^>]+>//sgi;
     } else {
-        for ( $text ) {
-            s/<\/?[^>]+>//sgi;
-        }
+        $text =~   s/<\/?[^>]+>//sgi;
         return $text;
     }
 }

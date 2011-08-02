@@ -147,6 +147,7 @@ sub parse {
             my ($glue) = grep { $_->{command} eq 'glue' } @$parse_rools;
             $self->__glue ( $chosen, $glue, $debug )	if ref $glue;
         }
+  	warn "Getting images...\n"			if $debug;
         my $images = $self->__get_images (
                 structure	=> $shortcuts, 
                 chosen		=> $chosen->[0],
@@ -288,11 +289,11 @@ sub __clean_img {
 sub __check_img_name {
     my $name = shift;
     my $test = $1	if $name =~ /\/([^\/]+)$/;
-    if ( $test =~ /\d+[x-]\d+/ || $test =~ /\.gif$/i ) {
+    if ( $test && ($test =~ /\d+[x-]\d+/ || $test =~ /\.gif$/i) ) {
         return 1;
     }
     foreach my $word ( @PICNAME ) {
-        if ( $test =~ /^$word/si || $test =~ /[^a-z]$word[^a-z]/si ) {
+        if ( $test && ($test =~ /^$word/si || $test =~ /[^a-z]$word[^a-z]/si) ) {
             return 1;
         }
     }
@@ -721,6 +722,7 @@ sub __dig_big_texts {
     unless ( @ret ) {
         warn "Nothing was found at all!!! Check your ROOLS or MINIMUM value" if $debug;
     }
+    warn "Digging done!\n"		if $debug;
     return \@ret;
 }
 

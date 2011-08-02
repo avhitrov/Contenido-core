@@ -60,14 +60,14 @@ sub fetch {
 	$content = <$fh>;
     }
     if ( $content ) {
-	warn Dumper($self);
 	unless ( $encoding ) {
 		$encoding = $self->__try_content_encoding( substr($content, 0, 350) );
-		$self->{encoding} = $encoding;
 		if ( $encoding && $encoding ne 'utf-8' ) {
 			Encode::from_to($content, $encoding, 'utf-8');
 		}
 	}
+	$self->{encoding} = $encoding;
+	warn Dumper($self)		if $DEBUG;
 	$self->{content} = $content;
 	$self->{success} = 1;
     } else {

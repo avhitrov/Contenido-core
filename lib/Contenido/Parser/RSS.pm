@@ -190,7 +190,7 @@ sub parse {
                     $item->{video}{url} :
                         $item->{'videourl'}					||
                         $item->{'video_url'}					||
-                        ($item->{'guid'} =~ /^http:/ ? $item->{'guid'} : undef)	||
+                        ($item->{'guid'} && $item->{'guid'} =~ /^http:/ ? $item->{'guid'} : undef)	||
                         (exists $item->{'link'} && ref $item->{'link'} eq 'HASH' ? $item->{'link'}{'href'} || $item->{'link'}{'url'} : $item->{'link'} );
                 $content_type = 2;
             }

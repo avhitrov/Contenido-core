@@ -233,7 +233,7 @@ sub parse {
 		@images = values %images;
             }
             push @items, {
-                'checksum'		=> md5_hex(encode_utf8($title.$description)),
+                'checksum'		=> md5_hex(encode_utf8(($title || '').($description || ''))),
                 'ignore'		=> $item->{ignore}	|| 0,
                 'title'		=> $title		|| '',
                 'title_gui'		=> $item->{title_gui}	|| $title || '',

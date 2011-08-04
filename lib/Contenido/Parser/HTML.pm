@@ -68,8 +68,8 @@ sub parse {
     my $gui = delete $opts{gui};
     my $header = decode('utf-8', delete $opts{header});
     warn "Header length: ".length($header || '')."\n"				if $debug;
-    my $description = decode('utf-8', delete $opts{description});
-    warn "Description length: ".length($description || '')."\n"			if $debug;
+    my $description = decode('utf-8', delete $opts{description}) || '';
+    warn "Description length: ".length($description)."\n"			if $debug;
     my $minimum = delete $opts{min} || length $description;
 
     my $pre_rools =	$self->__parse_rools (delete $opts{parser_pre});

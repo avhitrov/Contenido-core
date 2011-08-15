@@ -12,6 +12,16 @@ use LWP::UserAgent;
 use Contenido::File::Scheme::FILE;
 use Contenido::Parser::Util;
 
+sub new {
+    my ($proto) = @_;
+    my $class = ref($proto) || $proto;
+    my $self = {};
+    bless $self, $class;
+
+    return $self;
+}
+
+
 sub fetch {
     my ($self, $input, %opts) = @_;
 
@@ -62,8 +72,20 @@ sub fetch {
     if ( $content ) {
 	unless ( $encoding ) {
 		$encoding = $self->__try_content_encoding( substr($content, 0, 350) );
-		if ( $encoding && $encoding ne 'utf-8' ) {
-			Encode::from_to($content, $encoding, 'utf-8');
+	}
+	if ( $encoding && $encoding ne 'utf-8' ) {
+		warn "Encoding from $encoding\n..."		if $DEBUG;
+		Encode::from_to($content, $encoding, 'utf-8');
+		if ( exists $self->{headers} ) {
+			foreach my $header ( keys %{$self->{headers}} ) {
+				if ( ref $self->{headers}{$header} eq 'ARRAY' ) {
+					foreach my $val ( @{$self->{headers}{$header}} ) {
+						Encode::from_to($val, $encoding, 'utf-8');
+					}
+				} else {
+					Encode::from_to($self->{headers}{$header}, $encoding, 'utf-8');
+				}
+			}
 		}
 	}
 	$self->{encoding} = $encoding;
@@ -91,6 +113,8 @@ sub is_success {
 sub __try_content_encoding {
     my ($self, $input)= @_;
     if ( $input =~ /encoding[\ ]?=[\ ]?[\"\']?([a-z\-\d]+)/i ) {
+	return lc($1);
+    } elsif ( $input =~ /charset[\ ]?=[\ ]?[\"\']?([a-z\-\d]+)/i ) {
 	return lc($1);
     } elsif ( $input =~ /(utf-8|windows-1251|koi8-r)/i ) {
 	return lc($1);

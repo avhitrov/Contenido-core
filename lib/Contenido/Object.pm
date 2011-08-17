@@ -748,7 +748,7 @@ sub set_link {
 
     do { $log->warning("Вызов метода ->set_link() без указания идентификатора сообщения-источника"); return undef } unless ($self->id() > 0);
     do { $log->warning("Вызов метода ->set_link() без указания идентификатора сообщения-цели"); return undef } unless ($dest_id >= 0);
-    do { $log->warning("Вызов метода ->set_link() без указания класса связи"); }  unless (defined($lclass) && ($lclass >= 0));
+    do { $log->warning("Вызов метода ->set_link() без указания класса связи"); }  unless defined($lclass) && length($lclass);
 
     # Создаем объект связи...
     my $link = $lclass->new($self->keeper);
@@ -1135,7 +1135,7 @@ sub memcached_expire {
 # Метод _image_store() генерит  сохраняет графику, привязанную к полю image или images 
 #
 # Формат использования:
-#  $document->_image_store( INPUT, field => 'fieldname' )
+#  $document->_image_store( INPUT, attr => 'fieldname' )
 # ----------------------------------------------------------------------------
 sub _store_image {
     my $self = shift;

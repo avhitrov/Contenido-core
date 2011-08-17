@@ -34,27 +34,16 @@
 
             if ($SETS->{'_delete_image.'.$name} == 1)
             {
-                my $IMAGE = eval ('my '.$object->{ $name });
-                Contenido::File::remove($IMAGE->{'filename'});
-                Contenido::File::remove($IMAGE->{'mini'}{'filename'});
-                foreach my $key (keys %{$IMAGE->{'mini'}}) {
-                    if (ref $IMAGE->{'mini'}{$key} && ref $IMAGE->{'mini'}{$key} eq 'HASH' && $IMAGE->{'mini'}{$key}->{'filename'}) {
-                        Contenido::File::remove($IMAGE->{'mini'}{$key}->{'filename'}) if $IMAGE->{'mini'}{$key}->{'filename'} ne $IMAGE->{'mini'}{'filename'};
-                    }
-                }
-                $object->{$name} = '';
+		my $IMAGE = $object->get_image( $name );
+		$object->_delete_image( $IMAGE );
+		$object->$name('');
             } else {
-                my $IMAGE = undef;
-                if (length($object->{ $name }) > 8)
-                {
-                    $IMAGE = eval ('my '.$object->{ $name });
-                    if (ref($IMAGE) ne 'HASH') {  $IMAGE = {} };
-                }
-                $IMAGE = $m->comp('/contenido/components/set_image.msn', default=>$IMAGE, field=>$name, SETS=>$SETS, object=>$object, prop => $prop);
-                if (exists($IMAGE->{filename}))
-                {
-                    local $Data::Dumper::Indent = 0;
-                    $object->{$name} = Data::Dumper::Dumper($IMAGE);
+                my $IMAGE = $object->get_image( $name );
+		$IMAGE = ref $IMAGE ? $IMAGE : {};
+		$IMAGE = $m->comp('/contenido/components/set_image.msn', default=>$IMAGE, field=>$name, SETS=>$SETS, object=>$object, prop => $prop);
+		if ( exists $IMAGE->{filename} ) {
+			local $Data::Dumper::Indent = 0;
+			$object->$name( Data::Dumper::Dumper($IMAGE) );
                 }
             }
 
@@ -62,73 +51,52 @@
             # --------------------------------------------------------------------------------------
             # А вот это уже сложнее - составление блока из всех картинок...
 
-            my $IMAGES = {};
-            if (length($object->{ $name }) > 10)
-            {
-                $IMAGES = eval ('my '.$object->{ $prop->{attr} });
-                if (ref($IMAGES) ne 'HASH')
-                {
-                    $IMAGES = {};
-                    $IMAGES->{maxnumber} = 0;
-                };
-            }
-
-            my $maxnumber_ = 0;
+            my $IMAGES = $object->get_image( $name );
+	    if (ref($IMAGES) ne 'HASH') {
+		$IMAGES = {};
+		$IMAGES->{maxnumber} = 0;
+	    };
 
             # Теперь надо просмотреть все аргументы - а вдруг это то, что нам нужно...
             foreach my $arg (keys(%{ $SETS }))
             {
-                # Разбиваем все на части, отделяем...
-                my ($partname,undef) = split(/\./,$arg);
-                $partname =~ /^(.+)_(\d+)$/;
-                my ($localname,$number) = ($1, $2);
-                if ( ($localname eq $prop->{attr}) && ($number > 0) && ( $arg eq $localname.'_'.$number ))
-                {
+		# Разбиваем все на части, отделяем...
+		my ($partname,undef) = split(/\./,$arg);
+		$partname =~ /^(.+)_(\d+)$/;
+		my ($localname,$number) = ($1, $2);
+		if ( ($localname eq $prop->{attr}) && ($number > 0) && ( $arg eq $localname.'_'.$number )) {
                     # Ура! Нашли элемент!
 
                     my $partname = $localname.'_'.$number;
 
-                    if ($SETS->{'_delete_image.'.$partname} == 1)
-                    {
-                        Contenido::File::remove($IMAGES->{'image_'.$number}{"filename"});
-                        Contenido::File::remove($IMAGES->{'image_'.$number}{"mini"}{"filename"});
-                        foreach my $key (keys %{$IMAGES->{'image_'.$number}{'mini'}}) {
-                            if (ref $IMAGES->{'image_'.$number}{'mini'}{$key} && ref $IMAGES->{'image_'.$number}{'mini'}{$key} eq 'HASH' && $IMAGES->{'image_'.$number}{'mini'}{$key}->{'filename'}) {
-                                Contenido::File::remove($IMAGES->{'image_'.$number}{'mini'}{$key}->{'filename'}) if $IMAGES->{'image_'.$number}{'mini'}{$key}->{'filename'} ne $IMAGES->{'image_'.$number}{'mini'}{'filename'};
-                            }
-                        }
-                        delete $IMAGES->{'image_'.$number};
-                    }
-                    else
-                    {
-                        my $IMAGE = undef;
-                        if (exists($IMAGES->{'image_'.$number}))
-                        {
-                            $IMAGE = $IMAGES->{'image_'.$number};
-                        };
+                    if ($SETS->{'_delete_image.'.$partname} == 1) {
+			$object->_delete_image( $IMAGES->{'image_'.$number} );
+			delete $IMAGES->{'image_'.$number};
+		    } else {
+			my $IMAGE = undef;
+			if (exists($IMAGES->{'image_'.$number})) {
+				$IMAGE = $IMAGES->{'image_'.$number};
+			};
                         $IMAGE = $m->comp('/contenido/components/set_image.msn', default=>$IMAGE, field=>$partname, SETS=>$SETS, object=>$object, prop => $prop);
-                        if (exists($IMAGE->{filename}))
-                        {
-                            local $Data::Dumper::Indent = 0;
-                            $IMAGE->{number} = $number;
-                            $IMAGES->{'image_'.$number} = $IMAGE;
-                            $IMAGES->{maxnumber} = $number        if ($number > $IMAGES->{maxnumber});
-                        }
-                    }
-                }
+			if (exists($IMAGE->{filename})) {
+				local $Data::Dumper::Indent = 0;
+				$IMAGE->{number} = $number;
+				$IMAGES->{'image_'.$number} = $IMAGE;
+				$IMAGES->{maxnumber} = $number		if ($number > $IMAGES->{maxnumber});
+			}
+		    }
+		}
+	    }
 
-            }
-
-            if ( scalar(keys(%{ $IMAGES })) > 0)
-            {
+	    if ( scalar(keys(%{ $IMAGES })) > 0) {
 		my $maxnumber = 0;
 		for ( 1..100 ) {
 			$maxnumber = $_		if exists $IMAGES->{"image_$_"} && $_ > $maxnumber;
 		}
 		$IMAGES->{maxnumber} = $maxnumber;
-                local $Data::Dumper::Indent = 0;
-                $object->{$name} = Data::Dumper::Dumper($IMAGES);
-            }
+		local $Data::Dumper::Indent = 0;
+		$object->$name( Data::Dumper::Dumper($IMAGES) );
+	    }
 
 	} elsif ( $prop->{type} eq 'multimedia' ) {
             # --------------------------------------------------------------------------------------

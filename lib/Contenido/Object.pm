@@ -18,6 +18,7 @@ $VERSION = '4.1';
 
 use Utils;
 use Contenido::Globals;
+use Contenido::File;
 use Data::Dumper;
 
 use DBD::Pg;
@@ -1128,6 +1129,29 @@ sub contenido_status_style {
 
 sub memcached_expire {
     return $_[0]->keeper->state->memcached_object_expire;
+}
+
+# ----------------------------------------------------------------------------
+# Метод _image_store() генерит  сохраняет графику, привязанную к полю image или images 
+#
+# Формат использования:
+#  $document->_image_store( INPUT, field => 'fieldname' )
+# ----------------------------------------------------------------------------
+sub _store_image {
+    my $self = shift;
+    do { $log->error("Метод delete() можно вызывать только у объектов, но не классов"); die } unless ref($self);
+
+    my $input = shift;
+    my (%opts) = @_;
+
+    return Contenido::File::store_image( $input, object => $self, attr => $opts{attr} );
+}
+
+sub _delete_image {
+    my $self = shift;
+    my $IMAGE = shift;
+
+    return Contenido::File::remove_image( $IMAGE );
 }
 
 1;

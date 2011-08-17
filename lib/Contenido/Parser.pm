@@ -55,7 +55,9 @@ sub fetch {
 			return $self;
 		}
 	}
-    } elsif ((ref $input eq "GLOB") or (ref $input eq 'Apache::Upload') or (ref $input eq 'IO::File')) {
+    } elsif ( ref $input eq 'Apache::Upload' ) {
+	$fh = $input->fh;
+    } elsif ((ref $input eq "GLOB") or (ref $input eq 'IO::File')) {
 	$fh = $input;
     } elsif (ref $input eq "SCALAR") {
 	$fh = IO::Scalar->new($input);

@@ -16,8 +16,8 @@
 <tr>\
 %		}
 <td><% $serial %></td>\
-<td style="font-size:75%;" nowrap><% $document->class_name() %></td>\
-<td style="font-size:75%;" nowrap align="right"><a href="sections.html?class=<% $document->class() %>&id=<% $id %>&use_section=1">С учетом</a>/<a href="sections.html?class=<% $document->class() %>&id=<% $id %>">Без учета</a>&nbsp;секции</td>\
+<td nowrap><% $document->class_name() %></td>\
+<td nowrap align="right"><a href="sections.html?class=<% $document->class() %>&id=<% $id %>&use_section=1">С учетом</a>/<a href="sections.html?class=<% $document->class() %>&id=<% $id %>">Без учета</a>&nbsp;секции</td>\
 </tr>
 %	}
 	</table>

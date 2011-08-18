@@ -8,7 +8,7 @@
 	ul.liststruct li {list-style-image:url(/contenido/i/nav-2-a.gif)}
 </style>
 
-<ul class="liststruct" style="font-size:70%;font-family:Tahoma;text-align:left;">
+<ul class="liststruct" style="font-size:11px;font-family:Tahoma;text-align:left;">
 <li><a href="options.html?proto=colors">Редактирование цветовых параметров</a>
 <li><a href="options.html?proto=widths">Ширины</a>
 <li><a href="options.html?proto=params">Дополнительные параметры</a>

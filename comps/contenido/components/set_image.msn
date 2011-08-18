@@ -19,9 +19,14 @@ return undef unless defined $SETS and defined $field;
 
 my $IMAGE = $default;
 
-if ($SETS->{$field}) {
+if ($SETS->{$field} || $SETS->{"$field.ext_url"}) {
 
-    my $upload = $r->upload($field);
+    my $upload;
+    if ( $SETS->{$field} ) {
+	$upload = $r->upload($field);
+    } elsif ( $SETS->{"$field.ext_url"} && $SETS->{"$field.ext_url"} =~ /^(http|https|ftp):\/\/.*/ ) {
+	$upload = $SETS->{"$field.ext_url"};
+    }
     if ($upload) {
 
 	my $IMG = $object->_store_image( $upload, attr => $prop->{attr} );

@@ -22,7 +22,7 @@ function insertTags( TagOpen, TagClose )
 // --->
 </script>
 
-<table border="0" width="95%" style="font-size:70%; font-weight:; font-family:Tahoma;background-color:#dcdcdc;color:#000000;">
+<table border="0" width="95%" style="font-size:11px; font-weight:; font-family:Tahoma;background-color:#dcdcdc;color:#000000;">
 <tr><td>
 Вставка тегов:<br>
 &nbsp;&nbsp;<a style="color:#000000" href="javascript: insertTags('<br>','')" title="перевод строки">&lt;br&gt;</a>&nbsp;&nbsp;

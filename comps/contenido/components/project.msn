@@ -8,7 +8,7 @@
 		ul.listtypes li.active {list-style-image:url(/contenido/i/nav-2.gif)}
 	</style>
 
-	<ul class="listtypes" style="font-size:70%;font-family:Tahoma;text-align:left;">
+	<ul class="listtypes" style="font-size:11px;font-family:Tahoma;text-align:left;">
 	<li>Документы:
 	<ul>
 %	for my $class (sort {$a->class_name cmp $b->class_name} @{ $state->{available_documents} })

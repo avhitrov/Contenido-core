@@ -10,7 +10,7 @@
 <& "/contenido/components/__section_tree__.msn", root=>$root, level => $level, mode=>1 &>
 
 	</table>
-	<div style="font-size:70%;font-family:Tahoma;margin:5px 4px 10px 4px;"><b><a href="section.html?sect_id=<% $root %>">Создать подраздел &raquo;</a></b></div>
+	<div style="font-size:11px;font-family:Tahoma;margin:5px 4px 10px 4px;"><b><a href="section.html?sect_id=<% $root %>">Создать подраздел &raquo;</a></b></div>
 	</fieldset>
 
 <%args>

@@ -3,7 +3,7 @@
 <span style="font:11px Verdana;">(<a href="document.html?class=<% $class %>&<% $field %>=<% $id %><% $defaults %>" target="_blank">создать новый</a>)</span></div>
 % if ( ref $docs eq 'ARRAY' && @$docs ) {
 %	if ($total > $size) {
-<div style="font-size:75%; font-family:Arial; text-align:center;">
+<div style="font-size:12px; font-family:Arial; text-align:center;">
 <& /inc/pages_.msn, p => $p, n => $size, total => $total, params => {%ARGS} &></div>
 %	}
 %	my @props = sort { $a->{column} <=> $b->{column} } grep { exists $_->{column} } $docs->[0]->required_properties;

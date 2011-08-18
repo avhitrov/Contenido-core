@@ -7,7 +7,7 @@
         ul.listtypes li.unactive a {color:gray}
     </style>
 
-    <ul class="listtypes" style="font-size:70%;font-family:Tahoma;text-align:left;">
+    <ul class="listtypes" style="font-size:11px;font-family:Tahoma;text-align:left;">
 %   for my $u (sort { $a->name cmp $b->name } @users) {
         <li class="<% $u->status == 0 ? 'un' : '' %>active"><a href="users.html?login=<% $u->login() %>&class=<% $u->class() %>"><% $u->name() %> (<% $u->login() %>)</a>
 %   }

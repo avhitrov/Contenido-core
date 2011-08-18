@@ -5,6 +5,7 @@
 	body {
 		background-color: #FFFFFF;
 		margin: 0px;
+		font-family: Tahoma, Arial, sans-serif;
 	}
 	form {
 		margin:  0px;
@@ -23,28 +24,31 @@
 
 	fieldset {padding:6px;margin-bottom:10px;border:2px solid #8093B0;}
 	fieldset legend {font-size:8pt;font-weight:bold;font-family:Tahoma;padding:3px 6px 3px 6px;margin-bottom:6px;color:#ffffff;background-color:#8093B0;}
+
+	table { font-size:13px; }
+	input { font-size:12px; }
 	
-	.tatop {font-size:70%;font-family:Tahoma;color:#ffffff;}
+	.tatop {font-size:11px;font-family:Tahoma;color:#ffffff;}
 	.tatop a {color:#ffffff;}
-	.npath {font-size:70%;font-family:Tahoma;padding:8px;}
+	.npath {font-size:11px;font-family:Tahoma;padding:8px;}
 	
-	.textnorm { font-size:70%; font-family:Tahoma; }
+	.textnorm { font-size:12px; font-family:Tahoma; }
 	.input_btn {background-color:#930300;color:#FFFFFF;height:2.4em;}
 	
 	table.tlistdocs { margin-top:10px; margin-bottom:10px; border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9; }
 	table.tlistdocs td, table.tlistdocs th { border:1px solid #d9d9d9; border-right:0px; border-bottom:0px; }
-	table.tlistdocs td {font-size:70%;font-family:Tahoma;}
+	table.tlistdocs td {font-size:12px;font-family:Arial;}
 	table.tlistdocs table td {border:0px;}
 	
 	table.tform th, table.tform td {
-		font-size:   70%;
+		font-size:   11px;
 		font-family: Tahoma;
 		text-align:  left;
 	}
 	
-	th {font-size:70%;font-family:Tahoma;text-align:left;}
+	th {font-size:11px;font-family:Tahoma;text-align:left;}
 	
-	h5, .hdr5 {font-size:70%;font-family:Tahoma;font-weight:bold;padding-top:10px;padding-bottom:5px;}
+	h5, .hdr5 {font-size:11px;font-family:Tahoma;font-weight:bold;padding-top:10px;padding-bottom:5px;}
 	
 
 	.hiddensect { color:#909090; }
@@ -65,6 +69,8 @@
 	}
 	.link_string { font: 12px Tahoma; padding:5px 10px; border-bottom:1px solid gray; }
 	.link_string p { margin:0; padding:0; }
+
+	.mm_act { background:#d0d0d0; border-top:1px solid gray; border-right:1px solid gray; text-decoration:none; }
 	
 </style>
 <title>Редакторский интерфейс<% (length($title) > 0) ? " | $title" : "" %></title>

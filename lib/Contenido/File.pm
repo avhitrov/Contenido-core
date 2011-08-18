@@ -173,21 +173,25 @@ sub store_image {
     my $fh = get_fh($input);
     return	unless ref $fh;
 
-    my $size = (stat $fh)[7];
     my $ext;
-    if ( $opts{filename} ) {
-	$ext = $opts{filename} =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
-    } elsif ( not ref $input ) {
+    my $size = 1073741824;
+    if ( not ref $input ) {
 	$ext = $input =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
+	if ( scheme($input) eq 'file' ) {
+		$size = (stat $fh)[7];
+	}
     } elsif ( ref $input eq 'Apache::Upload' ) {
 	$ext = $input->filename() =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
+	$size = (stat $fh)[7];
+    } elsif ( $opts{filename} ) {
+	$ext = $opts{filename} =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
     }
     $ext ||= 'bin';
 
     my $fh_tmp = IO::File->new('>'.$filename_tmp.'.'.$ext) || return;
     my $buffer;
 
-    sysread $fh, $buffer, $size;
+    $size = sysread $fh, $buffer, $size;
     syswrite $fh_tmp, $buffer, $size;
 
     undef $fh_tmp;

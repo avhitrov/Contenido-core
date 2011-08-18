@@ -32,10 +32,10 @@
 </div>
 %	}
 %	if ( $total or defined $alpha or defined $search  ) {
-<div style="font-size:75%; font-family:Arial;">
+<div style="font-size:12px; font-family:Arial;">
 <table border="0" cellspacing="0" cellpadding="2" width="100%" style="margin:4px 0 0; border:1px solid gray;">
 <tr bgcolor="#e0e0e0"><th colspan="4">Поиск по букве:&nbsp;&nbsp;[<a href="?class=<% $class %>" style="font-weight:normal;">сброс фильтра</a>]</th></tr>
-<tr><td style="font-size:75%; font-family:Arial; padding:2px 4px;">
+<tr><td style="font-size:12px; font-family:Arial; padding:2px 4px;">
 <& /inc/alpha.msn, alpha=>$alpha, params=>\%ARGS, &>
 </td></tr></table>
 
@@ -212,7 +212,7 @@
 %			} #- foreach @documents
 </table>
 
-<div style="font-size:75%; font-family:Arial;">
+<div style="font-size:12px; font-family:Arial;">
 <& /inc/pages_.msn, p=>$p, n=>$n, total=>$total, params=>\%ARGS, &>
 <div style="height:5px"><spacer type="block" height="5"></div>
 </div>

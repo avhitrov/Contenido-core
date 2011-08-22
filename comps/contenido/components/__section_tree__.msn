@@ -45,7 +45,7 @@
 	    my ($statcase) = grep { $_->[0] == $sect->status } @{$statprop->{cases}}	if exists $statprop->{cases} && ref $statprop->{cases} eq 'ARRAY';
 	    my $statname = $statcase->[1]						if ref $statcase;
             my $html_sect = '<span'.($statstyle).(!$sect->status ? ' class="hiddensect"' : '').'>'.($section_access ? '<a href="'.$href.'"'.$statstyle.'>' : '').$sname.($section_access ? '</a>' : '') . '&nbsp;'.($sect->status != 1 && $statname ? '&nbsp;<span style="font-size:11px;">('.$statname.')</span>' : '').'</span>';
-            my $style = ($offset == 1) ? ($viewmode ? ' style="font-size:110%;"':' style="font-size:95%;"') : '';
+            my $style = ($offset == 1) ? ($viewmode ? ' style="font-size:16px;font-weight:bold;"':' style="font-size:14px;"') : ' style="font-size:12px;"';
 
             $m->out(<<EOT);
 <tr>
@@ -64,7 +64,9 @@ EOT
             {
                 my $fhref = '/contenido/?set_context=filter-'.$sect->id();
                 my $new_doc_class = $sect->default_document_class;
-                $m->out(qq^\n<td align="center" nowrap><a href="$fhref">уст.фильтр</a>^);
+                $m->out(qq^\n<td align="center" nowrap>^);
+                $m->out(qq^<a href="section.html?id=$sect->{id}" title="Редактировать параметры секции"><img src="/contenido/i/actions/edit.gif" width="15" height="17" align="absmiddle" border="0"></a>&nbsp;&nbsp;&nbsp;^);
+                $m->out(qq^<a href="$fhref">фильтр</a>^);
                 $m->out(qq^&nbsp;&nbsp;&nbsp;<a href="document.html?sect_id=$sect->{id}&class=$new_doc_class">доб.докум</a>^) if $section_access == 2 and $new_doc_class;
                 $m->out("</td>");
             }

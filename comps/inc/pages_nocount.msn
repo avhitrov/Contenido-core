@@ -1,0 +1,61 @@
+% if ( @string ) {
+%	$m->out( join($delimiter, @string) );
+% }
+<%args>
+
+	$n	=> 10
+	$p	=> 1
+	$href	=> ''
+	$found	=> undef
+	$size	=> 8
+	$params	=> {}
+	$pname => 'p'
+	$delimiter => ' | '
+
+</%args>
+<%init>
+
+   $p = 1 if $p > 10000;
+
+   my @string;
+   my @params;
+   while ( my ($key, $value) = each %$params ) {
+	next		if $key eq $pname;
+	if ( ref $value eq 'ARRAY' ) {
+		push @params, ( map { "$key=$_" } @$value );
+	} else {
+		push @params, "$key=$value";
+	}
+   }
+
+   my $delim = int( $size / 2 );
+   my ($begin, $end);
+   if ( $found < $n ) {
+	$end = $p;
+	$begin = $p >= $size ? $p - $size + 1 : 1;
+   } elsif ( $p < $delim ) {
+	$begin = 1;
+	$end = $begin + $size - 1;
+   } else {
+	$begin = $p > $delim ? $p - $delim : 1;
+	$end = $begin + $size - 1;
+   }
+   if ( $p > 1 ) {
+	push @string, '<a href="'.$href.'?p='.($p - 1).(@params ? '&'.join('&', @params) : '' ).'">&larr; предыдущая</a>';
+	if ( $begin > 1 ) {
+		$string[-1] .= ' [<a href="'.$href.'?p=1'.(@params ? '&'.join('&', @params) : '' ).'">в начало</a>]';
+	}
+   }
+   for ( $begin..$end ) {
+	my $num = $_;
+	if ( $num == $p ) {
+		push @string, '<b>'.$num.'</b>';
+	} else {
+		push @string, '<a href="'.$href.'?p='.$num.( @params ? '&'.join('&', @params) : '' ).'">'.$num.'</a>';
+	}
+   }
+   if ( defined $found && $found >= $n ) {
+	push @string, '<a href="'.$href.'?p='.($p + 1).( @params ? '&'.join('&', @params) : '' ).'">следующая &rarr;</a>';
+   }
+
+</%init>

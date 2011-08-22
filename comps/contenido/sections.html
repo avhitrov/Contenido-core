@@ -69,12 +69,14 @@ function set_create_button( oSelect, sBtnID ) {
 %	} else {
  в разделе\
 %	}
-%	if ($total > 0)	{
+%	if (!$owner->no_count && $total > 0)	{
  (всего: <% $total %>, показано с <% $first + 1 %> по <% ($first + $n > $total) ? $total : $first + $n %>)
+%	} elsif ( $owner->no_count ) {
+ (<span style="color:yellow">без пересчета</span>, показано с <% $first + 1 %> по <% $first + scalar @documents %>)
 %	}
 	</legend>
 
-%	if ($total or defined($alpha) or defined($search) ) {
+%	if ($total || scalar @documents || defined($alpha) || defined($search) ) {
 %		if ($section_access == 2) {
 <& "/contenido/components/new_objects_form.msn", proto => 'documents',
 	sect_id => $owner->id,
@@ -121,13 +123,21 @@ function set_create_button( oSelect, sBtnID ) {
 %		}
 
 <div style="height:5px"><spacer type="block" height="5"></div>
+% if ( $owner->no_count ) {
+<& /inc/pages_nocount.msn, p=>$p, n=>$n, found=> scalar @documents, href=>'sections.html', params=>\%ARGS, size => 15 &>
+% } else {
 <& /inc/pages_.msn, p=>$p, n=>$n, total=>$total, href=>'sections.html', params=>\%ARGS, &>
+% }
 </div>
 
 <& /contenido/components/section_browse.msn, documents => \@documents, columns => \@columns, section => $owner, filter => \%filter_params, %ARGS &>
 
 <div style="font-size:12px; font-family:Arial;">
+% if ( $owner->no_count ) {
+<& /inc/pages_nocount.msn, p=>$p, n=>$n, found=> scalar @documents, href=>'sections.html', params=>\%ARGS, size => 15 &>
+% } else {
 <& /inc/pages_.msn, p=>$p, n=>$n, total=>$total, href=>'sections.html', params=>\%ARGS, &>
+% }
 <div style="height:5px"><spacer type="block" height="5"></div>
 </div>
 
@@ -326,11 +336,11 @@ function set_create_button( oSelect, sBtnID ) {
         }
     }
 
-	$total = $keeper->get_documents(%filter, count=>1);
+	$total = $keeper->get_documents(%filter, count=>1)	unless $owner->no_count;
 
 	my $n = 40;
 	my $first = $n * ($p - 1);
-	($first,$p)=(0,0) if ($first>$total);
+	($first,$p)=(0,0) if (!$owner->no_count && $first>$total);
 
 	if ($class && !$use_section) {
 		@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first);

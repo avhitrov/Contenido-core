@@ -108,6 +108,11 @@ sub add_properties {
             'rusname' => 'Сортировка документов',
         },
         {
+            'attr' => 'no_count',
+            'type' => 'checkbox',
+            'rusname' => 'Не пересчитывать документы в разделе админки',
+        },
+        {
             'attr' => 'filters',
             'type' => 'struct',
             'rusname' => 'Дополнительные фильтры выборки',

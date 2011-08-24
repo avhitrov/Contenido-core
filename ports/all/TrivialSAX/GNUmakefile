@@ -3,7 +3,7 @@
 # $Id: GNUmakefile 1489 2009-11-27 14:15:17Z abavykin $
 ###############################################################################
 
-PORTVERSION =		0.02
+PORTVERSION =		0.03
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	XML
 PORT_DEPENDS =		libxml-perl

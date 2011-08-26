@@ -1132,10 +1132,10 @@ sub memcached_expire {
 }
 
 # ----------------------------------------------------------------------------
-# Метод _image_store() генерит  сохраняет графику, привязанную к полю image или images 
+# Метод _store_image() сохраняет графику, привязанную к полю image или images 
 #
 # Формат использования:
-#  $document->_image_store( INPUT, attr => 'fieldname' )
+#  $document->_store_image( INPUT, attr => 'fieldname' )
 # ----------------------------------------------------------------------------
 sub _store_image {
     my $self = shift;
@@ -1147,11 +1147,48 @@ sub _store_image {
     return Contenido::File::store_image( $input, object => $self, attr => $opts{attr} );
 }
 
+# ----------------------------------------------------------------------------
+# Метод _delete_image() удаляет файлы, связанные с полем image или images.
+# Вычищает все мини-копии
+#
+# Формат использования:
+#  $document->_store_image( $image_attr_structure )
+# ----------------------------------------------------------------------------
 sub _delete_image {
     my $self = shift;
     my $IMAGE = shift;
 
     return Contenido::File::remove_image( $IMAGE );
+}
+
+# ----------------------------------------------------------------------------
+# Метод _store_binary() сохраняет произвольный бинарный файл, привязанную к полю multimedia или multimedia_new 
+#
+# Формат использования:
+#  $document->_store_binary( INPUT, attr => 'fieldname' )
+# ----------------------------------------------------------------------------
+sub _store_binary {
+    my $self = shift;
+    do { $log->error("Метод delete() можно вызывать только у объектов, но не классов"); die } unless ref($self);
+
+    my $input = shift;
+    my (%opts) = @_;
+
+    return Contenido::File::store_binary( $input, object => $self, attr => $opts{attr} );
+}
+
+# ----------------------------------------------------------------------------
+# Метод _delete_binary() удаляет файлы, связанные с полем multimedia или multimedia_new.
+# Не пытается искать мини-копии
+#
+# Формат использования:
+#  $document->_delete_binary( $binary_attr_structure )
+# ----------------------------------------------------------------------------
+sub _delete_binary {
+    my $self = shift;
+    my $BINARY = shift;
+
+    return Contenido::File::remove_binary( $BINARY );
 }
 
 1;

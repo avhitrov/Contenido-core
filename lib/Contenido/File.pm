@@ -186,6 +186,9 @@ sub store_image {
     } elsif ( $opts{filename} ) {
 	$ext = $opts{filename} =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
     }
+    if ( ref $fh eq 'IO::Scalar' ) {
+	$size = length("$fh");
+    }
     $ext ||= 'bin';
 
     my $fh_tmp = IO::File->new('>'.$filename_tmp.'.'.$ext) || return;
@@ -320,6 +323,67 @@ sub remove_image {
 		}
 	}
     }
+    1;
+}
+
+
+sub store_binary {
+    my $input = shift;
+    my (%opts) = @_;
+    my $object = delete $opts{object} || return;
+    my $attr = delete $opts{attr}  || return;
+
+    my ($prop) = grep { $_->{attr} eq $attr } $object->structure;
+    return	unless ref $prop;
+
+    my $filename = '/binary/'.$object->get_file_name() || return;
+    my $filename_tmp = $state->{'tmp_dir'}.'/'.join('_', split('/', $filename));
+
+    my $fh = get_fh($input);
+    return	unless ref $fh;
+
+    my $ext;
+    my $size = 1073741824;
+    if ( not ref $input ) {
+	$ext = $input =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
+	if ( scheme($input) eq 'file' ) {
+		$size = (stat $fh)[7];
+	}
+    } elsif ( ref $input eq 'Apache::Upload' ) {
+	$ext = $input->filename() =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
+	$size = (stat $fh)[7];
+    } elsif ( $opts{filename} ) {
+	$ext = $opts{filename} =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
+    }
+    if ( ref $fh eq 'IO::Scalar' ) {
+	$size = length("$fh");
+    }
+    $ext ||= 'bin';
+
+    my $fh_tmp = IO::File->new('>'.$filename_tmp.'.'.$ext) || return;
+    my $buffer;
+
+    $size = sysread $fh, $buffer, $size;
+    syswrite $fh_tmp, $buffer, $size;
+
+    undef $fh_tmp;
+
+    my $BINARY;
+    if ( store($filename.'.'.$ext, $filename_tmp.'.'.$ext) ) {
+	$BINARY = { filename => $filename.'.'.$ext };
+	unlink $filename_tmp.'.'.$ext if -e $filename_tmp.'.'.$ext;
+    }
+
+    return $BINARY;
+}
+
+sub remove_binary {
+    my $BINARY = shift;
+
+    if ( ref $BINARY eq 'HASH' && exists $BINARY->{filename} ) {
+	remove($BINARY->{'filename'}) || return;
+    }
+
     1;
 }
 

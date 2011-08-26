@@ -1,7 +1,15 @@
 <!-- Один объект мультимедиа -->
 <table cellpadding="0" cellspacing="2" border="0" width="100%">
 <tr><td><b><% $rusname %></b> / <font size="-1" color="#888888">name="<% $attr %>"</font> </td></tr>
-<tr><td><input type="file" name="<% $attr %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+<tr><td><a href="javascript:void(0)" class="mm_act" id="<% $attr %>_file_prompt" style="padding:0 6px;"
+ onclick="$('#<% $attr %>_url_loader').hide(); $('#<% $attr %>_file_loader').show(); $('#<% $attr %>_file_prompt').addClass('mm_act'); $('#<% $attr %>_url_prompt').removeClass('mm_act'); return false;">file</a>
+<a href="javascript:void(0)" class="mm_inact" id="<% $attr %>_url_prompt" style="padding:0 6px;"
+ onclick="$('#<% $attr %>_file_loader').hide(); $('#<% $attr %>_url_loader').show(); $('#<% $attr %>_url_prompt').addClass('mm_act'); $('#<% $attr %>_file_prompt').removeClass('mm_act'); $('#<% $attr %>_ext_url')[0].focus(); return false;">url</a></div>
+<div id="<% $attr %>_file_loader" style="background:#d0d0d0; padding:2px;">
+<input type="file" name="<% $attr %>" style="width:95%;font-family:arial;font-size:9pt;"></div>
+<div id="<% $attr %>_url_loader" style="display:none; background:#d0d0d0; padding:2px;">&nbsp;URL:&nbsp;<input
+ id="<% $attr %>_ext_url" type="text" name="<% $attr %>.ext_url" style="width:81%;font-family:arial;font-size:9pt;"></div>
+</td></tr>
 %	if ( exists($MULTI->{filename}) )
 %	{
 %		my $TYPE = 'unknown';

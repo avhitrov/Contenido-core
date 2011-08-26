@@ -14,6 +14,16 @@ use Contenido::DateTime;
 
 our $IgnoreErrors = 1;
 
+my %translit = (
+	'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'ё' => 'e', 'ж' => 'zh', 'з' => 'z', 'и' => 'i', 'й' => 'y',
+	'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't', 'у' => 'u', 'ф' => 'f', 'х' => 'h',
+	'ц' => 'ts', 'ч' => '4', 'ш' => 'sh', 'щ' => 'sch', 'ъ' => 'y', 'ы' => 'i', 'ь' => 'y', 'э' => 'e', 'ю' => 'u', 'я' => 'a', 'А' => 'A',
+	'Б' => 'B', 'В' => 'V', 'Г' => 'G', 'Д' => 'D', 'Е' => 'E', 'Ё' => 'E', 'Ж' => 'ZH', 'З' => 'Z', 'И' => 'I', 'Й' => 'Y', 'К' => 'K', 'Л' => 'L',
+	'М' => 'M', 'Н' => 'N', 'О' => 'O', 'П' => 'P', 'Р' => 'R', 'С' => 'S', 'Т' => 'T', 'У' => 'U', 'Ф' => 'F', 'Х' => 'H', 'Ц' => 'TS', 'Ч' => '4',
+	'Ш' => 'SH', 'Щ' => 'SCH', 'Ъ' => 'Y', 'Ы' => 'I', 'Ь' => 'Y', 'Э' => 'E', 'Ю' => 'U', 'Я' => 'YA',
+);
+
+
 sub fetch {
     my $filename = shift || return;
     my $fh;
@@ -337,6 +347,36 @@ sub store_binary {
     return	unless ref $prop;
 
     my $filename = '/binary/'.$object->get_file_name() || return;
+    if ( $prop->{softrename} ) {
+	my $oid = $object->id || int(rand(10000));
+	my $orig_name = '';
+	if ( ref $input eq 'Apache::Upload' ) {
+		$orig_name = $input->filename();
+	} elsif ( !ref $input ) {
+		$orig_name = $input;
+	}
+	if ( $orig_name ) {
+		if ( $orig_name =~ /\\([^\\]+)$/ ) {
+			$orig_name = $1;
+		} elsif ( $orig_name =~ /\/([^\/]+)$/ ) {
+			$orig_name = $1;
+		}
+		$orig_name =~ s/[\ \t]/_/g;
+		$orig_name = $oid.'_'.$orig_name;
+		$filename =~ s/\/([^\/]+)$//;
+		my $fname = $1;
+		unless ( $orig_name =~ /^[a-zA-Z_\d\.\-\,]+$/ ) {
+			$orig_name = translit( $orig_name );
+		}
+		warn "\n\n\n\n\nNew Name: [$orig_name]\n\n\n\n\n"		if $DEBUG;
+		unless ( $orig_name =~ /^[a-zA-Z_\d\.\-\,]+$/ ) {
+			$orig_name = $fname;
+		}
+		$filename .= '/'.$orig_name;
+		$filename =~ s/\.([^\.]+)$//;
+	}
+    }
+
     my $filename_tmp = $state->{'tmp_dir'}.'/'.join('_', split('/', $filename));
 
     my $fh = get_fh($input);
@@ -345,15 +385,15 @@ sub store_binary {
     my $ext;
     my $size = 1073741824;
     if ( not ref $input ) {
-	$ext = $input =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
+	$ext = $input =~ /\.([^\.]+)$/ ? lc($1) : 'bin';
 	if ( scheme($input) eq 'file' ) {
 		$size = (stat $fh)[7];
 	}
     } elsif ( ref $input eq 'Apache::Upload' ) {
-	$ext = $input->filename() =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
+	$ext = $input->filename() =~ /\.([^\.]+)$/ ? lc($1) : 'bin';
 	$size = (stat $fh)[7];
     } elsif ( $opts{filename} ) {
-	$ext = $opts{filename} =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
+	$ext = $opts{filename} =~ /\.([^\.]+)$/ ? lc($1) : 'bin';
     }
     if ( ref $fh eq 'IO::Scalar' ) {
 	$size = length("$fh");
@@ -370,8 +410,30 @@ sub store_binary {
 
     my $BINARY;
     if ( store($filename.'.'.$ext, $filename_tmp.'.'.$ext) ) {
-	$BINARY = { filename => $filename.'.'.$ext };
+	@{$BINARY}{"filename", "ext", "size"} = (
+		$filename.".".$ext, $ext, $size
+	);
+
 	unlink $filename_tmp.'.'.$ext if -e $filename_tmp.'.'.$ext;
+
+	if ( $ext =~ /(rar|7z|zip|arc|lha|arj|cab)/ ) {
+		$BINARY->{type} = 'archive';
+	} elsif ( $ext =~ /(doc|rtf)/ ) {
+		$BINARY->{type} = 'doc';
+	} elsif ( $ext eq 'xls' ) {
+		$BINARY->{type} = 'xls';
+	} elsif ( $ext =~ /(mdb|ppt)/ ) {
+		$BINARY->{type} = 'msoffice';
+	} elsif ( $ext =~ /(pdf)/ ) {
+		$BINARY->{type} = 'ebook';
+	} elsif ( $ext eq 'psd' ) {
+		$BINARY->{type} = 'psd';
+	} elsif ( $ext =~ /(exe|msi|cab)/ ) {
+		$BINARY->{type} = 'executable';
+	} else {
+		$BINARY->{type} = 'unknown';
+	}
+
     }
 
     return $BINARY;
@@ -385,6 +447,22 @@ sub remove_binary {
     }
 
     1;
+}
+
+
+sub translit {
+    my $str = shift;
+    my @str = split (//, $str);
+    my $res = '';
+    while ( scalar @str ) {
+	my $alpha = shift @str;
+	if ( exists $translit{$alpha} ) {
+		$res .= $translit{$alpha};
+	} else {
+		$res .= $alpha;
+	}
+    }
+    return $res;
 }
 
 

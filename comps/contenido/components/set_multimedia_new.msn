@@ -81,8 +81,6 @@
 </%args>
 <%init>
 
-use IO::File;
-
 return undef unless defined $SETS and defined $field;
 #use vars qw($keeper);
 
@@ -91,76 +89,27 @@ return undef unless defined $SETS and defined $field;
 
 my $BINARY = $default;
 
-if ($SETS->{$field}) {
-    my $filename = "/binary/".$object->get_file_name() || return;
-    my $upload = $r->upload($field);
-    if ( $prop->{softrename} ) {
-	my $oid = $object->id || int(rand(10000));
-	my $orig_name = $upload->filename();
-	if ( $orig_name =~ /\\([^\\]+)$/ ) {
-		$orig_name = $1;
-	} elsif ( $orig_name =~ /\/([^\/]+)$/ ) {
-		$orig_name = $1;
-	}
-	$orig_name =~ s/[\ \t]/_/g;
-	$orig_name = $oid.'_'.$orig_name;
-	$filename =~ s/\/([^\/]+)$//;
-	my $fname = $1;
-	unless ( $orig_name =~ /^[a-zA-Z_\d\.\-\,]+$/ ) {
-		$orig_name = $m->comp('.translit', str => $orig_name);
-	}
-	warn "\n\n\n\n\nNew Name: [$orig_name]\n\n\n\n\n";
-	unless ( $orig_name =~ /^[a-zA-Z_\d\.\-\,]+$/ ) {
-		$orig_name = $fname;
-	}
-	$filename .= '/'.$orig_name;
-	$filename =~ s/\.([^\.]+)$//;
+if ($SETS->{$field} || $SETS->{"$field.ext_url"}) {
+
+    my $upload;
+    if ( $SETS->{$field} ) {
+	$upload = $r->upload($field);
+    } elsif ( $SETS->{"$field.ext_url"} && $SETS->{"$field.ext_url"} =~ /^(http|https|ftp):\/\/.*/ ) {
+	$upload = $SETS->{"$field.ext_url"};
     }
-    my $filename_tmp = $state->{"tmp_dir"}."/".join("_", split("/", $filename));
+    if ($upload) {
 
-    my $suffix = $upload->filename() =~ /\.([^\.]+)$/ ? lc($1) : 'bin';
-    my $fh = $upload->fh();
-    my $size = (stat $fh)[7];
+	my $BIN = $object->_store_binary( $upload, attr => $prop->{attr} );
 
-    my $fh_tmp = IO::File->new(">".$filename_tmp.".".$suffix) || die "Can't open temporary file";
+	if ( ref $BIN eq 'HASH' && exists $BIN->{filename} ) {
+		$object->_delete_binary( $default );
+		%$BINARY = %$BIN;
+	}
 
-    my $buffer;
-
-    $size = sysread $fh, $buffer, $size;
-    syswrite $fh_tmp, $buffer, $size;
-
-    undef $fh_tmp;
-
-    if (Contenido::File::store($filename.".".$suffix, $filename_tmp.".".$suffix)) {
-        if (ref $BINARY eq "HASH" and $BINARY->{"filename"}) {
-            Contenido::File::remove($BINARY->{"filename"});
-        }
-
-        @{$BINARY}{"filename", "ext", "size"} = (
-            $filename.".".$suffix,
-        $suffix,
-        $size
-        );
-    }
-
-    unlink $filename_tmp.".".$suffix if -e $filename_tmp.".".$suffix;
-    if ( $suffix =~ /(rar|7z|zip|arc|lha|arj|cab)/ ) {
-	$BINARY->{type} = 'archive';
-    } elsif ( $suffix =~ /(doc|rtf)/ ) {
-	$BINARY->{type} = 'doc';
-    } elsif ( $suffix eq 'xls' ) {
-	$BINARY->{type} = 'xls';
-    } elsif ( $suffix =~ /(mdb|ppt)/ ) {
-	$BINARY->{type} = 'msoffice';
-    } elsif ( $suffix =~ /(pdf)/ ) {
-	$BINARY->{type} = 'ebook';
-    } elsif ( $suffix eq 'psd' ) {
-	$BINARY->{type} = 'psd';
-    } elsif ( $suffix =~ /(exe|msi|cab)/ ) {
-	$BINARY->{type} = 'executable';
     } else {
-	$BINARY->{type} = 'unknown';
+	warn 'ERROR in incoming POST form: "'.$field.' is not file upload (value: "'.$SETS->{$field}.'")';
     }
+
 }
 
 # Дополнительные поля - берем все, что найдем...
@@ -169,8 +118,8 @@ my $pattern = "^".$field.q|\.(.*)$|;
 
 foreach my $localfield (keys(%{ $SETS })) {
     if ($localfield =~ /$pattern/) {
-        my $imagefield = $1;
-        $BINARY->{$imagefield} = $m->comp("/contenido/components/filter.msn", str => $SETS->{$localfield});
+	my $imagefield = $1;
+	$BINARY->{$imagefield} = $m->comp("/contenido/components/filter.msn", str => $SETS->{$localfield});
     }
 }
 

@@ -45,10 +45,11 @@ function insertTags( TagOpen, TagClose )
 </td><td align="right" valign="bottom">
 <a style="color:#000000" href="javascript: li()" title="вставить список(ul-li)">Вставить список</a>&nbsp;&nbsp;
 </td></tr></table>
-<textarea name="<% $name %>" rows="30" cols="60" style="width:95%;font-family:arial;font-size:9pt;"><% $check %></textarea>
+<textarea name="<% $name %>" rows="<% $prop->{rows} || 30 %>" cols="60" style="width:95%;font-family:arial;font-size:9pt;"><% $check %></textarea>
 <%args>
 
-	$name => undef
-	$check => undef
+	$name	=> undef
+	$check	=> undef
+	$prop	=> {}
 
 </%args>

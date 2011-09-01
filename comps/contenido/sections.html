@@ -293,6 +293,7 @@ function set_create_button( oSelect, sBtnID ) {
 	}
 
 	my %filter=();
+	my $nothing_found = 0;
 	my %order = (not $class and $owner->order_by) ? (order_by => $owner->order_by) : (order => ['date','direct']);
 	if (defined $alpha and $alpha ne '') {
 		$filter{ilike}=1;
@@ -313,8 +314,25 @@ function set_create_button( oSelect, sBtnID ) {
 		if ( $doc_class ) {
 			my @props = $doc_class->new( $keeper )->structure();
 			my ($prop) = grep { $_->{attr} eq $search_by } @props	if @props;
-			if ( ref $prop && ($prop->{type} eq 'integer' || $prop->{type} eq 'checkbox') ) {
+			if ( ref $prop && ($prop->{type} eq 'integer' || $prop->{type} eq 'checkbox' || 
+			     (($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup') && $search =~ /^\d+$/)  ) ) {
 				$filter{$search_by} = int($search);
+			} elsif ( ref $prop && ($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup') && $search =~ /\D/ ) {
+				my $lookup_opts = $prop->{lookup_opts};
+				if ( ref $lookup_opts && exists $lookup_opts->{class} ) {
+					my $search_field = exists $lookup_opts->{search_by} ? $lookup_opts->{search_by} : 'name';
+					my @ids = $keeper->get_documents (
+							ids	=> 1,
+							class	=> $lookup_opts->{class},
+							ilike	=> 1,
+							$search_field	=> '%'.$search.'%',
+						);
+					if ( @ids ) {
+						$filter{$search_by} = \@ids;
+					} else {
+						$nothing_found = 1;
+					}
+				}
 			} else {
 				$filter{$search_by}='%'.$search.'%';
 				$filter{ilike} = 1;
@@ -325,16 +343,18 @@ function set_create_button( oSelect, sBtnID ) {
 		}
 	}
 
-    # Дополнительные фильтры раздела
-    if ($owner->filters) {
-        no strict 'vars';
-        my $filters = eval($owner->filters);
-        if ($@) {
-            warn "Bad filter: " . $owner->filters . " in section " . $owner->id;
-        } elsif (ref $filters eq 'HASH') {
-            map { $filter{$_} = $filters->{$_} } keys %$filters;
-        }
-    }
+	# Дополнительные фильтры раздела
+	if ($owner->filters) {
+		no strict 'vars';
+		my $filters = eval($owner->filters);
+		if ($@) {
+			warn "Bad filter: " . $owner->filters . " in section " . $owner->id;
+		} elsif (ref $filters eq 'HASH') {
+			while ( my ($key, $val) = each %$filters ) {
+				$filter{$key} = $val;
+			}
+		}
+	}
 
 	$total = $keeper->get_documents(%filter, count=>1)	unless $owner->no_count;
 
@@ -342,26 +362,29 @@ function set_create_button( oSelect, sBtnID ) {
 	my $first = $n * ($p - 1);
 	($first,$p)=(0,0) if (!$owner->no_count && $first>$total);
 
-	if ($class && !$use_section) {
-		@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first);
-	} elsif ($sorted) {
-		@documents = $keeper->get_sorted_documents(%filter, limit=>$n, offset=>$first);
-	} else {
-		@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first);
+	unless ( $nothing_found ) {
+		if ($class && !$use_section) {
+			@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first);
+		} elsif ($sorted) {
+			@documents = $keeper->get_sorted_documents(%filter, limit=>$n, offset=>$first);
+		} else {
+			@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first);
+		}
 	}
 
 	# набор колонок таблицы документов...
-    my @columns = $sorted ? ({attr => '_sort_', name => 'N'}) : ();
+	my @columns = $sorted ? ({attr => '_sort_', name => 'N'}) : ();
 
-    # пытаемся найти колонки, которые документ сам пожелал показать (required_properties -> column)...
-    if ($filter{class} or @documents and $documents[0]) {
-        push @columns,
-            sort {$a->{column} <=> $b->{column}}
-            grep {$_->{column}} ($filter{class} ? $filter{class}->new($keeper)->structure : $documents[0]->structure);
-    }
+	# пытаемся найти колонки, которые документ сам пожелал показать (required_properties -> column)...
+	if ($filter{class} or @documents and $documents[0]) {
+		push @columns,
+		sort {$a->{column} <=> $b->{column}}
+		grep {$_->{column}} ($filter{class} ? $filter{class}->new($keeper)->structure : $documents[0]->structure);
+	}
 
-    # стандартная жопка таблицы...
-    @columns = (@columns,
-            {attr => '_act_',       rusname => 'Действия'},
-    );
+	# стандартная жопка таблицы...
+	@columns = (@columns,
+		{attr => '_act_',       rusname => 'Действия'},
+	);
+
 </%init>

@@ -174,7 +174,7 @@ function delete_check () {
 <td nowrap align="right"><% $document->{$col->{attr}} || '&nbsp;' %>\
 %					} elsif ($col->{type} eq 'integer') {
 <td align="right"><% $document->{$col->{attr}} %>&nbsp;\
-%					} elsif ($col->{type} eq 'lookup') {
+%					} elsif ($col->{type} eq 'lookup' || $col->{type} eq 'pickup') {
 <td align="left">\
 %						my $id = $document->{$col->{attr}};
 %						if ($id) {

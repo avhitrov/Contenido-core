@@ -168,8 +168,8 @@ sub parse {
             }
             $self->{text} = ref $chosen eq 'ARRAY' ? $chosen->[0] : $chosen;
 #            $self->{html} = $content;
-#            $self->{tree} = $shortcuts;
-            $self->{tree} = $tree;
+            $self->{tree} = $shortcuts;
+#            $self->{tree} = $tree;
             $self->{chosen} = $chosen;
         } else {
             $self->__post_rool ($chosen->[0], $post_rools, $description);

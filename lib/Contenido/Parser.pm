@@ -26,6 +26,7 @@ sub fetch {
     my ($self, $input, %opts) = @_;
 
     my ($fh, $content);
+    my $timeout = delete $opts{timeout} || 10;
     my $encoding = delete $opts{encoding};
     if (not ref $input) {
 	no strict "refs";
@@ -35,7 +36,7 @@ sub fetch {
 	} else {
 		my $request = new HTTP::Request GET => $input;
 		my $ua = new LWP::UserAgent;
-		$ua->timeout(10);
+		$ua->timeout($timeout);
 		my $res = $ua->request($request);
 		if ($res->is_success) {
 			$self->{headers} = $res->headers;

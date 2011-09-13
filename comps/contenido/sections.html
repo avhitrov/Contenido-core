@@ -315,7 +315,8 @@ function set_create_button( oSelect, sBtnID ) {
 			my @props = $doc_class->new( $keeper )->structure();
 			my ($prop) = grep { $_->{attr} eq $search_by } @props	if @props;
 			if ( ref $prop && ($prop->{type} eq 'integer' || $prop->{type} eq 'checkbox' || 
-			     (($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup') && $search =~ /^\d+$/)  ) ) {
+			     (($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup') && $search =~ /^\d+$/) || 
+			     (exists $prop->{db_type} && $prop->{db_type} =~ /integer\[\]/)    )) {
 				$filter{$search_by} = int($search);
 			} elsif ( ref $prop && ($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup') && $search =~ /\D/ ) {
 				my $lookup_opts = $prop->{lookup_opts};

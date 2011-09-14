@@ -312,10 +312,10 @@ sub _prepare_hash_results {
                 $item->post_init($opts);
                 $self->set_object_to_cache($item, 30, $opts) if ($opts->{with_cache});
                 $total++;
-		if ( exists $item->{$hash_by} && $item->{$hash_by} ) {
-	                $items{$item->{$hash_by}} = $item;
+		if ( exists $item->{$hash_by} && defined $item->{$hash_by} ) {
+			$items{$item->{$hash_by}} = $item;
 		} else {
-                        $log->warning( "Can not HASH BY parameter [$hash_by]. It doesn't exists in row or the field is empty");
+			$log->warning( "Can not HASH BY parameter [$hash_by]. It doesn't exists in row or the field is empty");
 		}
             }
         }

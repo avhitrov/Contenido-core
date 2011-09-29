@@ -7,6 +7,7 @@
 CORE_REQUIRED +=		BSD-Resource
 CORE_REQUIRED +=		Digest-MD5
 CORE_REQUIRED +=		Image-Size
+CORE_REQUIRED +=		Image-Info
 CORE_REQUIRED +=		String-CRC32
 CORE_REQUIRED +=		Time-HiRes
 CORE_REQUIRED +=		Time-modules

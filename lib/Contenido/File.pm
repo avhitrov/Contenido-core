@@ -11,6 +11,7 @@ use IO::Scalar;
 use Contenido::File::Scheme::HTTP;
 use Contenido::File::Scheme::FILE;
 use Contenido::DateTime;
+use Image::Info qw(image_info dim);
 
 our $IgnoreErrors = 1;
 
@@ -208,6 +209,12 @@ sub store_image {
     syswrite $fh_tmp, $buffer, $size;
 
     undef $fh_tmp;
+
+    my $image_info = image_info($filename_tmp.'.'.$ext);
+    if ( ref $image_info && $image_info->{file_ext} ne $ext ) {
+	rename $filename_tmp.'.'.$ext, $filename_tmp.'.'.$image_info->{file_ext};
+	$ext = $image_info->{file_ext};
+    }
 
     my $IMAGE;
     if ( store($filename.'.'.$ext, $filename_tmp.'.'.$ext) ) {

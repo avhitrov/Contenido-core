@@ -42,13 +42,17 @@ sub fetch {
 			$self->{headers} = $res->headers;
 			my $content_length = $res->headers->header('content-length');
 			my $content_type = $res->headers->header('content-type');
+			my $headers_string = $res->headers->as_string;
+#			warn $res->content_type_charset."\n\n";
+#			warn Dumper($res->headers)		if $DEBUG;
 			$self->{content_type} = $content_type;
-			if ( $content_type =~ /charset\s*=\s*([a-z\d\-]+)/i ) {
-				$encoding = $1;
+			if ( $res->content_type_charset ) {
+				$encoding = Encode::find_encoding($res->content_type_charset)->name;
 			}
 			my $base_url = $input =~ /^([a-z]+:\/\/[a-z\.\d]+)/ ? $1 : '';
 			$self->{base_url} = $base_url		if $base_url;
-			$content = $res->content;
+			$content = $res->decoded_content( charset => 'none' );
+#			warn "Charset: ".$res->content_charset."\n";
 		} else {
 			warn $res->status_line." \n";
 			$self->{success} = 0;
@@ -73,26 +77,64 @@ sub fetch {
 	$content = <$fh>;
     }
     if ( $content ) {
-	unless ( $encoding ) {
-		$encoding = $self->__try_content_encoding( substr($content, 0, 350) );
-	}
-	if ( $encoding && $encoding ne 'utf-8' ) {
-		warn "Encoding from $encoding\n..."		if $DEBUG;
-		Encode::from_to($content, $encoding, 'utf-8');
-		if ( exists $self->{headers} ) {
-			foreach my $header ( keys %{$self->{headers}} ) {
-				if ( ref $self->{headers}{$header} eq 'ARRAY' ) {
-					foreach my $val ( @{$self->{headers}{$header}} ) {
-						Encode::from_to($val, $encoding, 'utf-8');
+	warn "starting content decoding...\n";
+	if ( exists $self->{headers} && ref $self->{headers} && ($self->{headers}->content_is_html || $self->{headers}->content_is_xhtml || $self->{headers}->content_is_xml) ) {
+		unless ( $encoding ) {
+			$encoding = $self->__try_content_encoding( substr($content, 0, 350) );
+		}
+		if ( $encoding && $encoding ne 'utf-8' && $encoding ne 'utf-8-strict' ) {
+			warn "Encoding from $encoding\n..."		if $DEBUG;
+			Encode::from_to($content, $encoding, 'utf-8');
+			if ( exists $self->{headers} ) {
+				foreach my $header ( keys %{$self->{headers}} ) {
+					if ( ref $self->{headers}{$header} eq 'ARRAY' ) {
+						foreach my $val ( @{$self->{headers}{$header}} ) {
+							Encode::from_to($val, $encoding, 'utf-8');
+						}
+					} else {
+						Encode::from_to($self->{headers}{$header}, $encoding, 'utf-8');
 					}
-				} else {
-					Encode::from_to($self->{headers}{$header}, $encoding, 'utf-8');
+				}
+			}
+		} else {
+#			Encode::_utf8_off($content);
+			if ( exists $self->{headers} ) {
+				foreach my $header ( keys %{$self->{headers}} ) {
+					if ( ref $self->{headers}{$header} eq 'ARRAY' ) {
+						foreach my $val ( @{$self->{headers}{$header}} ) {
+							Encode::_utf8_off($val);
+						}
+					} else {
+						warn "Test: ".$self->{headers}{$header}.": check flag: ".Encode::is_utf8($self->{headers}{$header}).". check: ".Encode::is_utf8($self->{headers}{$header},1)."\n";
+						if ( Encode::is_utf8($self->{headers}{$header}) && Encode::is_utf8($self->{headers}{$header},1) ) {
+							Encode::_utf8_off($self->{headers}{$header});
+#							Encode::_utf8_on($self->{headers}{$header});
+#							$self->{headers}{$header} = Encode::encode('utf8', $self->{headers}{$header}, Encode::FB_QUIET);
+#							Encode::from_to($self->{headers}{$header}, $encoding, 'utf8');
+						}
+					}
 				}
 			}
 		}
+		$self->{encoding} = $encoding;
+		warn Dumper($self)		if $DEBUG;
+		if ( $self->{headers}->content_is_html ) {
+			my $headers;
+			if ( $content =~ /<head.*?>(.*?)<\/head>/si ) {
+				$headers = $self->__parse_html_header( $1 );
+			}
+			if ( ref $headers eq 'ARRAY' && @$headers ) {
+				foreach my $header ( @$headers ) {
+					if ( $header->{tag} eq 'title' ) {
+						$self->{headers}{title} = $header->{content};
+					} elsif ( $header->{tag} eq 'meta' && (($header->{rel} && $header->{rel} =~ /icon/i) || ($header->{href} && $header->{href} =~ /\.ico$/)) ) {
+						$self->{favicon} = $header->{href};
+					}
+				}
+				$self->{html_headers} = $headers;
+			}
+		}
 	}
-	$self->{encoding} = $encoding;
-	warn Dumper($self)		if $DEBUG;
 	$self->{content} = $content;
 	$self->{success} = 1;
     } else {
@@ -124,6 +166,68 @@ sub __try_content_encoding {
     } else {
 	return undef;
     }
+}
+
+sub __parse_html_header {
+    my ($self, $input)= @_;
+    my @tags;
+    $input =~ s/[\r\n\t]+/\ /sgi;
+    if ( $input =~ /<title.*?>(.*?)<\/title.*?>/sgi ) {
+	my $title = $1;
+	for ( $title ) {
+		s/^\s+//;
+		s/\s+$//;
+	}
+	push @tags, { tag => 'title', content => $title };
+    }
+    while ( $input =~ /<(.*?)\/?>/sgi ) {
+	my $tag = $1;
+	my $struct = {};
+	for ( $tag ) {
+		s/\ *=\ */=/g;
+		$_ = __encode_quotes($_);
+	}
+	my @tag = split /\ +/, $tag;
+	$struct->{tag} = lc(shift @tag);
+	next	unless ($struct->{tag} eq 'link' || $struct->{tag} eq 'meta');
+	foreach my $str ( @tag ) {
+		if ( $str =~ /^(.*?)=(.*)$/ ) {
+			my $attr = $1;
+			my $val = $2;
+			for ( $val ) {
+				s/^"//;
+				s/"$//;
+				s/&nbsp;/\ /sg;
+			}
+			$struct->{$attr} = $val;
+		}
+	}
+	push @tags, $struct;
+    }
+    return \@tags;
+}
+
+sub __encode_quotes {
+    my $str = shift;
+    my @in = split //, $str;
+    my $out = '';
+    my $quot = '';
+    foreach my $ch ( @in ) {
+	if ( ($ch eq '"' && $quot eq '"') || ($ch eq "'" && $quot eq "'") ) {
+		$quot = '';
+	} elsif ( ($ch eq "'" || $ch eq '"' ) && !$quot ) {
+		$quot = $ch;
+	} elsif ( ($ch eq '"' && $quot eq "'") ) {
+		$ch = '&quot;';
+	} elsif ( ($ch eq "'" && $quot eq '"') ) {
+		$ch = '&amp;';
+	} elsif ( ($ch eq ' ' && $quot) ) {
+		$ch = '&nbsp;';
+	}
+	$out .= $ch;
+    }
+    $out =~ s/'/"/sgi;
+    return $out;
 }
 
 sub scheme {

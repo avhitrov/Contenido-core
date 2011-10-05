@@ -5,7 +5,7 @@
 
 #include ../../etc/perl.mk
 
-PORTVERSION =		5.805
+PORTVERSION =		5.836
 DISTFILE =		${PORTNAME}-perl-${PORTVERSION}.tar.gz
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	LWP

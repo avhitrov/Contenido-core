@@ -54,7 +54,7 @@ sub fetch {
 			$content = $res->decoded_content( charset => 'none' );
 #			warn "Charset: ".$res->content_charset."\n";
 		} else {
-			warn $res->status_line." \n";
+			warn $res->status_line." \n"		if $DEBUG;
 			$self->{success} = 0;
 			$self->{reason} = $res->status_line;
 			return $self;
@@ -207,6 +207,37 @@ sub __parse_html_header {
     return \@tags;
 }
 
+### Имеет дело с "ободранным" тегом, 
+#   в котором отстутсвуют < и >
+########################################
+sub parse_html_tag {
+    my $self = shift;
+    my $tagstr = shift;
+
+    my %struct;
+    for ( $tagstr ) {
+	s/\ *=\ */=/g;
+	$_ = __encode_quotes($_);
+    }
+    my @tag = split /\ +/, $tagstr;
+    $struct{tag} = lc(shift @tag);
+
+    foreach my $str ( @tag ) {
+	if ( $str =~ /^(.*?)=(.*)$/ ) {
+		my $attr = lc($1);
+		my $val = $2;
+		for ( $val ) {
+			s/^"//;
+			s/"$//;
+			s/&nbsp;/\ /sg;
+		}
+		$struct{$attr} = $val;
+	}
+    }
+    return \%struct;
+}
+
+
 sub __encode_quotes {
     my $str = shift;
     my @in = split //, $str;
@@ -228,6 +259,24 @@ sub __encode_quotes {
     }
     $out =~ s/'/"/sgi;
     return $out;
+}
+
+
+sub image_replace {
+    my ($self, $img_params, $replace_struct) = @_;
+
+    my $img = $self->parse_html_tag('img '.$img_params);
+    if ( exists $replace_struct->{$img->{src}} ) {
+	my $new_image = $replace_struct->{$img->{src}};
+	if ( ref $new_image && exists $new_image->{filename} ) {
+		$img->{src} = $new_image->{filename};
+	} else {
+		$img->{src} = $new_image;
+	}
+	return '<img '.join(' ', map { $_.'="'.$img->{$_}.'"' } grep { $_ ne 'tag' } keys %$img).'>';
+    } else {
+	return '';
+    }
 }
 
 sub scheme {

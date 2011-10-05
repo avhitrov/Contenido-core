@@ -110,7 +110,7 @@ sub parse {
 	warn "Make tree...\n"				if $debug;
 	my ($tree, $shortcuts) = $self->__make_tree (\$content, $parse_rools, $debug);
 
-        $self->__extract_img ($shortcuts, $base_url, $debug);
+        $self->__extract_img ($shortcuts, $base_url, $strip_html, $debug);
         $self->__extract_headers ($shortcuts, $header, $debug);
 	warn "Getting big texts (min=$minimum)...\n"	if $debug;
         my $chosen = $self->__dig_big_texts (
@@ -141,7 +141,8 @@ sub parse {
                 chosen	=> $chosen,
                 header	=> $header,
                 ref $post_rools eq 'ARRAY' && @$post_rools ? (rools => $post_rools) : (),
-                debug	=> $debug
+                debug	=> $debug,
+                strip_html	=> $strip_html,
         );
         if ( ref $parse_rools eq 'ARRAY' ) {
             my ($glue) = grep { $_->{command} eq 'glue' } @$parse_rools;
@@ -595,33 +596,41 @@ sub __try_end {
 
 
 sub __extract_img {
-    my ($self, $structure, $base_url, $debug) = @_;
+    my ($self, $structure, $base_url, $strip_html, $debug) = @_;
     return	unless ref $structure eq 'HASH';
 
     foreach my $tag ( grep { ref $_ && $_->{type} eq 'text' && $_->{text} } values %$structure ) {
-        my $text = $tag->{text};
-        while ( $text =~ /<img (.*?)>/sgi  ) {
+        while ( $tag->{text} =~ /<img (.*?)\/?>/sgi  ) {
 #            warn "Image for extract_img found [$1]. Tag ID: $tag->{id}\n";
             my $params = $1;
-            my $img = {};
-            if ( $params =~ /src\x20*?=\x20*?["'](.*?)["']/ || $params =~ /src=([^\x20]+)/ ) {
-                $img->{url} = $1;
-                $img->{url} =~ s/[\r\t\n\ ]+$//;
-                $img->{url} =~ s/^[\r\t\n\ ]+//;
-                $img->{url} = $base_url.'/'.$img->{url}		unless $img->{url} =~ /^http:/;
-                $img->{url} =~ s/\/+/\//sgi;		
-                $img->{url} =~ s/http:\//http:\/\//sgi;		
-                $img->{w} = $1			if $params =~ /width[\D]+(\d+)/;
-                $img->{h} = $1			if $params =~ /height[\D]+(\d+)/;
-                $img->{alt} = $1		if $params =~ /alt\x20*?=\x20*?["'](.*?)["']/;
+            my $img = $self->parse_html_tag('img '.$params);
+            if ( exists $img->{src} && $img->{src} ) {
+                my %img = ( src => $img->{src} );
+                $img{url} = $img{src} =~ /^http[s]?:/ ? $img{src} : $base_url.($img{src} =~ m|^/| ? '' : '/').$img{src};
+                $img{w} = $img->{width}		if $img->{width};
+                $img{h} = $img->{height}	if $img->{height};
+                $img{alt} = $img->{alt}		if $img->{alt};
+                $img{title} = $img->{title}	if $img->{title};
                 $tag->{images} = []		unless ref $tag->{images} eq 'ARRAY';
-                push @{ $tag->{images} }, $img;
-#                warn "Image for extract_img stored [$img->{url}]. Tag ID: $tag->{id}\n";
+                push @{ $tag->{images} }, \%img;
             }
+#            if ( $params =~ /src\x20*?=\x20*?["'](.*?)["']/ || $params =~ /src=([^\x20]+)/ ) {
+#                $img->{url} = $1;
+#                $img->{url} =~ s/[\r\t\n\ ]+$//;
+#                $img->{url} =~ s/^[\r\t\n\ ]+//;
+#                $img->{url} = $base_url.'/'.$img->{url}		unless $img->{url} =~ /^http:/;
+#                $img->{url} =~ s/\/+/\//sgi;		
+#                $img->{url} =~ s/http:\//http:\/\//sgi;		
+#                $img->{w} = $1			if $params =~ /width[\D]+(\d+)/;
+#                $img->{h} = $1			if $params =~ /height[\D]+(\d+)/;
+#                $img->{alt} = $1		if $params =~ /alt\x20*?=\x20*?["'](.*?)["']/;
+#                $tag->{images} = []		unless ref $tag->{images} eq 'ARRAY';
+#                push @{ $tag->{images} }, $img;
+#                warn "Image for extract_img stored [$img->{url}]. Tag ID: $tag->{id}\n";
+#            }
         }
-        $text =~ s/<img (.*?)>//sgi;
-        $tag->{text} = $text;
-        $tag->{count} = length ($text);
+        $tag->{text} =~ s/<img (.*?)>//sgi		if $strip_html;
+        $tag->{count} = length ($tag->{text});
     }
 }
 
@@ -716,6 +725,7 @@ sub __dig_big_texts {
                     s/\&\\x(\d+)//sgi;
                 }
                 push @ret, $tag;
+#		$self->log_elem($tag);
             }
         }
     }
@@ -815,7 +825,8 @@ sub __strip_html {
 
     my $chosen = $opts{chosen};
     my $rooles = $opts{rools};
-    my $header = $opts{header};
+    my $header = $opts{header} || '';
+    my $strip_html = $opts{strip_html};
 
     foreach my $unit ( @$chosen ) {
         my %tags;
@@ -861,7 +872,7 @@ sub __strip_html {
             s/^(\d+):(\d+)//si;
             s/^[\ \t\r\n]+//si;
         }
-        if ( lc(substr ($unit->{text}, 0, length($header) )) eq lc($header) ) {
+        if ( $header && lc(substr ($unit->{text}, 0, length($header) )) eq lc($header) ) {
             substr $unit->{text}, 0, length($header), '';
             $unit->{text} =~ s/^[\.\ \t\r\n]+//sgi;
         }
@@ -1192,6 +1203,17 @@ sub __post_rool {
             }
         }
     }
+}
+
+
+sub log_elem {
+    my $self = shift;
+    my $elem = shift;
+    return	unless ref $elem eq 'HASH';
+
+    my %elem;
+    map { $elem{$_} = $elem->{$_} } grep { $_ ne 'parent' } keys %$elem;
+    warn Dumper \%elem;
 }
 
 

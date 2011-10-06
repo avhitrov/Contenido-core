@@ -79,7 +79,8 @@ sub parse {
     my $post_rools =	$self->__parse_rools (delete $opts{parser_end});
     warn Dumper ($post_rools)							if $debug;
 
-#        warn "Experimental. Debug!!!\n"			if $debug;
+    #####  Experimental things sometimes transform to things for everyday use
+    #########################################################################
         if ( ref $pre_rools eq 'ARRAY' ) {
             my @sets = grep { $_->{command} eq 'set' } @$pre_rools;
             foreach my $set ( @sets ) {
@@ -114,10 +115,11 @@ sub parse {
         $self->__extract_headers ($shortcuts, $header, $debug);
 	warn "Getting big texts (min=$minimum)...\n"	if $debug;
         my $chosen = $self->__dig_big_texts (
-                structure => $shortcuts,
-                min	=> $minimum,
+                structure	=> $shortcuts,
+                min		=> $minimum,
                 ref $parse_rools eq 'ARRAY' && @$parse_rools ? (rools => $parse_rools) : (),
-                debug	=> $debug );
+		strip_html	=> $strip_html,
+                debug		=> $debug );
         unless ( ref $chosen eq 'ARRAY' && @$chosen ) {
                 $self->{error_message} = 'Nothing was found at all!!! Check your MINIMUM value';
                 return $self->is_success(0)		unless $gui;
@@ -600,13 +602,14 @@ sub __extract_img {
     return	unless ref $structure eq 'HASH';
 
     foreach my $tag ( grep { ref $_ && $_->{type} eq 'text' && $_->{text} } values %$structure ) {
-        while ( $tag->{text} =~ /<img (.*?)\/?>/sgi  ) {
+        while ( $tag->{text} =~ /<img[\ \t](.*?)\/?>/sgi  ) {
 #            warn "Image for extract_img found [$1]. Tag ID: $tag->{id}\n";
             my $params = $1;
             my $img = $self->parse_html_tag('img '.$params);
             if ( exists $img->{src} && $img->{src} ) {
                 my %img = ( src => $img->{src} );
                 $img{url} = $img{src} =~ /^http[s]?:/ ? $img{src} : $base_url.($img{src} =~ m|^/| ? '' : '/').$img{src};
+                $img{type} = 'inner';
                 $img{w} = $img->{width}		if $img->{width};
                 $img{h} = $img->{height}	if $img->{height};
                 $img{alt} = $img->{alt}		if $img->{alt};
@@ -614,20 +617,31 @@ sub __extract_img {
                 $tag->{images} = []		unless ref $tag->{images} eq 'ARRAY';
                 push @{ $tag->{images} }, \%img;
             }
-#            if ( $params =~ /src\x20*?=\x20*?["'](.*?)["']/ || $params =~ /src=([^\x20]+)/ ) {
-#                $img->{url} = $1;
-#                $img->{url} =~ s/[\r\t\n\ ]+$//;
-#                $img->{url} =~ s/^[\r\t\n\ ]+//;
-#                $img->{url} = $base_url.'/'.$img->{url}		unless $img->{url} =~ /^http:/;
-#                $img->{url} =~ s/\/+/\//sgi;		
-#                $img->{url} =~ s/http:\//http:\/\//sgi;		
-#                $img->{w} = $1			if $params =~ /width[\D]+(\d+)/;
-#                $img->{h} = $1			if $params =~ /height[\D]+(\d+)/;
-#                $img->{alt} = $1		if $params =~ /alt\x20*?=\x20*?["'](.*?)["']/;
-#                $tag->{images} = []		unless ref $tag->{images} eq 'ARRAY';
-#                push @{ $tag->{images} }, $img;
-#                warn "Image for extract_img stored [$img->{url}]. Tag ID: $tag->{id}\n";
-#            }
+        }
+        while ( $tag->{text} =~ /<a[\ \t](.*?)\/?>/sgi  ) {
+            my $params = $1;
+            my $anc = $self->parse_html_tag('a '.$params);
+            if ( exists $anc->{href} && $anc->{href} && $anc->{href} =~ /\.(jpe?g|gif|png|bmp|tiff?)$/ ) {
+                my %img = ( src => $anc->{href} );
+                $img{url} = $img{src} =~ /^http[s]?:/ ? $img{src} : $base_url.($img{src} =~ m|^/| ? '' : '/').$img{src};
+                $img{type} = 'external';
+                $img{title} = $anc->{title}	if $anc->{title};
+                $tag->{images} = []		unless ref $tag->{images} eq 'ARRAY';
+                push @{ $tag->{images} }, \%img;
+            }
+        }
+        while ( $tag->{text} =~ /<a[\ \t](.*?)\/?><img[\ \t](.*?)\/?>/sgi  ) {
+            my $aparams = $1;
+            my $iparams = $1;
+            my $anc = $self->parse_html_tag('a '.$aparams);
+            my $img = $self->parse_html_tag('img '.$iparams);
+            if ( exists $anc->{href} && $anc->{href} && $anc->{href} =~ /\.(jpe?g|gif|png|bmp|tiff?)$/ ) {
+		my @images = grep { $_->{src} eq $img->{src} } @{ $tag->{images} };
+		map {
+			$_->{ext_src} = $anc->{href};
+			$_->{ext_url} = $anc->{href} =~ /^http[s]?:/ ? $anc->{href} : $base_url.($anc->{href} =~ m|^/| ? '' : '/').$anc->{href};
+		} @images;
+            }
         }
         $tag->{text} =~ s/<img (.*?)>//sgi		if $strip_html;
         $tag->{count} = length ($tag->{text});
@@ -658,6 +672,7 @@ sub __dig_big_texts {
     my $minimum = exists $opts{min} ? $opts{min} : undef;
     my $debug = exists $opts{debug} ? $opts{debug} : undef;
     my $rools = exists $opts{rools} ? $opts{rools} : undef;
+    my $strip_html = exists $opts{strip_html} ? $opts{strip_html} : undef;
     return	unless ref $structure eq 'HASH';
 
     my @rools;
@@ -699,7 +714,7 @@ sub __dig_big_texts {
                 $text = Contenido::Parser::Util::strip_html($text);
                 $tag->{text_weight} = length($text);
                 if ( length($text) >= $minimum ) {
-                    for ( $tag->{text} ) {
+                    for ( $tag->{text} && $strip_html ) {
                         s/<a.*?>//sgi;
                         s/<\/a.*?>//sgi;
                     }
@@ -720,8 +735,10 @@ sub __dig_big_texts {
             $tag->{text_weight} = length($text);
             if ( length($text) >= $minimum ) {
                 for ( $tag->{text} ) {
-                    s/<a.*?>//sgi;
-                    s/<\/a.*?>//sgi;
+                    if ( $strip_html ) {
+                        s/<a.*?>//sgi;
+                        s/<\/a.*?>//sgi;
+                    }
                     s/\&\\x(\d+)//sgi;
                 }
                 push @ret, $tag;

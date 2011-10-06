@@ -214,16 +214,67 @@ sub store_image {
     if ( ref $image_info && $image_info->{file_ext} ne $ext ) {
 	rename $filename_tmp.'.'.$ext, $filename_tmp.'.'.$image_info->{file_ext};
 	$ext = $image_info->{file_ext};
+    } elsif ( !ref $image_info ) {
+	unlink $filename_tmp.'.'.$ext;
+	return undef;
+    }
+    my $transformed;
+    if ( exists $prop->{transform} && ref $prop->{transform} eq 'ARRAY' && scalar @{$prop->{transform}} == 2 && $prop->{transform}[0] =~ /(crop|resize|shrink)/ ) {
+	my $c_line;
+	if ( $prop->{transform}[0] eq 'resize' ) {
+		$c_line = $state->{'convert_binary'}.' -resize \''.$prop->{transform}[1].'\' -quality 80 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
+	} elsif ( $prop->{transform}[0] eq 'crop' ) {
+		my $shave_string;
+		my ($nwidth, $nheight) = $prop->{transform}[1] =~ /(\d+)x(\d+)/i ? ($1, $2) : (0, 0);
+		if ( ($image_info->{width} / $image_info->{height}) > ($nwidth / $nheight) ) {
+			my $shave_pixels = (($image_info->{width} / $image_info->{height}) - ($nwidth / $nheight)) * $image_info->{height};
+			$shave_string = ' -shave '.int($shave_pixels / 2).'x0';
+		} elsif ( ($image_info->{height} / $image_info->{width}) > ($nheight / $nwidth) ) {
+			my $shave_pixels = (($image_info->{height} / $image_info->{width}) - ($nheight / $nwidth)) * $image_info->{width};
+			$shave_string = ' -shave 0x'.int($shave_pixels / 2);
+		}
+		if ( $shave_string ) {
+			my $c_line = $state->{"convert_binary"}." $shave_string $filename_tmp.$ext $filename_tmp.shaved.$ext";
+			my $result = `$c_line`;
+			if (length $result  > 0) {
+				print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";
+				return undef;
+			}
+		} else {
+			my $c_line = "cp $filename_tmp.$ext $filename_tmp.shaved.$ext";
+			my $result = `$c_line`;
+			if (length $result  > 0) {
+				print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";
+				return undef;
+			}
+		}
+		$c_line = $state->{'convert_binary'}.' -geometry \''.$prop->{transform}[1].'!\' -quality 80 '.$filename_tmp.'.shaved.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
+	} elsif ( $prop->{transform}[0] eq 'shrink' ) {
+		$c_line = $state->{'convert_binary'}.' -geometry \''.$prop->{transform}[1].'!\' -quality 80 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
+	}
+	my $result = `$c_line`;
+	$transformed = 1;
+	unlink $filename_tmp.'.shaved.'.$ext      if -e $filename_tmp.'.shaved.'.$ext;
     }
 
     my $IMAGE;
-    if ( store($filename.'.'.$ext, $filename_tmp.'.'.$ext) ) {
+    my $stored = $transformed ? store($filename.'.'.$ext, $filename_tmp.'.transformed.'.$ext) : store($filename.'.'.$ext, $filename_tmp.'.'.$ext);
+    if ( $stored ) {
 	$IMAGE = {};
-	# hashref slice assigning - жжесть
-	@{$IMAGE}{'filename', 'width', 'height'} = (
-		$filename.'.'.$ext,
-		Image::Size::imgsize($filename_tmp.'.'.$ext),
-	);
+	if ( $transformed && -e $filename_tmp.'.transformed.'.$ext ) {
+		# hashref slice assigning - жжесть
+		@{$IMAGE}{'filename', 'width', 'height'} = (
+			$filename.'.transformed.'.$ext,
+			Image::Size::imgsize($filename_tmp.'.'.$ext),
+		);
+		unlink $filename_tmp.'.transformed.'.$ext;
+	} else {
+		# hashref slice assigning - жжесть
+		@{$IMAGE}{'filename', 'width', 'height'} = (
+			$filename.'.'.$ext,
+			Image::Size::imgsize($filename_tmp.'.'.$ext),
+		);
+	}
 
 	foreach my $suffix (@preview) {
 		my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'\' -quality 80 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.'.$suffix.'.'.$ext;

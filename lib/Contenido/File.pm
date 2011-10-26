@@ -261,15 +261,14 @@ sub store_image {
     my $stored = $transformed ? store($filename.'.'.$ext, $filename_tmp.'.transformed.'.$ext) : store($filename.'.'.$ext, $filename_tmp.'.'.$ext);
     if ( $stored ) {
 	$IMAGE = {};
+	# hashref slice assigning - жжесть
 	if ( $transformed && -e $filename_tmp.'.transformed.'.$ext ) {
-		# hashref slice assigning - жжесть
 		@{$IMAGE}{'filename', 'width', 'height'} = (
-			$filename.'.transformed.'.$ext,
-			Image::Size::imgsize($filename_tmp.'.'.$ext),
+			$filename.'.'.$ext,
+			Image::Size::imgsize($filename_tmp.'.transformed.'.$ext),
 		);
 		unlink $filename_tmp.'.transformed.'.$ext;
 	} else {
-		# hashref slice assigning - жжесть
 		@{$IMAGE}{'filename', 'width', 'height'} = (
 			$filename.'.'.$ext,
 			Image::Size::imgsize($filename_tmp.'.'.$ext),

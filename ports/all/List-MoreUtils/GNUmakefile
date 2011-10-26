@@ -3,7 +3,7 @@
 # $Id: GNUmakefile 285 2006-08-01 12:28:21Z lonerr $
 ###############################################################################
 
-PORTVERSION =		0.22
+PORTVERSION =		0.33
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	List
 

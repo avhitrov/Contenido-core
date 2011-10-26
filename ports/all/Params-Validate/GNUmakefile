@@ -11,6 +11,9 @@ MASTER_CPAN_SUBDIR =	Devel/DROLSKY
 
 ifeq (${shell perl -e 'print 1 if ${PERL_LEVEL}>=500600 and ${PERL_LEVEL}<500800'},1)
 PORT_DEPENDS =		Attribute-Handlers
+else
+PORT_DEPENDS =		Module-Build			\
+			ExtUtils-CBuilder
 endif
 
 include ../../etc/ports.mk

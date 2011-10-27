@@ -3,12 +3,10 @@
 # $Id:
 ###############################################################################
 
-PORTVERSION =		0.11
+PORTVERSION =		0.107
 PERL_MAKEMAKER =	yes
-MASTER_CPAN_SUBDIR =	Class
-PORT_DEPENDS =		Try-Tiny					\
-			Data-OptList					\
-			Package-Stash					\
-			Module-Runtime
+MASTER_CPAN_SUBDIR =	Data
+PORT_DEPENDS =		Params-Util					\
+			Sub-Install
 
 include ../../etc/ports.mk

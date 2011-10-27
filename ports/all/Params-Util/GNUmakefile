@@ -1,14 +1,10 @@
 ##############################################################################
-# $HeadURL: 
-# $Id:
+# $HeadURL: svn://cvs1.rambler.ru/Contenido/trunk/ports/all/Params-Validate/GNUmakefile $
+# $Id: GNUmakefile 1625 2011-10-26 15:21:17Z ahitrov $
 ###############################################################################
 
-PORTVERSION =		0.11
+PORTVERSION =		1.04
 PERL_MAKEMAKER =	yes
-MASTER_CPAN_SUBDIR =	Class
-PORT_DEPENDS =		Try-Tiny					\
-			Data-OptList					\
-			Package-Stash					\
-			Module-Runtime
+MASTER_CPAN_SUBDIR =	Params
 
 include ../../etc/ports.mk

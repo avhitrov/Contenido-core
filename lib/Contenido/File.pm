@@ -263,9 +263,10 @@ sub store_image {
 	$IMAGE = {};
 	# hashref slice assigning - жжесть
 	if ( $transformed && -e $filename_tmp.'.transformed.'.$ext ) {
-		@{$IMAGE}{'filename', 'width', 'height'} = (
-			$filename.'.'.$ext,
-			Image::Size::imgsize($filename_tmp.'.transformed.'.$ext),
+		my ($tw, $th) = Image::Size::imgsize($filename_tmp.'.transformed.'.$ext);
+		my ($w, $h) = Image::Size::imgsize($filename_tmp.'.'.$ext);
+		@{$IMAGE}{'filename', 't_width', 't_height', 'width', 'height'} = (
+			$filename.'.'.$ext, $tw, $th, $w, $h
 		);
 		unlink $filename_tmp.'.transformed.'.$ext;
 	} else {
@@ -372,6 +373,8 @@ sub store_image {
 	}
 
 	unlink $filename_tmp.'.'.$ext if -e $filename_tmp.'.'.$ext;
+	$IMAGE->{width} = delete $IMAGE->{t_width}	if exists $IMAGE->{t_width};
+	$IMAGE->{height} = delete $IMAGE->{t_height}	if exists $IMAGE->{t_height};
     }
 
     return $IMAGE;

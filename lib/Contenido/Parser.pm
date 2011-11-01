@@ -77,7 +77,7 @@ sub fetch {
 	$content = <$fh>;
     }
     if ( $content ) {
-	warn "starting content decoding...\n";
+	warn "starting content decoding...\n"		if $DEBUG;
 	if ( exists $self->{headers} && ref $self->{headers} && ($self->{headers}->content_is_html || $self->{headers}->content_is_xhtml || $self->{headers}->content_is_xml) ) {
 		unless ( $encoding ) {
 			$encoding = $self->__try_content_encoding( substr($content, 0, 350) );
@@ -105,7 +105,7 @@ sub fetch {
 							Encode::_utf8_off($val);
 						}
 					} else {
-						warn "Test: ".$self->{headers}{$header}.": check flag: ".Encode::is_utf8($self->{headers}{$header}).". check: ".Encode::is_utf8($self->{headers}{$header},1)."\n";
+						warn "Test: ".$self->{headers}{$header}.": check flag: ".Encode::is_utf8($self->{headers}{$header}).". check: ".Encode::is_utf8($self->{headers}{$header},1)."\n"	if $DEBUG;
 						if ( Encode::is_utf8($self->{headers}{$header}) && Encode::is_utf8($self->{headers}{$header},1) ) {
 							Encode::_utf8_off($self->{headers}{$header});
 #							Encode::_utf8_on($self->{headers}{$header});

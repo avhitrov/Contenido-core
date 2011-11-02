@@ -6,6 +6,7 @@
 PORTVERSION =		0.02
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	Dist
-PORT_DEPENDS =		Sub-Exporter
+PORT_DEPENDS =		ExtUtils-MakeMaker			\
+			Sub-Exporter
 
 include ../../etc/ports.mk

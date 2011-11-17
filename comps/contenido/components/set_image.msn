@@ -29,7 +29,7 @@ if ($SETS->{$field} || $SETS->{"$field.ext_url"}) {
     }
     if ($upload) {
 
-	my $IMG = $object->_store_image( $upload, attr => $prop->{attr} );
+	my $IMG = $object->_store_image( $upload, attr => $prop->{attr}, prop => $prop );
 
 	if ( ref $IMG eq 'HASH' && exists $IMG->{filename} ) {
 		$object->_delete_image( $default );

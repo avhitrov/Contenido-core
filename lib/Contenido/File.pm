@@ -170,9 +170,9 @@ sub store_image {
     my $input = shift;
     my (%opts) = @_;
     my $object = delete $opts{object} || return;
-    my $attr = delete $opts{attr}  || return;
+    my $attr = delete $opts{attr};
 
-    my ($prop) = grep { $_->{attr} eq $attr } $object->structure;
+    my ($prop) = exists $opts{prop} && ref $opts{prop} ? ($opts{prop}) : $attr ? grep { $_->{attr} eq $attr } $object->structure : (undef);
     return	unless ref $prop;
     my @preview = exists $prop->{'preview'} && ref $prop->{'preview'} eq 'ARRAY' ? @{$prop->{'preview'}} : exists $prop->{'preview'} && $prop->{'preview'} ? ($prop->{'preview'}) : ();
     my @crops = exists $prop->{'crop'} && ref $prop->{'crop'} eq 'ARRAY' ? @{$prop->{'crop'}} : exists $prop->{'crop'} && $prop->{'crop'} ? ($prop->{'crop'}) : ();

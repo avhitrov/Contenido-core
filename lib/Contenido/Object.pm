@@ -1144,7 +1144,7 @@ sub _store_image {
     my $input = shift;
     my (%opts) = @_;
 
-    return Contenido::File::store_image( $input, object => $self, attr => $opts{attr} );
+    return Contenido::File::store_image( $input, object => $self, attr => $opts{attr}, prop => $opts{prop} );
 }
 
 # ----------------------------------------------------------------------------

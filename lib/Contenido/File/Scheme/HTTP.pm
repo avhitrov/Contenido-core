@@ -12,7 +12,7 @@ use HTTP::Headers;
 use LWP::UserAgent;
 use File::Temp;
 
-my  %LWP_ARGS = (timeout => 5);
+my  %LWP_ARGS = (timeout => 10);
 
 sub fetch {
     my $path      = shift || return;

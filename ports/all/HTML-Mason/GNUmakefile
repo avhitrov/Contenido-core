@@ -5,11 +5,12 @@
 
 #include ../../etc/perl.mk
 
-PORTVERSION =		1.33
+PORTVERSION =		1.47
 MASTER_CPAN_SUBDIR =	HTML
 PERL_MODBUILD =		yes
 PORT_DEPENDS =		Params-Validate				\
 			Exception-Class				\
+			Log-Any					\
 			Class-Container				\
 			Cache-Cache				\
 			HTML-Parser				\

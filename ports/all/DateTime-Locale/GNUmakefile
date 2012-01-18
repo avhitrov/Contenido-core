@@ -4,10 +4,11 @@
 ###############################################################################
 
 PORTVERSION =		0.45
-PERL_MODBUILD =		yes
+PERL_MAKEMAKER =        yes
+#PERL_MODBUILD =		yes
 MASTER_CPAN_SUBDIR =	DateTime
-PORT_DEPENDS =		Params-Validate		\
-			List-MoreUtils
+PORT_DEPENDS =		List-MoreUtils		\
+			Params-Validate
 
 
 include ../../etc/ports.mk

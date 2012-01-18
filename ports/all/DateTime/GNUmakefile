@@ -4,14 +4,12 @@
 ###############################################################################
 
 PORTVERSION =		0.70
-PERL_MODBUILD =         yes
+PERL_MODBUILD =		yes
 MASTER_CPAN_SUBDIR =	DateTime
-PORT_DEPENDS =		Class-Factory-Util				\
-			Params-Validate					\
-			DateTime-TimeZone				\
+PORT_DEPENDS =		DateTime-TimeZone				\
 			DateTime-Locale					\
 			Math-Round					\
-			Time-Local
+			Params-Validate
 
 #CONFIGURE_PRECMD =	${MAKE_RECURSIVE} pre-configure
 #pre-configure:

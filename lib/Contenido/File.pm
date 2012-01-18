@@ -142,6 +142,7 @@ sub scheme {
     my $scheme;
 
     $scheme = URI->new($uri)->scheme() || "file";
+    $scheme = 'http'	if lc($scheme) eq 'https';
 
     return $scheme;
 }

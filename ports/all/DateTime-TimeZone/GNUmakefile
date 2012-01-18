@@ -11,5 +11,15 @@ PORT_DEPENDS =		Class-Load					\
 			Class-Singleton					\
 			Params-Validate
 
+include ../../etc/perl.mk
+
+ifeq (${shell ${PERL} -e 'print 1 if ${PERL_LEVEL}<500806'},1)
+PORT_DEPENDS +=		PathTools
+endif
+
+ifeq (${shell ${PERL} -e 'print 1 if ${PERL_LEVEL}<501000'},1)
+PORT_DEPENDS +=		parent
+endif
+
 
 include ../../etc/ports.mk

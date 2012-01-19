@@ -6,7 +6,8 @@ PORTVERSION =		1.00
 PERL_MODBUILD =		yes
 #PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	ExtUtils
-PORT_DEPENDS =		ExtUtils-CBuilder
+PORT_DEPENDS =		ExtUtils-CBuilder			\
+			Module-Build
 
 include ../../etc/perl.mk
 

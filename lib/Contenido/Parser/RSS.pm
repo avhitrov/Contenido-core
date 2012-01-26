@@ -50,6 +50,7 @@ sub parse {
     my $content_global_type = delete $opts{content_type} || 1;
     my $debug = $DEBUG;
     my $gui = delete $opts{gui};
+    my $preserve_tags = delete $opts{preserve_tags} || 0;
     my $description_as_fulltext = delete $opts{description_as_fulltext};
     warn "Parser Rools: [".$opts{parser_rss}."]\n"				if $debug && $opts{parser_rss};
 
@@ -58,7 +59,7 @@ sub parse {
     warn "RSS Rools: ".Dumper ($rss_rools)					if $debug && $rss_rools;
 
     my @items;
-    my $feed = $self->__parse_content(\$content);
+    my $feed = $self->__parse_content(\$content, preserve_tags => $preserve_tags);
 
     if ( ref $feed eq 'ARRAY' ) {
         foreach my $item ( @$feed ) {
@@ -461,7 +462,7 @@ sub __feed_type {
 
 
 sub __parse_content {
-    my ($self, $contref) = @_;
+    my ($self, $contref, %opts) = @_;
 
     my $feed_type = $self->__feed_type($contref);
 #    warn "FEED Type = [$feed_type]\n";
@@ -474,10 +475,15 @@ sub __parse_content {
     #$$contref =~ s/<p>/\n\n/sgi;
     #$$contref =~ s/<p\s(.*?)>/\n\n/sgi;
     $$contref =~ s/<\/?strong\s(.*?)>//sgi;
-    $$contref =~ s/<\/?s>//sgi;
-    $$contref =~ s/<\/?i>//sgi;
-    $$contref =~ s/<\/?b>//sgi;
-    $$contref =~ s/<\/?strong>//sgi;
+    if ( $opts{preserve_tags} ) {
+        $$contref =~ s/<(\/?[sib])>/\[$1\]/sgi;
+        $$contref =~ s/<(\/?strong)>/\[$1\]/sgi;
+        $$contref =~ s/<(\/?em)>/\[$1\]/sgi;
+    } else {
+        $$contref =~ s/<(\/?[sib])>//sgi;
+        $$contref =~ s/<(\/?strong)>//sgi;
+        $$contref =~ s/<(\/?em)>//sgi;
+    }
     #$$contref =~ s/<\/p>//sgi;
     #$$contref =~ s/<\/p\s(.*?)>//sgi;
     my @items;
@@ -1054,8 +1060,13 @@ sub __field_prepare {
     my ($self, $text) = @_;
     return	unless $text;
 
-    $text =~ s/^[\n\r\ \t]+//;
-    $text =~ s/[\n\r\ \t]+$//;
+    for ( $text ) {
+        s/^[\n\r\ \t]+//;
+        s/[\n\r\ \t]+$//;
+        s/\[(\/?strong)\]/<$1>/sgi;
+        s/\[(\/?em)\]/<$1>/sgi;
+        s/\[(\/?[sib])\]/<$1>/sgi;
+    }
     $self->__cdata (\$text);
     $self->__extchar (\$text);
 #    $text = HTML::Entities::decode_entities($text);

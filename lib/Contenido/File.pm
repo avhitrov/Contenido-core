@@ -212,12 +212,13 @@ sub store_image {
     undef $fh_tmp;
 
     my $image_info = image_info($filename_tmp.'.'.$ext);
-    if ( ref $image_info && $image_info->{file_ext} ne $ext ) {
-	rename $filename_tmp.'.'.$ext, $filename_tmp.'.'.$image_info->{file_ext};
-	$ext = $image_info->{file_ext};
-    } elsif ( !ref $image_info ) {
+    if ( !(ref $image_info && $image_info->{width} && $image_info->{height}) || (ref $image_info && $image_info->{error}) ) {
 	unlink $filename_tmp.'.'.$ext;
 	return undef;
+    }
+    if ( $image_info->{file_ext} ne $ext ) {
+	rename $filename_tmp.'.'.$ext, $filename_tmp.'.'.$image_info->{file_ext};
+	$ext = $image_info->{file_ext};
     }
     my $transformed;
     if ( exists $prop->{transform} && ref $prop->{transform} eq 'ARRAY' && scalar @{$prop->{transform}} == 2 && $prop->{transform}[0] =~ /(crop|resize|shrink)/ ) {

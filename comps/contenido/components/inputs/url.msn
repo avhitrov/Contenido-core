@@ -1,5 +1,7 @@
+<a href="#" onclick="this.href = $('input[name=<% $name %>]').attr('value'); if ( this.href.slice(0,4) == 'http' || this.href.slice(0,3) == 'ftp' ) { return true } else { return false }"
+ title="Открыть ссылку" target="_blank"><img src="/contenido/i/lookup-19x19.gif" width="19" height="19" align="right" style="border:0; margin:0 5px;"></a>
 <input <% $prop->{readonly} ? 'readonly ' : '' %> type="text" name="<% $name %>" id="<% $name%>_text" size="60" value="<% html_escape($check) || $prop->{default} %>"
- style="width: 95%;color:blue;text-decoration:underline;" onkeyup="<% $name %>_changed();" onclick="lookfor_<% $name %>()">
+ style="width: 97%;color:blue;text-decoration:underline;" onkeyup="<% $name %>_changed();">
 
 <table id="<% $name %>_prev_table" style="width: 95%; display: none;" cellspacing="0" cellpadding="0" border="0">
 	<tr>
@@ -13,6 +15,7 @@
 <textarea id="<% $name %>_prev_value" style="display: none;"><% $check %></textarea>
 
 <script type="text/javascript">
+<!--
 	function <% $name %>_changed() {
 		var t = document.getElementById('<% $name %>_prev_table');
 		if (document.getElementById('<% $name %>_text').value==document.getElementById('<% $name %>_prev_value').value) {
@@ -26,21 +29,12 @@
 		}
 	}
 
-	function lookfor_<% $name %>() {
-		var id = document.getElementById('<% $name %>').value;
-		if (id) {
-			var Uri = id;
-			var Width = screen.width;
-			var Height = screen.height;
-			window.open(Uri,'Interface','width='+Width+',height='+Height+',top=0,left=0,location=1,menubar=1,resizable=0,scrollbars=1,status=1,titlebar=1,toolbar=1,directories=1,hotkeys=1');
-		}
-	}
-
 	function <% $name %>_undo() {
 		document.getElementById('<% $name %>_text').value = document.getElementById('<% $name %>_prev_value').value;
 		<% $name %>_changed();
 		return false;
 	}
+//-->
 </script>
 
 <%args>

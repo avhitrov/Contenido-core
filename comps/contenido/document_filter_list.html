@@ -17,8 +17,8 @@
 %	foreach my $doc (@$docs) {
 %		my $document_access = $user->section_accesses($user, $doc->section);
 %		my $color = $doc->contenido_status_style ? $doc->contenido_status_style : 
-%				$doc->status == 1 ? 'blue' :
-%				$doc->status == 0 ? 'gray' : 'blue';
+%				$doc->status == 1 ? 'color:blue;' :
+%				$doc->status == 0 ? 'color:gray;' : 'color:blue;';
 %		my ($a1, $a2) = $document_access == 2 ? ('<a href="document.html?id='.$doc->id.'&class='.$doc->class.'" style="'.$color.'" target="_blank">', '</a>') : ('','');
 %#		my ($stat) = grep { $_->{attr} eq 'status' } @props;
 %#		my ($case) = grep { $_->[0] == $banner->status } @{ $stat->{cases} }	if ref $stat eq 'HASH' && exists $stat->{cases};

@@ -16,7 +16,7 @@
 %	my $doc = ref $destination ? $docs->{$link->source_id} : $docs->{$link->dest_id};
 <tr bgcolor="<% $i++ % 2 ? 'white' : '#f0f0f0' %>">
 %	if ( ref $doc ) {
-%		my $style = $link->status ? '' : ' color:#606060;';
+%		my $style = $link->contenido_status_style ? $link->contenido_status_style : $link->status ? '' : ' color:#606060;';
 <td style="width:40px; text-align:center;"><input type="checkbox" name="links" value="link_<% $link->id %>_<% $doc->id %>_<% $link->class %>"></td>
 <td><a href="document.html?class=<% $doc->class %>&id=<% $doc->id %>" target="_blank" style="<% $style %>"><% $doc->name %></a></td>
 %	} else {

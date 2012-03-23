@@ -5,7 +5,7 @@
 
 #include ../../etc/perl.mk
 
-PORTVERSION =		0.14
+PORTVERSION =		0.19
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	OLE
 

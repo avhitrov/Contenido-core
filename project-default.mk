@@ -147,6 +147,9 @@ endif
 IMAGES ?=			${MASON_COMP}/images
 STATIC_SOURCE_TOUCH_FILE ?=	${MASON_COMP}/.touch
 
+# Files are stored in NFS (=Common) or independently on each front (=Separate)
+FILE_WEB_STORAGE ?=		Separate
+
 HTTPD_DOCS ?=			${MASON_COMP}/www
 CONF ?=				${PROJ_USR}/${PROJECT}/conf
 

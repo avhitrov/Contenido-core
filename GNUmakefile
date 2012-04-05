@@ -1158,6 +1158,7 @@ REWRITE +=										\
 		DEVELOPMENT								\
 		ERROR_MODE								\
 		FILES									\
+		FILE_WEB_STORAGE							\
 		HOSTNAME								\
 		HTTPD_DOCS								\
 		HTTPD_ELOG_LEVEL							\

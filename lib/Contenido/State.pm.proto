@@ -78,6 +78,7 @@ sub new
     }
 
     $self->{convert_binary} = '@CONVERT@';
+    $self->{file_web_storage} = lc('@FILE_WEB_STORAGE@');
 
     $self->{core_src} = '@CORE_SRC@';
     $self->{plug_src} = '@PLUG_SRC@';

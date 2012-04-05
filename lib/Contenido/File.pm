@@ -44,7 +44,8 @@ sub store {
 
     my $dt = Contenido::DateTime->new()->set_locale('en')->set_time_zone("UTC");
 
-    my @successful;
+    my (@successful, @failure);
+    my %result;
 
     #убираем сдвоенные и более /
     $filename =~ s#/+#/#g;
@@ -52,27 +53,31 @@ sub store {
     $filename =~ s#^/##;
 
     foreach my $dir (@{$state->{"files_dir"}}) {
-        seek $fh, 0, 0;
-        my $path = $dir . '/' . $filename;
+	seek $fh, 0, 0;
+	my $path = $dir . '/' . $filename;
+	my $scheme = uc(scheme($path));
 
-        no strict "refs";
-        my $return = &{"Contenido::File::Scheme::".uc(scheme($path))."::store"}($path, $fh, $dt);
-        push @successful, $path if $return;
+	if ( $scheme eq 'FILE' || $state->{file_web_storage} eq 'separate' || ($state->{file_web_storage} eq 'common' && !exists $result{HTTP}{success}) ) {
+		no strict "refs";
+		my $return = &{"Contenido::File::Scheme::".$scheme."::store"}($path, $fh, $dt);
+		if ( $return ) {
+			push @successful, $path;
+			push @{$result{$scheme}{success}}, $path;
+		} else {
+			push @failure, $path;
+			push @{$result{$scheme}{fail}}, $path;
+		}
+	}
+    }
+    if (!$IgnoreErrors && ( exists $result{FILE}{fail} || ($state->{file_web_storage} eq 'separate' && exists $result{HTTP}{fail})
+	 || ($state->{file_web_storage} eq 'common' && exists $result{HTTP}{fail} && !exists($result{HTTP}{success})) ) ) {
+	foreach my $path (@successful) {
+		no strict "refs";
+		&{"Contenido::File::Scheme::".uc(scheme($path))."::remove"}($path);
+	}
+	return;
     }
 
-    if (
-        !@successful or 
-        (
-            (scalar @successful != scalar @{$state->{"files_dir"}}) and 
-            !$IgnoreErrors
-        )
-    ) {
-        foreach my $path (@successful) {
-            no strict "refs";
-            &{"Contenido::File::Scheme::".uc(scheme($path))."::remove"}($path);
-        }
-        return;
-    }
     1;
 }
 

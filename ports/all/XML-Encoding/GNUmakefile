@@ -1,9 +1,9 @@
 ##############################################################################
-# $HeadURL: http://svn.dev.rambler.ru/Contenido/branches/utf8/ports/all/XML-Encoding/GNUmakefile $
-# $Id: GNUmakefile 1465 2009-10-27 12:44:36Z ahitrov $
+# $HeadURL: svn+ssh://svn@vcs.dev.rambler.ru/Contenido/branches/utf8/ports/all/XML-Encoding/GNUmakefile $
+# $Id: GNUmakefile 1653 2012-04-08 12:27:35Z ahitrov $
 ###############################################################################
 
-PORTVERSION =		2.07
+PORTVERSION =		2.08
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	XML
 PORT_DEPENDS =		XML-Parser

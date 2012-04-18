@@ -28,6 +28,7 @@ sub fetch {
     my ($fh, $content);
     my $timeout = delete $opts{timeout} || 10;
     my $encoding = delete $opts{encoding};
+    my $user_agent = delete $opts{user_agent};
     if (not ref $input) {
 	no strict "refs";
 	my $scheme = uc(scheme($input));
@@ -35,8 +36,10 @@ sub fetch {
 		$fh = &{"Contenido::File::Scheme::".uc(scheme($input))."::get_fh"}($input);
 	} else {
 		my $request = new HTTP::Request GET => $input;
+		warn "REQUEST: ".Dumper( $request )		if $DEBUG;
 		my $ua = new LWP::UserAgent;
 		$ua->timeout($timeout);
+		$ua->agent($user_agent || 'Mozilla/5.0 Firefox/11.0');
 		my $res = $ua->request($request);
 		if ($res->is_success) {
 			$self->{headers} = $res->headers;

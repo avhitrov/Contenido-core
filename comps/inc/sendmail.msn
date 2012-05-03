@@ -62,7 +62,7 @@
 		Subject => $subject,
 #		Encoding=> 'binary',
 		Date	=> $pdate,
-		Type    => ($etype eq 'mixed' ? 'multipart/mixed' : $etype eq 'related' ? 'multipart/related;type="multipart/alternative";charset="koi8-r"' : $etype),
+		Type    => ($etype eq 'mixed' ? 'multipart/mixed' : $etype eq 'related' ? 'multipart/related;type="multipart/alternative";charset="utf-8"' : $etype),
 	);
   $msg->attach(
 		'Type' => 'text/html;charset="utf-8"',

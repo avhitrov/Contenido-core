@@ -4,12 +4,7 @@
 
 var tinyMCEImageList = new Array(
 	// Name, URL
-% foreach my $img ( @images ) {
-%	if ( $comma++ ) {
-, 
-%	}
-	["<% $img->{name} %>", "<% $img->{url} %>"]\
-% }
+<% join(',', @imgstr) %>
 );
 <%args>
 
@@ -35,7 +30,7 @@ var tinyMCEImageList = new Array(
 					my $img_path = ($state->{images_dir} =~ /^http:/ ? $state->{images_dir} : '').($image->{filename} =~ /^\// ? '' : '/').$image->{filename};
 					my $name = $image->{alt} || $prop->{attr}.": image_$_";
 					$name =~ s/"/\\"/g;
-					push @images, { url => $img_path, name => $name };
+					push @images, { url => $img_path, name => $name, mini => (exists $image->{mini} ? $image->{mini} : undef) };
 				}
 			}
 		}
@@ -45,11 +40,21 @@ var tinyMCEImageList = new Array(
 			my $img_path = ($state->{images_dir} =~ /^http:/ ? $state->{images_dir} : '').($image->{filename} =~ /^\// ? '' : '/').$image->{filename};
 			my $name = $image->{alt} || $document->name.' ('.$prop->{attr}.')';
 			$name =~ s/"/\\"/g;
-			push @images, { url => $img_path, name => $name };
+			push @images, { url => $img_path, name => $name, mini => (exists $image->{mini} ? $image->{mini} : undef) };
 		}
 	}
   }
   return	unless @images;
   my $comma = 0;
+  my @imgstr;
+  foreach my $img ( @images ) {
+	push @imgstr, '["'.$img->{name}.'","'.$img->{url}.'"]';
+	if ( exists $img->{mini} && ref $img->{mini} eq 'HASH' ) {
+		while ( my ($dim, $mini) = each %{$img->{mini}} ) {
+			next	unless ref $mini eq 'HASH' && exists $mini->{filename};
+			push @imgstr, '["'.$img->{name}.'. Mini: '.$dim.'","'.$mini->{filename}.'"]';
+		}
+	}
+  }
 
 </%init>

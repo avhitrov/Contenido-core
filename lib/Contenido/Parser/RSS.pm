@@ -696,7 +696,7 @@ sub __parse_item_ATOM {
             } else {
                 $item{$elem_name} = $elem->{$elem_name};
             }
-            if ( $elem->{$elem_name}{type} =~ /^image/ ) {
+            if ( exists $elem->{$elem_name}{type} && $elem->{$elem_name}{type} =~ /^image/ ) {
                 my $enclosure = { url => $elem->{$elem_name}{href} || $elem->{$elem_name}{url}, type => $elem->{$elem_name}{type} };
                 if ( exists $item{enclosure} && ref $item{enclosure} eq 'ARRAY' ) {
                     push @{ $item{enclosure} }, $enclosure;
@@ -707,7 +707,7 @@ sub __parse_item_ATOM {
                     $item{enclosure} = $enclosure;
                 }
             }
-            if ( $elem->{$elem_name}{type} =~ /^video/ ) {
+            if ( exists $elem->{$elem_name}{type} && $elem->{$elem_name}{type} =~ /^video/ ) {
                 my $enclosure = { url => $elem->{$elem_name}{href} || $elem->{$elem_name}{url}, type => $elem->{$elem_name}{type} };
                 if ( exists $item{enclosure} && ref $item{enclosure} eq 'ARRAY' ) {
                     push @{ $item{enclosure} }, $enclosure;

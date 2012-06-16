@@ -11,14 +11,36 @@ sub new {
 	my $self = {};
 	bless $self, $class;
 
+	# configured
+	$self->{debug} =		(lc('@DEBUG@') eq 'yes');
+	$self->{project} =		'@PROJECT@';
+
 	# зашитая конфигурация плагина
-#	$self->{db_type} =		'remote';
-#	$self->{db_keepalive} =	0;
-#	$self->{db_host} =		'';
-#	$self->{db_name} =		'';
-#	$self->{db_user} =		'';
-#	$self->{db_password} =	'';
-#	$self->{db_port} =		'';
+	$self->{db_type} =		'none';		### For REAL database use 'remote'
+	$self->{db_keepalive} =	0;
+	$self->{db_host} =		'';
+	$self->{db_name} =		'';
+	$self->{db_user} =		'';
+	$self->{db_password} =	'';
+	$self->{db_port} =		'';
+	$self->{store_method} =		'toast';
+	$self->{cascade} =		1;
+	$self->{db_prepare} =		0;
+
+	$self->{memcached_enable} =	lc( '@MEMCACHED_ENABLE@' ) eq 'yes' ? 1 : 0;
+	$self->{memcached_enable_compress} = 1;
+	$self->{memcached_backend} =	'@MEMCACHED_BACKEND@';
+	$self->{memcached_servers} =	[qw(@MEMCACHED_SERVERS@)];
+	$self->{memcached_busy_lock} =	60;
+	$self->{memcached_delayed} =	lc('@MEMCACHED_DELAYED@') eq 'yes' ? 1 : 0;
+
+	$self->{serialize_with} =	'json';		### or 'dumper'
+
+	# not implemented really (core compatibility)
+	$self->{binary_directory} =	'/nonexistent';
+	$self->{data_directory} =	'/nonexistent';
+	$self->{images_directory} =	'/nonexistent';
+	$self->{preview} =		'0';
 
 	$self->_init_();
 	$self;	
@@ -39,13 +61,32 @@ sub _init_ {
 
 	# зашитая конфигурация плагина
 	$self->{attributes}->{$_} = 'SCALAR' for qw(
-#		db_type
-#		db_keepalive
-#		db_host
-#		db_port
-#		db_name
-#		db_user
-#		db_password
+                debug
+                project
+
+		db_type
+		db_keepalive
+		db_host
+		db_port
+		db_name
+		db_user
+		db_password
+		store_method
+		cascade
+		db_prepare
+		db_client_encoding
+
+		memcached_enable
+		memcached_enable_compress
+		memcached_backend
+		memcached_servers
+		memcached_busy_lock
+		memcached_delayed
+
+		binary_directory
+		data_directory
+		images_directory
+		preview
 	);
 }
 

@@ -1208,6 +1208,7 @@ REWRITE +=										\
 		PGSQL_ENCODE_DATA							\
 		PGSQL_DECODE_DATA							\
 		PGSQL_ENABLE_UTF							\
+		SERIALIZE_WITH								\
 		PLUG_SRC								\
 		PLUGINS									\
 		PLUGIN_COMP								\

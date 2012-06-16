@@ -57,6 +57,8 @@ sub new {
     $self->{db_client_encoding} = $local_state->{attributes}{db_client_encoding} ? $local_state->db_client_encoding() : '';
     $self->{db_enable_utf8}	= $local_state->{attributes}{db_enable_utf8} ? $local_state->db_enable_utf8() : 0;
 
+    $self->{serialize_with} = $local_state->{serialize_with};
+
     $self->{data_dir} = $self->{data_directory} = $local_state->data_directory();
     $self->{images_dir} = $self->{images_directory} = $local_state->images_directory();
     $self->{binary_dir} = $self->{binary_directory} = $local_state->binary_directory();
@@ -95,6 +97,7 @@ sub _init_ {
 
     foreach my $attribute ( qw(
             db_host db_name db_user db_password db_port
+            serialize_with
 
             data_directory data_dir
             images_directory images_dir
@@ -313,9 +316,9 @@ sub _prepare_hash_results {
                 $self->set_object_to_cache($item, 30, $opts) if ($opts->{with_cache});
                 $total++;
 		if ( exists $item->{$hash_by} && defined $item->{$hash_by} ) {
-			$items{$item->{$hash_by}} = $item;
+	                $items{$item->{$hash_by}} = $item;
 		} else {
-			$log->warning( "Can not HASH BY parameter [$hash_by]. It doesn't exists in row or the field is empty");
+                        $log->warning( "Can not HASH BY parameter [$hash_by]. It doesn't exists in row or the field is empty");
 		}
             }
         }

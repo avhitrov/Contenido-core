@@ -20,11 +20,16 @@ use Utils;
 use Contenido::Globals;
 use Contenido::File;
 use Data::Dumper;
+use Data::Recursive::Encode;
+use JSON::XS;
 
 use DBD::Pg;
 use Encode;
 
 use SQL::ProtoTable;
+
+our $json_n = JSON::XS->new->utf8(0);
+our $json_u = JSON::XS->new->utf8(1);
 
 # required properties теперь берутся из свойств таблицы
 sub required_properties {
@@ -219,7 +224,7 @@ sub class_init {
                     $virtual_fields{$attr} = 1;
                 } else {
                     #инициализируем из dump все кроме виртуальных свойств
-                    push @funct_exra_fields, "$attr=>$func_start_encode\$dump->{$attr}$func_end_encode";
+                    push @funct_exra_fields, "$attr=>(\$keeper->serialize_with eq 'json' ? Encode::encode('utf-8', \$dump->{$attr}, Encode::FB_HTMLCREF) : $func_start_encode\$dump->{$attr}$func_end_encode)";
                 }
             }
         }
@@ -234,12 +239,13 @@ sub class_init {
         # Чтение из одного дампа в базе данных
         # --------------------------------------------------------------------------------------------
         my $funct_eval_dump .= '
-    my $dump = Contenido::Object::eval_dump(\\$row->[-1]);
+            my $dump = $keeper->serialize_with eq \'json\' ? (Contenido::Object::eval_json(\\$row->[-1]) || {}) : Contenido::Object::eval_dump(\\$row->[-1]);
 ';
         $funct = $funct_begin.$funct_begin_if_light.$funct_start_obj.join(', ', @funct_default_fields).$funct_end_obj.$funct_elsif_light.$funct_eval_dump.$funct_start_obj.join(', ', (@funct_default_fields, @funct_exra_fields)).$funct_end_obj.$funct_endif_light;
     } else {
         $funct = $funct_begin.$funct_start_obj.join(', ', @funct_default_fields).$funct_end_obj;
     }
+#    warn "Restore function: [$funct]\n";
 
     create_method($class, 'init_from_db', $funct);
 
@@ -299,14 +305,29 @@ sub _create_extra_dump {
 
     my $extra_fields = [];
     my $virtual_fields = {};
-    {
+
+    if ( $self->keeper->serialize_with eq 'json' ) {
         no strict 'refs';
-        local $Data::Dumper::Indent = 0;
         #пропускаем virtual attributes
         #да я знаю что так писать нельзя но блин крута как смотрится
         $extra_fields = ${$self->{class}.'::extra_fields'};
         $virtual_fields = ${$self->{class}.'::virtual_fields'};
         #надо использовать все extra поля кроме тех что находятся в virtual_fields списке
+        if ($state->db_encode_data) {
+            return Encode::decode('utf-8', $json_n->encode ({map { $_=> Encode::decode($state->db_encode_data, $self->{$_}, Encode::FB_HTMLCREF) } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields}));
+        } else {
+            my $content = Encode::decode('utf-8', $json_n->encode ({map { $_=>$self->{$_} } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields}));
+#            warn "Store content is [$content]. UTF-8 Flag [".Encode::is_utf8($content)."]\n";
+            return $content;
+        }
+    } else {
+        no strict 'refs';
+        #пропускаем virtual attributes
+        #да я знаю что так писать нельзя но блин крута как смотрится
+        $extra_fields = ${$self->{class}.'::extra_fields'};
+        $virtual_fields = ${$self->{class}.'::virtual_fields'};
+        #надо использовать все extra поля кроме тех что находятся в virtual_fields списке
+        local $Data::Dumper::Indent = 0;
         if ($state->db_encode_data) {
             return Data::Dumper::Dumper({map { $_=> Encode::decode($state->db_encode_data, $self->{$_}, Encode::FB_HTMLCREF) } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields});
         } else {
@@ -334,7 +355,7 @@ sub restore_extras {
             # --------------------------------------------------------------------------------------------
             # Чтение из одного дампа в базе данных
             # --------------------------------------------------------------------------------------------
-            my $dump_ = eval_dump(\$row->[-1]);
+            my $dump_ = $self->keeper->serialize_with eq 'json' ? eval_json(\$row->[-1]) : eval_dump(\$row->[-1]);
             if ($dump_) {
                 foreach (@$extra_fields) {
                     $self->{$_} = $dump_->{$_};
@@ -347,6 +368,17 @@ sub restore_extras {
     }
 }
 
+sub _serialize {
+    my $self = shift;
+    my $data = shift;
+    if ( $self->keeper->serialize_with eq 'json' ) {
+	return $json_n->encode($data);
+    } else {
+	local $Data::Dumper::Indent = 0;
+	return Data::Dumper::Dumper($data);
+    }
+}
+
 # ----------------------------------------------------------------------------
 # Выбирает хеш из перл-дампа по атрибуту
 # Пример:
@@ -355,7 +387,8 @@ sub restore_extras {
 sub get_data {
     my $self = shift;
     my $attr = shift;
-    my $data  = eval_dump(\$self->{$attr});
+    my $encode = shift;
+    my $data  = $self->keeper->serialize_with eq 'json' ? ( $encode ? Data::Recursive::Encode->encode_utf8(eval_json(\$self->{$attr})) : eval_json(\$self->{$attr}) ) : eval_dump(\$self->{$attr});
     return ($data || {});
 }
 
@@ -372,7 +405,7 @@ sub get_pic {
     my $attr = shift;
 
     Contenido::Image->new (
-        img => $self->get_data($attr),
+        img => $self->get_data($attr, 'encode'),
         attr    => $attr,
     );
 }
@@ -392,7 +425,7 @@ sub get_pics {
     my $self = shift;
     my $attr = shift;
     my %args = ref $_[0] ? %{$_[0]} : @_;
-    my $pics = $self->get_data($attr);
+    my $pics = $self->get_data($attr, 'encode');
 
     # Дефолты
     $args{order} ||= 'direct';
@@ -459,9 +492,11 @@ sub store {
     foreach ($self->required_properties()) {
 
         my $value = $self->{$_->{attr}};
-        $value = undef if (defined($value) and $value eq '') and (lc($_->{db_type}) eq 'float' or lc($_->{db_type} eq 'integer'));
-        $value = undef if lc $_->{db_type} eq 'integer[]' && ref $value ne 'ARRAY';
-        $value = undef if lc $_->{db_type} eq 'integer_ref[]' && ref $value ne 'ARRAY';
+        if ( exists $_->{db_field} && $_->{db_field} ) {
+            $value = undef if (defined($value) and $value eq '') and (lc($_->{db_type}) eq 'float' or lc($_->{db_type} eq 'integer'));
+            $value = undef if lc $_->{db_type} eq 'integer[]' && ref $value ne 'ARRAY';
+            $value = undef if lc $_->{db_type} eq 'integer_ref[]' && ref $value ne 'ARRAY';
+        }
 
         #пропустить readonly если у документа уже есть id
         if ($self->id() and $_->{readonly}) {
@@ -993,6 +1028,13 @@ sub eval_dump {
     return eval ${$_[0]};
 }
 
+sub eval_json {
+    return undef	unless ${$_[0]};
+    my $value = $json_u->decode( ${$_[0]});
+#    map { $_ = Encode::encode(\'utf-8\', $_) unless ref $_; } values %$value;
+    return $value;
+}
+
 sub create_method {
     my ($class, $sub_name, $code) = @_;
 
@@ -1069,7 +1111,11 @@ sub structure {
 # оставлена для обратной совместимости...
 sub get_image {
     my $self = shift;
-    $self->get_data(shift);
+    if ( $self->keeper->serialize_with eq 'json' ) {
+	return $self->get_data(shift, 'encode');
+    } else {
+	return $self->get_data(shift);
+    }
 }
 
 sub raw_restore {

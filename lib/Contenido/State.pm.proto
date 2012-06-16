@@ -42,6 +42,8 @@ sub new
     $self->{db_encode_data} = '@PGSQL_ENCODE_DATA@';
     $self->{db_decode_data} = '@PGSQL_DECODE_DATA@' || 'utf-8';
 
+    $self->{serialize_with} = lc('@SERIALIZE_WITH@') || 'dumper';
+
     $self->{master_db_host}     = (($self->{db_type} eq 'remote') and '@MASTER_BASE_HOST@') ? lc('@MASTER_BASE_HOST@') : 'localhost';
     $self->{master_db_name}     = '@MASTER_BASE_NAME@';
     $self->{master_db_user}     = '@MASTER_BASE_USER@';
@@ -231,7 +233,6 @@ sub _init_
 
                 stage
                 db_keepalive db_host db_name db_user db_password db_port db_type db_client_encoding db_enable_utf8
-
                 db_encode_data db_decode_data
 
                 mason_comp

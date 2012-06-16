@@ -113,9 +113,17 @@ sub remove {
     #убираем начальный /
     $filename =~ s#^/##;
 
+    my $success = 0;
     foreach my $dir (@{$state->{"files_dir"}}) {
-        no strict "refs";
-        &{"Contenido::File::Scheme::".uc(scheme($dir))."::remove"}($dir."/".$filename);
+	no strict "refs";
+	my $scheme = uc(scheme($dir));
+	my $res;
+	if ( !$success || $scheme eq 'FILE' ) {
+		$res = &{"Contenido::File::Scheme::".$scheme."::remove"}($dir."/".$filename);
+	}
+	if ( $res && $scheme eq 'HTTP' && $state->{file_web_storage} eq 'common' ) {
+		$success = 1;
+	}
     }
 
     1;

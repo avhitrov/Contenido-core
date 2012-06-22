@@ -233,6 +233,12 @@ sub store_image {
 	rename $filename_tmp.'.'.$ext, $filename_tmp.'.'.$image_info->{file_ext};
 	$ext = $image_info->{file_ext};
     }
+    if ( $image_info->{color_type} eq 'CMYK' ) {
+	rename $filename_tmp.'.'.$ext, $filename_tmp.'.cmyk.'.$ext;
+	my $c_line = $state->{'convert_binary'}.' -colorspace RGB -quality 100 '.$filename_tmp.'.cmyk.'.$ext.' '.$filename_tmp.'.'.$ext;
+	`$c_line`;
+	unlink $filename_tmp.'.cmyk.'.$ext;
+    }
     my $transformed;
     if ( exists $prop->{transform} && ref $prop->{transform} eq 'ARRAY' && scalar @{$prop->{transform}} == 2 && $prop->{transform}[0] =~ /(crop|resize|shrink)/ ) {
 	my $c_line;

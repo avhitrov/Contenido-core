@@ -14,7 +14,6 @@
   return	unless ref $object;
   return	unless ref $source;
 
-  local $Data::Dumper::Indent = 0;
   my @properties = $source->structure();
   for (0..$#properties) {
 	my $prop = $properties[$_];
@@ -91,7 +90,7 @@
 						}
 					}
 				}
-				$object->$name(Dumper($img));
+				$object->$name( $object->_serialize($img) );
 				warn "\nClone img complete: ".Dumper($img)."\n"				if $DEBUG;
 			}
 		} elsif ( $prop->{type} eq 'images' ) {
@@ -151,7 +150,7 @@
 			}
 			if ( $attachment->{maxnumber} ) {
 				$PICTURE->{maxnumber} = $attachment->{maxnumber};
-				$object->$name(Dumper($PICTURE));
+				$object->$name( $object->_serialize($PICTURE) );
 			}
 			warn "\nClone pics complete: ".Dumper($PICTURE)."\n"				if $DEBUG;
 		} elsif ( $prop->{type} eq 'multimedia_new' ) {
@@ -168,7 +167,7 @@
 						atext	=> $attachment->{atext}
 						};
 				}
-				$object->$name(Dumper($img));
+				$object->$name( $object->_serialize($img) );
 				warn "\nClone binary complete: ".Dumper($img)."\n"				if $DEBUG;
 			}
 		}

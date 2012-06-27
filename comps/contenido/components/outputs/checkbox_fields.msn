@@ -1,7 +1,8 @@
 <%args>
 
-	$name => undef
-	$SETS => undef
+	$name	=> undef
+	$SETS	=> undef
+	$object	=> undef
 
 </%args>
 <%init>
@@ -18,9 +19,6 @@
 			$FIELDS->{$name.'_'.$1}->{rusname} = $m->comp('/contenido/components/filter.msn', str => $SETS->{$element});
 		}
 	}
-	{
-		local $Data::Dumper::Indent = 0;
-		return Data::Dumper::Dumper($FIELDS);
-	}
+	return $object->_serialize($FIELDS);
 
 </%init>

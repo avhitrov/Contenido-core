@@ -1,16 +1,18 @@
+<%once>
+
+    use IO::File;
+
+</%once>
 <%args>
 
-$SETS => undef
-$field => undef
-$default => undef
-$object => undef
-$prop => undef
+	$SETS	=> undef
+	$field	=> undef
+	$default=> undef
+	$object	=> undef
+	$prop	=> undef
 
 </%args>
-
 <%init>
-use IO::File;
-use Data::Dumper;
 
 return undef unless defined $SETS and defined $field;
 

@@ -30,9 +30,9 @@
 			}
 		}
 	}
-	warn "\n\nPickup form ($name)".Dumper(\%ids)."\n";
+	warn "\n\nPickup form ($name)".Dumper(\%ids)."\n"			if $DEBUG;
 	my @ids = map { $_->{id} } grep { !exists $_->{delete} } values %ids;
-	warn "What to leave ($name)".Dumper(\@ids)."\n\n";
+	warn "What to leave ($name)".Dumper(\@ids)."\n\n"			if $DEBUG;
 
 	return \@ids;
 

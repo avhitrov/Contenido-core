@@ -42,8 +42,7 @@
 		$IMAGE = ref $IMAGE ? $IMAGE : {};
 		$IMAGE = $m->comp('/contenido/components/set_image.msn', default=>$IMAGE, field=>$name, SETS=>$SETS, object=>$object, prop => $prop);
 		if ( exists $IMAGE->{filename} ) {
-			local $Data::Dumper::Indent = 0;
-			$object->$name( Data::Dumper::Dumper($IMAGE) );
+			$object->$name( $object->_serialize($IMAGE) );
                 }
             }
 
@@ -79,7 +78,6 @@
 			};
                         $IMAGE = $m->comp('/contenido/components/set_image.msn', default=>$IMAGE, field=>$partname, SETS=>$SETS, object=>$object, prop => $prop);
 			if (exists($IMAGE->{filename})) {
-				local $Data::Dumper::Indent = 0;
 				$IMAGE->{number} = $number;
 				$IMAGES->{'image_'.$number} = $IMAGE;
 				$IMAGES->{maxnumber} = $number		if ($number > $IMAGES->{maxnumber});
@@ -94,8 +92,7 @@
 			$maxnumber = $_		if exists $IMAGES->{"image_$_"} && $_ > $maxnumber;
 		}
 		$IMAGES->{maxnumber} = $maxnumber;
-		local $Data::Dumper::Indent = 0;
-		$object->$name( Data::Dumper::Dumper($IMAGES) );
+		$object->$name( $object->_serialize($IMAGES) );
 	    }
 
 	} elsif ( $prop->{type} eq 'multimedia' ) {
@@ -117,8 +114,7 @@
                 $MULTI = $m->comp('/contenido/components/set_multi.msn', default=>$MULTI, field=>$name, SETS=>$SETS, object=>$object);
                 if (exists($MULTI->{filename}))
                 {
-                    local $Data::Dumper::Indent = 0;
-                    $object->{$name} = Data::Dumper::Dumper($MULTI);
+                    $object->$name ( $object->_serialize($MULTI) );
                 }
             }
 
@@ -141,8 +137,7 @@
                 $MULTI = $m->comp('/contenido/components/set_multimedia_new.msn', default=>$MULTI, field=>$name, SETS=>$SETS, object=>$object, prop => $prop);
                 if (exists($MULTI->{filename}))
                 {
-                    local $Data::Dumper::Indent = 0;
-                    $object->{$name} = Data::Dumper::Dumper($MULTI);
+                    $object->$name( $object->_serialize($MULTI) );
                 }
             }
 
@@ -169,8 +164,7 @@
                 $MULTI = $m->comp('/contenido/components/set_audio.msn', default=>$MULTI, field=>$name, SETS=>$SETS, object=>$object, prop => $prop);
                 if (exists($MULTI->{filename}))
                 {
-                    local $Data::Dumper::Indent = 0;
-                    $object->{$name} = Data::Dumper::Dumper($MULTI);
+                    $object->$name( $object->_serialize($MULTI) );
                 }
             }
 

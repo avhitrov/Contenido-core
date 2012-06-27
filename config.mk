@@ -24,6 +24,7 @@ CORE_REQUIRED +=		PerlMagick
 CORE_REQUIRED +=		IO-stringy
 CORE_REQUIRED +=		DateTime-Format-Pg
 CORE_REQUIRED +=		Cache-Memcached
+CORE_REQUIRED +=		Data-Recursive-Encode
 CORE_REQUIRED +=		cronolog
 CORE_REQUIRED +=		clogger
 CORE_REQUIRED +=		HTML-Parser

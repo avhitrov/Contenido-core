@@ -3,7 +3,7 @@
 # $Id: GNUmakefile 175 2006-06-16 12:50:03Z lonerr $
 ###############################################################################
 
-PORTVERSION =		1.58
+PORTVERSION =		2.0001
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	XML/PHISH
 PORT_DEPENDS =		XML-LibXML-Common

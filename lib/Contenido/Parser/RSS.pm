@@ -242,6 +242,7 @@ sub parse {
                 'description_gui'	=> $item->{description_gui} || $description || '',
                 'desc_length'	=> length( $description || '' ),
                 'link'		=> $link		|| '',
+                'guid'		=> $item->{'guid'} 	|| $link || '',
                 'pubdate'		=> $pubdate				|| '',
                 'fulltext'		=> $fulltext				|| '',
                 'fulltext_gui'		=> $item->{fulltext_gui}		|| '',

@@ -1,9 +1,9 @@
 	<script type="text/javascript">
 	<!--
 %# массив статусов (соответствует типам документов)
-	var statusval = new Array("<% join('", "', @ST_IDS) %>");
+	var statusval = new Array('<% join("', '", map { $_ =~ s/'/\\'/sg; $_ } @ST_IDS) %>');
 %# названия статусов
-	var statusname = new Array("<% join('", "', @ST_NAMES) %>");
+	var statusname = new Array('<% join("', '", map { $_ =~ s/'/\\'/sg; $_ } @ST_NAMES) %>');
 %# ф-ция, возвращающая массив статусов выбранного документа
 function getStatus(index,n){
     var statusvalues = n[index];

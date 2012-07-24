@@ -1030,7 +1030,9 @@ sub eval_dump {
 
 sub eval_json {
     return undef	unless ${$_[0]};
-    my $value = $json_u->decode( ${$_[0]});
+    my $str = ${$_[0]};
+    my $chr = substr($str, 0, 1); return $str	unless $chr eq '{' || $chr eq '[';
+    my $value = $json_u->decode( $str );
 #    map { $_ = Encode::encode(\'utf-8\', $_) unless ref $_; } values %$value;
     return $value;
 }

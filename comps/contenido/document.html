@@ -104,12 +104,14 @@
 	} elsif ( ($class) && (length($class)>0) && (! ref($document)) ) {
 		$document = new $class ($keeper);
 		$new = 1;
-		my @properties = $document->structure();
-		foreach my $prop ( @properties ) {
-			my $attr = $prop->{attr};
-			### !!! Если не стандартная переменная, то можем инициализировать
-			if ( exists $ARGS{$attr} && ! grep { $prop->{attr} eq $_ } qw( class sect_id id delete save clone s_alias activate deactivate p s use_section alpha alpha_search search_by search ) ) {
-				$document->$attr($ARGS{$attr});
+		unless ( $save ) {
+			my @properties = $document->structure();
+			foreach my $prop ( @properties ) {
+				my $attr = $prop->{attr};
+				### !!! Если не стандартная переменная, то можем инициализировать
+				if ( exists $ARGS{$attr} && ! grep { $prop->{attr} eq $_ } qw( class sect_id id delete save clone s_alias activate deactivate p s use_section alpha alpha_search search_by search ) ) {
+					$document->$attr($ARGS{$attr});
+				}
 			}
 		}
 	}

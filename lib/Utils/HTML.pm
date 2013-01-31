@@ -249,7 +249,7 @@ sub text_trim {
     my %opts = @_;
     my $text = $opts{'text'};
     my $length = $opts{'length'} || 200;
-    my $ellipsis = $opts{'ellipsis'} || '&#133;';
+    my $ellipsis = $opts{'ellipsis'} || '&hellip;';
     $text =~ s/<[^>]*>//g;
     if (length($text) > $length) {
         $text = substr($text, 0, $length);

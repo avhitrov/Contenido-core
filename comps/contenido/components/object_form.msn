@@ -39,6 +39,7 @@
 	{
 
 		my $prop = $properties[$_];
+		my $name = $prop->{attr};
 		next if ($prop->{hidden} == 1) || ($prop->{type} eq 'image') || ($prop->{type} eq 'external') || ($prop->{type} =~ /^array/i) || ($prop->{type} =~ /^image/) || ($prop->{type} eq 'multimedia') || ($prop->{type} eq 'multimedia_new') || ($prop->{type} eq 'audio');
 
 </%perl>
@@ -48,7 +49,7 @@
 	<tr>
 %		if( ( $prop->{type} eq 'flag' ) || ($prop->{type} eq 'checkbox') )
 %		{
-	<td><& "/contenido/components/inputs/checkbox.msn", prop => $prop, object=>$object, options=>$options, name => $prop->{attr}, check => $object->{$prop->{attr}}, id => $object->id() &></td>
+	<td><& "/contenido/components/inputs/checkbox.msn", prop => $prop, object=>$object, options=>$options, name => $name, check => ($object->$name || $object->{$name}), id => $object->id() &></td>
 % 		}
 	<td nowrap><b><% $prop->{rusname} %></b>&nbsp;/</td>
 	<td align="right" nowrap><font color="#888888" size="-1">&nbsp;name="<% $prop->{attr} %>"</font></td>
@@ -61,11 +62,11 @@
 </td></tr>
 %		if ($prop->{type} eq 'parent')
 %		{
-<tr><td><& "/contenido/components/inputs/$prop->{type}.msn", prop => $prop, object=>$object, options=>$options, name => $prop->{attr}, check => ($object->{$prop->{attr} } || $prop->{default} || $sect_id ), id => $object->id() &></td></tr>
+<tr><td><& "/contenido/components/inputs/$prop->{type}.msn", prop => $prop, object=>$object, options=>$options, name => $name, check => ($object->$name || $prop->{default} || $sect_id ), id => $object->id() &></td></tr>
 %		}
 %		elsif( ( $prop->{type} ne 'flag' ) && ($prop->{type} ne 'checkbox') )
 %		{
-<tr><td><& "/contenido/components/inputs/$prop->{type}.msn", prop => $prop, object=>$object, options => $options, name => $prop->{attr}, check => $object->{$prop->{attr}}, id => ($object->id() || 0) &></td></tr>
+<tr><td><& "/contenido/components/inputs/$prop->{type}.msn", prop => $prop, object=>$object, options => $options, name => $name, check => ($object->$name || $object->{$name}), id => ($object->id() || 0) &></td></tr>
 %		}
 %	}
 <tr>

@@ -1,4 +1,4 @@
-<input <% $prop->{readonly} ? 'readonly ' : '' %> type="text" name="<% $name %>" id="<% $name%>_text" size="60" value="<% defined $check ? html_escape($check) : $prop->{default} %>" style="width: 95%;" onkeyup="<% $name %>_changed();">
+<input <% $prop->{readonly} || $prop->{virtual} ? 'readonly ' : '' %> type="text" name="<% $name %>" id="<% $name%>_text" size="60" value="<% defined $check ? html_escape($check) : $prop->{default} %>" style="width: 95%;" onkeyup="<% $name %>_changed();">
 
 <table id="<% $name %>_prev_table" style="width: 95%; display: none;" cellspacing="0" cellpadding="0" border="0">
 	<tr>

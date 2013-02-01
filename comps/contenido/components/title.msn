@@ -103,7 +103,7 @@ $().ready(function() {
 
 			convert_urls : false,
 
-			extended_valid_elements : "iframe[src|width|height|name|align|noresize|scrolling|frameBorder|marginWidth|marginHeight]",
+			extended_valid_elements : "iframe[src|width|height|name|align|noresize|scrolling|frameBorder|marginWidth|marginHeight],form[action|method|target|enctype|name|id|onSubmit]",
 
 			paste_create_paragraphs : false,
 			paste_create_linebreaks : false,

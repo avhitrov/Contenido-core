@@ -19,10 +19,15 @@
 		next unless $k =~ /^${name}_(add|delete)$/;
 		next unless $v;
 
+		warn Dumper $v;
 		if ($1 eq 'add') {
 			$ids{$v} = 1;
 		} elsif ($1 eq 'delete') {
-			delete $ids{$v};
+			if ( ref $v eq 'ARRAY' ) {
+				map { delete $ids{$_} } @$v;
+			} else {
+				delete $ids{$v};
+			}
 		}
 	}
 

@@ -5,6 +5,7 @@
 	$source_class	=> undef
 	$dest_class	=> undef
 	$update	=> undef
+	$parent_url	=> undef
 
 </%ARGS>
 
@@ -82,13 +83,14 @@
 			}
 		}
 
+		$parent_url = URI::Escape::uri_escape( $parent_url )	if $parent_url;
 		# Проброс на содержание документа...
 		if ( $source_class ) {
-			$m->redirect ("document_links.html?id=$id&class=$class&source_class=$source_class");
+			$m->redirect ("document_links.html?id=$id&class=$class&source_class=$source_class&parent_url=$parent_url");
 		} elsif ( $dest_class ) {
-			$m->redirect ("document_links.html?id=$id&class=$class&dest_class=$dest_class");
+			$m->redirect ("document_links.html?id=$id&class=$class&dest_class=$dest_class&parent_url=$parent_url");
 		} else {
-			$m->redirect ("document_links.html?id=$id&class=$class");
+			$m->redirect ("document_links.html?id=$id&class=$class&parent_url=$parent_url");
 		}
 	}
 

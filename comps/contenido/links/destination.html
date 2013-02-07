@@ -78,6 +78,7 @@ function CheckSource ()
 <form action="link_add.html" name="sourceform" target="_top" method="post" onsubmit="return CheckSource();">
 <div id="link_list"></div>
 
+<input type="hidden" name="back" value="<% $back %>">
 <input type="hidden" name="class" value="<% $class %>">
 <input type="hidden" name="dest_id" value="<% $dest_id %>">
 <input type="hidden" name="dest_class" value="<% $dest_class %>">
@@ -146,6 +147,7 @@ function AddDest (Value, Name)
 	$dest_id        => ''
 	$save           => 0
 	$status         => 0
+	$back		=> undef
 
 	$p		=> 1
 	$use_section	=> undef

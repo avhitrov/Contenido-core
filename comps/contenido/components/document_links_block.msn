@@ -9,14 +9,14 @@
 % }
 <br clear="all">
 <div style="padding:4px 0 2px;"><a target="_top"
- href="link_frame.html?class=<% $class %>&<% $link_class_name %>=<% $document->class %>&<% $link_id_name %>=<% $document->id %>"><b>Добавить связь</b></a></div>
+ href="link_frame.html?class=<% $class %>&<% $link_class_name %>=<% $document->class %>&<% $link_id_name %>=<% $document->id %>&back=<% $back %>"><b>Добавить связь</b></a></div>
 % if ( $total > $size ) {
 <div style="padding:2px 0 4px;"><b>Страницы:</b> &nbsp;<&
 	'/inc/pages_.msn', total => $total, n => $size, p => $p,
 	params => { id => $document->id,  class => $document->class, link_class => $class },
  &></div>
 % }
-<& /contenido/components/document_links_list.msn, 
+<& /contenido/components/document_links_list.msn, parent_url => $parent_url,
 	links => $links, docs => $docs, $link_id_name eq 'dest_id' ? (destination => $document) : (source => $document) &>
 <%args>
 
@@ -27,6 +27,7 @@
 	$opts		=> {}
 	$link_id_name	=> 'dest_id'
 	$link_class_name=> 'dest_class'
+	$parent_url	=> undef
 
 </%args>
 <%init>
@@ -34,6 +35,7 @@
   return	unless ref $document;
   return	unless ref $lclasses eq 'ARRAY' && @$lclasses;
   $class ||= $lclasses->[0];
+  my $back = URI::Escape::uri_escape( $parent_url );
 
   my $size = 20;
   my $revert_id = $link_id_name eq 'dest_id' ? 'source_id' : 'dest_id';

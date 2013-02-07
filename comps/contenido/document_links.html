@@ -41,7 +41,8 @@ function switch_div (sName) {
 <& "/contenido/components/document_links_block.msn", 
 	document => $document, lclasses => \@sources, class => $lclass, p => $p,
 	link_id_name => 'source_id',
-	link_class_name => 'source_class'
+	link_class_name => 'source_class',
+	parent_url	=> $parent_url,
 &>
 </div>
 <div id="div_source_hidden" style="display:<% $show ? 'none' : 'block' %>; padding:5px;"><a href="javascript:switch_div('div_source')"
@@ -62,7 +63,8 @@ function switch_div (sName) {
 <& "/contenido/components/document_links_block.msn",
 	document => $document, lclasses => \@destinations, class => $lclass, p => $p,
 	link_id_name => 'dest_id',
-	link_class_name => 'dest_class'
+	link_class_name => 'dest_class',
+	parent_url	=> $parent_url,
 &>
 </div>
 <div id="div_destination_hidden" style="display:<% $show ? 'none' : 'block' %>; padding:5px;"><a href="javascript:switch_div('div_destination')"
@@ -81,11 +83,14 @@ function switch_div (sName) {
 	$class	=> undef
 	$id	=> undef
 	$link_class	=> undef
+	$parent_url	=> undef
 
 </%ARGS>
 
 <%INIT>
+
 	return unless ($state->{available_links} and @{$state->{available_links}});
+	$parent_url ||= $r->header_in("Referer");
 	my $document;
 	my (@sources, @destinations);
 	if ($id && ($id !~ /\D/) && ($id > 0)) {

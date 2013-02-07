@@ -75,6 +75,7 @@
 <div style="padding:2px; text-align:right">
 <input type="hidden" name="id" value="<% $document->id %>">
 <input type="hidden" name="class" value="<% $document->class %>">
+<input type="hidden" name="parent_url" value="<% $parent_url %>">
 %	if ( ref $destination ) {
 <input type="hidden" name="source_class" value="<% $links->[0]->class %>">
 %	} else {
@@ -92,6 +93,7 @@
 	$docs	=> undef
 	$destination	=> undef
 	$source		=> undef
+	$parent_url	=> undef
 
 </%args>
 <%init>

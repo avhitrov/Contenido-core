@@ -15,6 +15,7 @@
 	$dest_id	=> ''
 	$save		=> 0
 	$status		=> 0
+	$back		=> undef
 </%args>
 <%init>
 
@@ -22,9 +23,11 @@
   push @source_args, 'class='.$class			if $class;
   push @source_args, 'source_class='.$source_class	if $source_class;
   push @source_args, 'source_id='.$source_id		if $source_id;
+  push @source_args, 'back='.URI::Escape::uri_escape( $back );
   push @dest_args, 'class='.$class			if $class;
   push @dest_args, 'dest_class='.$dest_class		if $dest_class;
   push @dest_args, 'dest_id='.$dest_id			if $dest_id;
+  push @dest_args, 'back='.URI::Escape::uri_escape( $back );
 
   $sargs = @source_args ? '?'.join('&', @source_args) : undef;
   $dargs = @dest_args ? '?'.join('&', @dest_args) : undef;

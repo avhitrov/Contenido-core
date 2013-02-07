@@ -8,6 +8,7 @@
   $dest_class	=> undef
   $sources	=> undef
   $destinations	=> undef
+  $back		=> undef
 
 </%args>
 <%init>
@@ -59,12 +60,9 @@
 	$ret_params = "id=$dest_id&class=$dest_class";
   }
   if ($ret_params) {
-	$r->header_out("Location", "/contenido/document.html?".$ret_params);
-	$r->status(302);
-	$r->send_http_header();
-	$m->abort();
-  }else{
-	abort404;
+	$m->redirect( $back || "/contenido/document.html?".$ret_params );
+  } else {
+	&abort404;
   }
 
 </%init>

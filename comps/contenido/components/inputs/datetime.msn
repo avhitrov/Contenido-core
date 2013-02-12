@@ -39,7 +39,8 @@ function set_<% $prop->{attr} %>_now () {
 	# Формируем данные для select'а...
 	my @days    = map { $_ => $_ } (1..31);
 	my @months  = @{ $m->comp('/contenido/components/get_months.msn') };
-	my @years   = map { $_ => $_ } ( $localtime[5] - 5 .. $localtime[5] + 5);
+	my $start_year = $check && $check =~ /(\d{4})/ ? int($1) - 5 : $localtime[5] - 5;
+	my @years   = map { $_ => $_ } ( $start_year .. $localtime[5] + 5);
 	my @hours   = map { $_ => sprintf('%02d', $_) } (0 .. 23);
 	my @minutes = map { $_ => sprintf('%02d', $_) } (0 .. 59);
 	my @seconds;

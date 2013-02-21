@@ -266,7 +266,10 @@ sub dmove {
 
     my $sorder_;
     if ($self->_sorted()) {
-        my @ids = $keeper->get_documents( ids =>1, s => $self->id(), ($self->default_document_class ? (class => $self->default_document_class) : ()), order => ['date', undef], light => 1);
+        my @ids = $keeper->get_documents( ids =>1, s => $self->id(), 
+			($self->default_document_class ? (class => $self->default_document_class) : $self->default_table_class ? (table => $self->default_table_class) : ()), 
+			order => ['date', undef], light => 1
+		);
         my %ids = map { $_ => 1 } @ids;
         unless ($self->{_sorted_order}) {
             $self->{_sorted_order} = join ',', @ids;

@@ -25,7 +25,7 @@
 	$filter_params{p} = $ARGS{p}				if $ARGS{p} && $ARGS{p} > 1;
 	my $return_params = join ('&', map { $_.'='.$filter_params{$_} } keys %filter_params );
 
-	# ðÅÒÅÍÅÝÅÎÉÅ...
+	# ÐŸÐµÑ€ÐµÐ¼ÐµÑ‰ÐµÐ½Ð¸Ðµ...
 	if ($move && $id && ($id !~ /\D/) && ($id > 0)) {
 		$sect->dmove($id, $move);
 		my @params;

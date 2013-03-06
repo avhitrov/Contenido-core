@@ -750,6 +750,10 @@ project_user: check_core_installed pgsql_template
 # apache_* targets
 ##################
 
+#	_exp=`perl -e 'print $1 if "${LIMIT_VMEMORY_HTTPD}" =~ /.*(.)$/;'`; 
+#	_exp=`perl -e 'my $$e = ("${LIMIT_VMEMORY_HTTPD}"=~/.*(.)/)[0]; print $$e;'`; \
+#	echo _exp=$${_exp};						\
+
 apache_start: check_conf_installed
 	@${call is_alive,${PROJ_VAR}/${PROJECT}/run/httpd.pid};				\
 	FLAGS=`perl -e 'print " -DDEVELOPMENT" if lc "${DEVELOPMENT}" eq "yes";'`;	\
@@ -758,11 +762,26 @@ apache_start: check_conf_installed
 		elsif (lc "${CRONOLOG_ENABLE}" eq "yes") { print " -DCRONOLOG"; }	\
 		else                                     { print " -DFILELOG";  }'`;	\
 	if [ "${LIMIT_VMEMORY_HTTPD}" ]; then						\
-		LIMITS="${LIMIT_CMD} -v ${LIMIT_VMEMORY_HTTPD}";			\
+		if [ x`uname` = x"FreeBSD" ]; then					\
+			LIMITS="${LIMIT_CMD} -v ${LIMIT_VMEMORY_HTTPD}";		\
+		else									\
+#			echo "LIMIT_VMEMORY_HTTPD=${LIMIT_VMEMORY_HTTPD}";		\
+			_exp=`expr "${LIMIT_VMEMORY_HTTPD}" : '.*\(.\)'`;		\
+#			echo _exp=$${_exp};						\
+			_value=`expr "${LIMIT_VMEMORY_HTTPD}" : '\(.*\).'`;		\
+#			echo _value=$${_value};						\
+			if [ "$${_exp}" = "m" ]; then					\
+				_value=`expr $$_value \* 1024 `;			\
+			fi;								\
+#			echo _value=$${_value};						\
+			LIMITS="ulimit -S -v $${_value}";				\
+			echo "DEBUG: running on Linux, LIMITS='$${LIMITS}'"; \
+		fi;									\
 	fi;										\
 	if [ "$${ALIVE}" = "YES" ]; then						\
 		echo "WARNING: apache for project '${PROJECT}' already running";	\
 	else										\
+		[ x`uname` = x"Linux" ] && $${LIMITS} && LIMITS=""; \
 		if $${LIMITS} ${LOCAL}/apache/bin/httpd $${FLAGS}			\
 			-d ${PROJ_USR}/${PROJECT}/					\
 			-f ${PROJ_USR}/${PROJECT}/conf/apache/httpd.conf; then		\

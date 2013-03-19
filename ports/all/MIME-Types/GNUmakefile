@@ -5,12 +5,8 @@
 
 #include ../../etc/perl.mk
 
-PORTVERSION =		3.029
+PORTVERSION =		1.38
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	MIME
-PORT_DEPENDS =		ExtUtils-MakeMaker		\
-			Email-Date-Format		\
-			MIME-Types			\
-			MailTools
 
 include ../../etc/ports.mk

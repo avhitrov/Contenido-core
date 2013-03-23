@@ -13,6 +13,8 @@ PGSQL_BASE =			@NAME@
 BASE_USER =			@NAME@
 BASE_PASSWD =
 
+SERIALIZE_WITH =		json
+
 # Custom Apache handler
 #DEFAULT_HANDLER =		HTML::Mason::ApacheHandler
 

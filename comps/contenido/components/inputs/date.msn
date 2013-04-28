@@ -13,7 +13,7 @@
 	my $months = $m->comp('/contenido/components/get_months.msn');
 	my @years = map { $_ => $_ } (1940 .. $localtime[5] + 5);
 
-	if ($prop->{allow_null}) {
+	if ( ref $prop && exists $prop->{attr} && $prop->{allow_null}) {
 		unshift @days,    '', '';
 		unshift @$months, '', '';
 		unshift @years,   '', '';
@@ -45,4 +45,16 @@ function set_<% $prop->{attr} %>_now () {
 }
 //-->
 </script>
+%	if ( $prop->{allow_null} ) {
+&nbsp; <span style="padding-left:20px;"><a href="javascript:void(0)" onclick="set_<% $prop->{attr} %>_clear()" style="color:red;">Очистить!</a></span>
+<script type="text/javascript">
+<!--
+function set_<% $prop->{attr} %>_clear () {
+   document.forms['form'].elements['<% $prop->{attr} %>_day'].value = '';
+   document.forms['form'].elements['<% $prop->{attr} %>_month'].value = '';
+   document.forms['form'].elements['<% $prop->{attr} %>_year'].value = '';
+}
+//-->
+</script>
+%	}
 %  }

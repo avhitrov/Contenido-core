@@ -25,6 +25,23 @@ function set_<% $prop->{attr} %>_now () {
 }
 //-->
 </script>
+%	if ( $prop->{allow_null} ) {
+&nbsp; <span style="padding-left:20px;"><a href="javascript:void(0)" onclick="set_<% $prop->{attr} %>_clear()" style="color:red;">Очистить!</a></span>
+<script type="text/javascript">
+<!--
+function set_<% $prop->{attr} %>_clear () {
+   document.forms['form'].elements['<% $prop->{attr} %>_day'].value = '';
+   document.forms['form'].elements['<% $prop->{attr} %>_month'].value = '';
+   document.forms['form'].elements['<% $prop->{attr} %>_year'].value = '';
+   document.forms['form'].elements['<% $prop->{attr} %>_hour'].value = '';
+   document.forms['form'].elements['<% $prop->{attr} %>_minute'].value = '';
+%		unless ( $prop->{noseconds} ) {
+   document.forms['form'].elements['<% $prop->{attr} %>_second'].value = '';
+%		}
+}
+//-->
+</script>
+%	}
 % }
 <%args>
 	$prop

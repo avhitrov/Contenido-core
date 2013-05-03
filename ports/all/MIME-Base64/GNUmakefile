@@ -5,7 +5,7 @@
 
 #include ../../etc/perl.mk
 
-PORTVERSION =		3.07
+PORTVERSION =		3.13
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	MIME
 

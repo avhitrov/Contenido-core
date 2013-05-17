@@ -428,32 +428,35 @@ sub store_binary {
     return	unless ref $prop;
 
     my $filename = '/binary/'.$object->get_file_name() || return;
+    my $orig_name = '';
+    if ( ref $input eq 'Apache::Upload' ) {
+	$orig_name = $input->filename();
+    } elsif ( !ref $input ) {
+	$orig_name = $input;
+    }
+    if ( $orig_name ) {
+	if ( $orig_name =~ /\\([^\\]+)$/ ) {
+		$orig_name = $1;
+	} elsif ( $orig_name =~ /\/([^\/]+)$/ ) {
+		$orig_name = $1;
+	}
+    }
     if ( $prop->{softrename} ) {
 	my $oid = $object->id || int(rand(10000));
-	my $orig_name = '';
-	if ( ref $input eq 'Apache::Upload' ) {
-		$orig_name = $input->filename();
-	} elsif ( !ref $input ) {
-		$orig_name = $input;
-	}
 	if ( $orig_name ) {
-		if ( $orig_name =~ /\\([^\\]+)$/ ) {
-			$orig_name = $1;
-		} elsif ( $orig_name =~ /\/([^\/]+)$/ ) {
-			$orig_name = $1;
-		}
-		$orig_name =~ s/[\ \t]/_/g;
-		$orig_name = $oid.'_'.$orig_name;
+		my $set_name = $orig_name;
+		$set_name =~ s/[\ \t]/_/g;
+		$set_name = $oid.'_'.$set_name;
 		$filename =~ s/\/([^\/]+)$//;
 		my $fname = $1;
-		unless ( $orig_name =~ /^[a-zA-Z_\d\.\-\,]+$/ ) {
-			$orig_name = translit( $orig_name );
+		unless ( $set_name =~ /^[a-zA-Z_\d\.\-\,]+$/ ) {
+			$set_name = translit( $set_name );
 		}
-		warn "\n\n\n\n\nNew Name: [$orig_name]\n\n\n\n\n"		if $DEBUG;
-		unless ( $orig_name =~ /^[a-zA-Z_\d\.\-\,]+$/ ) {
-			$orig_name = $fname;
+		warn "\n\n\n\n\nNew Name: [$set_name]\n\n\n\n\n"		if $DEBUG;
+		unless ( $set_name =~ /^[a-zA-Z_\d\.\-\,]+$/ ) {
+			$set_name = $fname;
 		}
-		$filename .= '/'.$orig_name;
+		$filename .= '/'.$set_name;
 		$filename =~ s/\.([^\.]+)$//;
 	}
     }
@@ -491,24 +494,26 @@ sub store_binary {
 
     my $BINARY;
     if ( store($filename.'.'.$ext, $filename_tmp.'.'.$ext) ) {
-	@{$BINARY}{"filename", "ext", "size"} = (
-		$filename.".".$ext, $ext, $size
+	@{$BINARY}{"filename", "ext", "size", "sourcename"} = (
+		$filename.".".$ext, $ext, $size, $orig_name
 	);
 
 	unlink $filename_tmp.'.'.$ext if -e $filename_tmp.'.'.$ext;
 
 	if ( $ext =~ /(rar|7z|zip|arc|lha|arj|cab)/ ) {
 		$BINARY->{type} = 'archive';
-	} elsif ( $ext =~ /(doc|rtf)/ ) {
+	} elsif ( $ext =~ /(doc|docx|rtf)/ ) {
 		$BINARY->{type} = 'doc';
-	} elsif ( $ext eq 'xls' ) {
+	} elsif ( $ext =~ /(xls|xlsx)/ ) {
 		$BINARY->{type} = 'xls';
 	} elsif ( $ext =~ /(mdb|ppt)/ ) {
 		$BINARY->{type} = 'msoffice';
-	} elsif ( $ext =~ /(pdf)/ ) {
+	} elsif ( $ext =~ /(pdf|fb2|djvu)/ ) {
 		$BINARY->{type} = 'ebook';
-	} elsif ( $ext eq 'psd' ) {
-		$BINARY->{type} = 'psd';
+	} elsif ( $ext =~ /(psd|cdr)/ ) {
+		$BINARY->{type} = 'graphics';
+	} elsif ( $ext eq 'ico' ) {
+		$BINARY->{type} = 'icon';
 	} elsif ( $ext =~ /(exe|msi|cab)/ ) {
 		$BINARY->{type} = 'executable';
 	} else {

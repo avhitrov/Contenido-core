@@ -641,7 +641,7 @@ sub delete {
     if ( exists $opts{attachments} && $opts{attachments} ) {
 	my @props = $self->structure();
 	if ( @props ) {
-		@props = grep { $_->{type} =~ /^(image|images|multimedia_new)$/ } @props;
+		@props = grep { $_->{type} =~ /^(image|images|multimedia_new|multimedia_multi)$/ } @props;
 		foreach my $prop ( @props ) {
 			my $att = $self->get_image($prop->{attr});
 			if ( $prop->{type} eq 'image' ) {
@@ -676,6 +676,14 @@ sub delete {
 			} elsif ( $prop->{type} eq 'multimedia_new' ) {
 				if ( ref $att && exists $att->{filename} && $att->{filename} ) {
 					Contenido::File::remove( $att->{filename} );
+				}
+			} elsif ( $prop->{type} eq 'multimedia_multi' ) {
+				for ( 1..100 ) {
+					next	unless exists $att->{"file_$_"};
+					my $file = $att->{"file_$_"};
+					if ( ref $file && exists $file->{filename} && $file->{filename} ) {
+						Contenido::File::remove( $file->{filename} );
+					}
 				}
 			}
 		}
@@ -1200,7 +1208,7 @@ sub _store_image {
 # Вычищает все мини-копии
 #
 # Формат использования:
-#  $document->_store_image( $image_attr_structure )
+#  $document->_delete_image( $image_attr_structure )
 # ----------------------------------------------------------------------------
 sub _delete_image {
     my $self = shift;
@@ -1210,7 +1218,7 @@ sub _delete_image {
 }
 
 # ----------------------------------------------------------------------------
-# Метод _store_binary() сохраняет произвольный бинарный файл, привязанную к полю multimedia или multimedia_new 
+# Метод _store_binary() сохраняет произвольный бинарный файл, привязанную к полю multimedia_multi или multimedia_new 
 #
 # Формат использования:
 #  $document->_store_binary( INPUT, attr => 'fieldname' )

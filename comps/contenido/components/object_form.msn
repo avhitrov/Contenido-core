@@ -40,7 +40,7 @@
 
 		my $prop = $properties[$_];
 		my $name = $prop->{attr};
-		next if ($prop->{hidden} == 1) || ($prop->{type} eq 'image') || ($prop->{type} eq 'external') || ($prop->{type} =~ /^array/i) || ($prop->{type} =~ /^image/) || ($prop->{type} eq 'multimedia') || ($prop->{type} eq 'multimedia_new') || ($prop->{type} eq 'audio');
+		next if ($prop->{hidden} == 1) || ($prop->{type} eq 'image') || ($prop->{type} eq 'external') || ($prop->{type} =~ /^array/i) || ($prop->{type} =~ /^image/) || ($prop->{type} eq 'multimedia') || ($prop->{type} eq 'multimedia_new') || ($prop->{type} eq 'multimedia_multi') || ($prop->{type} eq 'audio');
 
 </%perl>
 <tr><td height="8"></td></tr>
@@ -162,8 +162,7 @@
 		MULTI => $MULTI,
 		options => $options,
  &>
-%		} elsif ($prop->{type} eq 'multimedia_new')
-%		{
+%		} elsif ($prop->{type} eq 'multimedia_new') {
 %			my $MULTI = $object->get_image( $prop->{attr} );
 
 <& "/contenido/components/inputs/multimedia_new.msn",
@@ -172,9 +171,37 @@
 		attr => $prop->{attr},
 		MULTI => $MULTI,
 		options => $options,
- &>
-%		} elsif ($prop->{type} eq 'audio')
-%		{
+&>
+
+%		} elsif ($prop->{type} eq 'multimedia_multi') {
+%			my $FILES = $object->get_image( $prop->{attr} );
+%			if (ref($FILES) ne 'HASH') { next };
+%			my $MN = $FILES->{maxnumber}+0;
+%			for my $mn (1..$MN) {
+%				my $MULTI = $FILES->{'file_'.$mn};
+<& "/contenido/components/inputs/multimedia_new.msn",
+		rusname => $prop->{rusname},
+		prop => $prop, object=>$object,
+		attr => $prop->{attr}.'_'.$mn,
+		MULTI => $MULTI,
+		options => $options,
+&>
+
+%			}
+%			my $ME = exists $prop->{empty_slots} ? $prop->{empty_slots} : 3;
+%			$ME = ($ME + $FILES->{maxnumber}) >= 100 ? 0 : (100 - $FILES->{maxnumber} < $ME ? 100 - $FILES->{maxnumber} : $ME );
+%			for my $mn (1..$ME) {
+
+<& "/contenido/components/inputs/multimedia_new.msn",
+		rusname => $prop->{rusname},
+		prop => $prop, object=>$object, 
+		attr => $prop->{attr}.'_'.($MN+$mn),
+		MULTI => {},
+		options => $options,
+&>
+
+%			}
+%		} elsif ($prop->{type} eq 'audio') {
 %			my $MULTI = $object->get_image( $prop->{attr} );
 
 <& "/contenido/components/inputs/audio.msn",

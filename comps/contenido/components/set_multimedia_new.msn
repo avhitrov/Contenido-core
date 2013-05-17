@@ -27,7 +27,7 @@ if ($SETS->{$field} || $SETS->{"$field.ext_url"}) {
     }
     if ($upload) {
 
-	my $BIN = $object->_store_binary( $upload, attr => $prop->{attr} );
+	my $BIN = $object->_store_binary( $upload, attr => $prop->{attr}, prop => $prop );
 
 	if ( ref $BIN eq 'HASH' && exists $BIN->{filename} ) {
 		$object->_delete_binary( $default );

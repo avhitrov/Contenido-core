@@ -10,23 +10,20 @@
 <div id="<% $attr %>_url_loader" style="display:none; background:#d0d0d0; padding:2px;">&nbsp;URL:&nbsp;<input
  id="<% $attr %>_ext_url" type="text" name="<% $attr %>.ext_url" style="width:81%;font-family:arial;font-size:9pt;"></div>
 </td></tr>
-%	if ( exists($MULTI->{filename}) )
-%	{
+%	if ( exists($MULTI->{filename}) ) {
 %		my $TYPE = 'unknown';
-%		if (length($MULTI->{ext}) > 0)
-%		{
-%			if (-e $keeper->{state}->{mason_comp}.'/contenido/i/icons/'.$MULTI->{ext}.'.gif')
-%			{
+%		if (length($MULTI->{ext}) > 0) {
+%			if (-e $keeper->{state}->{mason_comp}.'/contenido/i/icons/'.$MULTI->{ext}.'.gif') {
 %				$TYPE = $MULTI->{ext};
 %			}
 %		}
-<tr><td style="font-size:95%;"><% $MULTI->{filename} %></td></tr>
+<tr><td style="font-size:90%;"><a href="<% $MULTI->{filename} %>" target="_blank"><% $MULTI->{sourcename} || $MULTI->{filename} %></a></td></tr>
 <tr><td>
 
 <table border="0" width="100%"><tr>
 <td align="right"><a href="<% $MULTI->{filename} %>"><img src="/contenido/i/icons/<% $TYPE %>.gif" width="36" height=36" hspace="5" border="0"></a></td>
 <td>
-<font size="-1" color="#888888">Тип: <% uc($MULTI->{ext}) %><br>
+<font style="font-size:90%" color="#888888">Тип: <% uc($MULTI->{ext}) %><br>
 Размер: <% int($MULTI->{size}/1024) %> Кб
 </font>
 </td>
@@ -35,8 +32,7 @@
 </td></tr>
 %	}
 %
-%	foreach my $iattr (sort (@{ $iattrs }))
-%	{
+%	foreach my $iattr (sort (@{ $iattrs })) {
 %		next	if ( ($iattr eq 'filename') || ($iattr eq 'mini') || ($iattr eq 'width') || ($iattr eq 'height') );
 <tr><td><font size="-1" color="#888888"><% $ATTRNAMES->{$iattr} %> (<% $iattr %>):</font></td></tr>
 <tr><td><input type="text" name="<% $attr %>.<% $iattr %>" size="60" value="<% html_escape($MULTI->{$iattr}) %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
@@ -60,10 +56,10 @@
 <%INIT>
 
 	my $iattrs = $prop->{iattrs};
-	$iattrs ||= [];
+	$iattrs ||= ['alt'];
 
 	my $ATTRNAMES = {
-		'alt' => 'Подпись',
+		'alt' => 'Название',
 		'btext' => 'Текст до картинки',
 		'atext' => 'Текст после картинки',
 		'url' => 'Ссылка с картинки',

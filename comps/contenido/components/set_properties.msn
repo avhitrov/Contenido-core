@@ -101,9 +101,9 @@
 
             if ($SETS->{'_delete_multi.'.$name} == 1)
             {
-                my $BINARY = eval ('my '.$object->{ $name });
-                Contenido::File::remove($BINARY->{"filename"});
-                $object->{$name} = '';
+		my $BINARY = $object->get_image( $name );
+		$object->_delete_binary( $BINARY );
+		$object->$name('');
             } else {
                 my $MULTI = undef;
                 if (length($object->{ $name }) > 8)
@@ -124,9 +124,9 @@
 
             if ($SETS->{'_delete_multi.'.$name} == 1)
             {
-                my $BINARY = eval ('my '.$object->{ $name });
-                Contenido::File::remove($BINARY->{"filename"});
-                $object->{$name} = '';
+		my $BINARY = $object->get_image( $name );
+		$object->_delete_binary( $BINARY );
+		$object->$name('');
             } else {
                 my $MULTI = undef;
                 if (length($object->{ $name }) > 8)
@@ -140,6 +140,55 @@
                     $object->$name( $object->_serialize($MULTI) );
                 }
             }
+
+	} elsif ($prop->{type} eq 'multimedia_multi') {
+            # --------------------------------------------------------------------------------------
+            # А вот это уже сложнее - составление блока из всех файлов...
+
+            my $FILES = $object->get_image( $name );
+	    if ( ref($FILES) ne 'HASH' ) {
+		$FILES = {};
+		$FILES->{maxnumber} = 0;
+	    };
+
+            # Теперь надо просмотреть все аргументы - а вдруг это то, что нам нужно...
+            foreach my $arg (keys(%{ $SETS }))
+            {
+		# Разбиваем все на части, отделяем...
+		my ($partname,undef) = split(/\./,$arg);
+		$partname =~ /^(.+)_(\d+)$/;
+		my ($localname,$number) = ($1, $2);
+		if ( ($localname eq $prop->{attr}) && ($number > 0) && ( $arg eq $localname.'_'.$number )) {
+                    # Ура! Нашли элемент!
+
+                    my $partname = $localname.'_'.$number;
+
+                    if ($SETS->{'_delete_multi.'.$partname} == 1) {
+			$object->_delete_binary( $FILES->{'file_'.$number} );
+			delete $FILES->{'file_'.$number};
+		    } else {
+			my $MULTI = undef;
+			if (exists($FILES->{'file_'.$number})) {
+				$MULTI = $FILES->{'file_'.$number};
+			};
+			$MULTI = $m->comp('/contenido/components/set_multimedia_new.msn', default=>$MULTI, field=>$partname, SETS=>$SETS, object=>$object, prop => $prop);
+			if (exists($MULTI->{filename})) {
+				$MULTI->{number} = $number;
+				$FILES->{'file_'.$number} = $MULTI;
+				$FILES->{maxnumber} = $number		if ($number > $FILES->{maxnumber});
+			}
+		    }
+		}
+	    }
+
+	    if ( scalar(keys(%{ $FILES })) > 0) {
+		my $maxnumber = 0;
+		for ( 1..100 ) {
+			$maxnumber = $_		if exists $FILES->{"file_$_"} && $_ > $maxnumber;
+		}
+		$FILES->{maxnumber} = $maxnumber;
+		$object->$name( $object->_serialize($FILES) );
+	    }
 
 	} elsif ( $prop->{type} eq 'audio' ) {
             # --------------------------------------------------------------------------------------

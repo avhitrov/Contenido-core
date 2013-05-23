@@ -269,9 +269,9 @@ sub store_image {
 				return undef;
 			}
 		}
-		$c_line = $state->{'convert_binary'}.' -adaptive_resize \''.$prop->{transform}[1].'!\' -quality 100 '.$filename_tmp.'.shaved.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
+		$c_line = $state->{'convert_binary'}.' -adaptive-resize \''.$prop->{transform}[1].'!\' -quality 100 '.$filename_tmp.'.shaved.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
 	} elsif ( $prop->{transform}[0] eq 'shrink' ) {
-		$c_line = $state->{'convert_binary'}.' -adaptive_resize \''.$prop->{transform}[1].'!\' -quality 100 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
+		$c_line = $state->{'convert_binary'}.' -adaptive-resize \''.$prop->{transform}[1].'!\' -quality 100 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
 	}
 	my $result = `$c_line`;
 	$transformed = 1;

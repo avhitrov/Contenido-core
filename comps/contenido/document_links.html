@@ -31,8 +31,12 @@ function switch_div (sName) {
 %		my $show = (@sources && $link_class && grep { $_ eq $link_class } @sources) || ((@sources && @destinations) || !@destinations) ? 1 : 0;
 %		my $lclass = $link_class;
 %		if ( $link_class && grep { $_ eq $link_class } @destinations ) {
-%			$show = 0;
-%			$lclass = undef;
+%			if ( grep { $_ eq $link_class } @sources ) {
+%				$show = 1;
+%			} else {
+%				$show = 0;
+%				$lclass = undef;
+%			}
 %		}
 <fieldset>
 <legend>&rarr; <a href="javascript:switch_div('div_source')" style="color:white;"
@@ -53,8 +57,12 @@ function switch_div (sName) {
 %		my $show = (@destinations && $link_class && grep { $_ eq $link_class } @destinations ) || !@sources ? 1 : 0;
 %		my $lclass = $link_class;
 %		if ( $link_class && grep { $_ eq $link_class } @sources ) {
-%			$show = 0;
-%			$lclass = undef;
+%			if ( grep { $_ eq $link_class } @destinations ) {
+%				$show = 1;
+%			} else {
+%				$show = 0;
+%				$lclass = undef;
+%			}
 %		}
 <fieldset>
 <legend>&larr; <a href="javascript:switch_div('div_destination')" style="color:white;"

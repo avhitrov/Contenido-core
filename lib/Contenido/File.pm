@@ -278,6 +278,17 @@ sub store_image {
 	unlink $filename_tmp.'.shaved.'.$ext      if -e $filename_tmp.'.shaved.'.$ext;
     }
 
+    if ( exists $opts{watermark} && $opts{watermark} ) {
+	my $gravity = delete $opts{gravity} || 'Center';
+	my $source = $transformed ? $filename_tmp.'.transformed.'.$ext : $filename_tmp.'.'.$ext;
+	my $target = $filename_tmp.'.transformed.'.$ext;
+	my $offset = delete $opts{offset} || '+0+0';
+	my $c_line = $state->{'composite_binary'}." -geometry $offset -gravity $gravity -quality 99 $opts{watermark} $source $target";
+	warn "Watermark: $c_line\n"     if $DEBUG;
+	my $result = `$c_line`;
+	$transformed = 1;
+    }
+
     my $IMAGE;
     my $stored = $transformed ? store($filename.'.'.$ext, $filename_tmp.'.transformed.'.$ext) : store($filename.'.'.$ext, $filename_tmp.'.'.$ext);
     if ( $stored ) {

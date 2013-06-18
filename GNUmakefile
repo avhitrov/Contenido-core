@@ -1153,6 +1153,7 @@ REWRITE +=										\
 		CASCADE									\
 		COMP_CACHE_ENABLED							\
 		COMP_TIMINGS_DISABLE							\
+		COMPOSITE								\
 		CONF									\
 		CONTENIDO_VERSION							\
 		CONVERT									\

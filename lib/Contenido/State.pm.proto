@@ -79,6 +79,7 @@ sub new
         $self->{files_dir} = [split /\s+/ms, $files_dir];
     }
 
+    $self->{composite_binary} = '@COMPOSITE@';
     $self->{convert_binary} = '@CONVERT@';
     $self->{file_web_storage} = lc('@FILE_WEB_STORAGE@');
 

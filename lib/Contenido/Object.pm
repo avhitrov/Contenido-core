@@ -1192,6 +1192,7 @@ sub memcached_expire {
 #
 # Формат использования:
 #  $document->_store_image( INPUT, attr => 'fieldname' )
+#  $document->_store_image( INPUT, prop => $prophash )
 # ----------------------------------------------------------------------------
 sub _store_image {
     my $self = shift;
@@ -1200,7 +1201,7 @@ sub _store_image {
     my $input = shift;
     my (%opts) = @_;
 
-    return Contenido::File::store_image( $input, object => $self, attr => $opts{attr}, prop => $opts{prop} );
+    return Contenido::File::store_image( $input, object => $self, %opts );
 }
 
 # ----------------------------------------------------------------------------

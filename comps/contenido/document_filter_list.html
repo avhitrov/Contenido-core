@@ -6,7 +6,7 @@
 <div style="font-size:12px; font-family:Arial; text-align:center;">
 <& /inc/pages_.msn, p => $p, n => $size, total => $total, params => {%ARGS} &></div>
 %	}
-%	my @props = sort { $a->{column} <=> $b->{column} } grep { exists $_->{column} } $docs->[0]->required_properties;
+%	my @props = sort { $a->{column} <=> $b->{column} } grep { exists $_->{column} && $_->{column} } $docs->[0]->structure;
 <table width="100%" border="0" cellpadding="4" cellspacing="0" class="tlistdocs">
 <tr bgcolor="#efefef">
 %	foreach my $prop (@props) {
@@ -25,9 +25,12 @@
 <tr>
 %		foreach my $prop (@props) {
 %			my $attr = $prop->{attr};
-%			if ( $attr =~ /dtime/ ) {
+%			if ( $prop->{type} =~ /(datetime|date)/ ) {
 <td><% $a1 %><& "/contenido/components/show_dtime.msn", dtime => $doc->$attr &><% $a2 %></td>
-%			}else{
+%			} elsif ( $prop->{type} eq 'status' ) {
+%				my ($case) = grep { $_->[0] == $doc->$attr } @{$prop->{cases}};
+<td><% ref $case ? $case->[1] : 'неизвестно ['.$doc->$attr.']' %></td>
+%			} else {
 <td><% $a1.$doc->$attr.$a2 %></td>
 %			}
 %		}

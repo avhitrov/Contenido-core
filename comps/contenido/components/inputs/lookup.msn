@@ -100,7 +100,9 @@
 	}
 
 	var s = document.getElementById('<% $name %>_select');
-	document.getElementById('<% $name %>_prev_text').innerHTML = s.options.item(s.selectedIndex).innerHTML || '&nbsp;';
+	if ( s.selectedIndex >= 0 ) {
+		document.getElementById('<% $name %>_prev_text').innerHTML = s.options.item(s.selectedIndex).innerHTML || '&nbsp;';
+	}
 </script>
 
 % } else {

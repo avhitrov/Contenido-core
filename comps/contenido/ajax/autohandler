@@ -1,0 +1,7 @@
+<%init>
+
+  $r->header_out('Cache-Control', 'no-store, no-cache, must-revalidate');
+  $r->header_out('Pragma', 'no-cache');
+  $m->call_next;
+
+</%init>

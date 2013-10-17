@@ -12,6 +12,64 @@ function delete_check () {
 	}
    }
 }
+% if ( @inline_pickups ) {
+$().ready(function() {
+%	foreach my $pickup ( @inline_pickups ) {
+%		my $lookup_opts = $pickup->{lookup_opts};
+%		my $search_opts = join( '&', map { $_.'='.$lookup_opts->{$_} } keys %$lookup_opts );
+
+    $('.autocomplete_<% $pickup->{attr} %>').autocomplete({
+		minLength : 2,
+		source	: '/contenido/ajax/document_search.html?<% $search_opts %>',
+		select	: function( event, ui )
+		{
+			var sStoreId = $(this).attr('rel');
+			var item = ui.item;
+//			alert(mydump(item));
+			$('#' + sStoreId).val( item.id );
+//			$(this).val(item.label);
+//			alert( $('#' + sStoreId).val() );
+		},
+		change	: function( event, ui )
+		{
+			var sStoreId = $(this).attr('rel');
+			var sValue = $(this).val();
+			if ( sValue == '' ) {
+				$('#' + sStoreId).val('');
+			}
+		}
+    });
+
+%	}    
+});
+% }
+
+
+function mydump(arr,level) {
+    var dumped_text = "";
+    if(!level) level = 0;
+
+    var level_padding = "";
+    for(var j=0;j<level+1;j++) level_padding += "    ";
+
+    if(typeof(arr) == 'object') {  
+        for(var item in arr) {
+            var value = arr[item];
+
+            if(typeof(value) == 'object') { 
+                dumped_text += level_padding + "'" + item + "' ...\n";
+                dumped_text += mydump(value,level+1);
+            } else {
+                dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
+            }
+        }
+    } else { 
+        dumped_text = "===>"+arr+"<===("+typeof(arr)+")";
+    }
+    return dumped_text;
+}
+
+
 //-->
 </script>
 <form name="section_browse" action="sections.html" method="POST">
@@ -123,6 +181,36 @@ function delete_check () {
 %							}
 </select>
 %						}
+%					} elsif ($col->{type} eq 'pickup' || $col->{type} eq 'autocomplete') {
+%						my %opts = %{ $col->{lookup_opts} };
+%						my $doc;
+%						if ( $document->$attr ) {
+%							$doc = $keeper->get_document_by_id( $document->$attr, %opts );
+%						}
+<td><input type="hidden" name="<% 'update_'.$document->id.'_'.$attr %>" id="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr || '' %>">
+<input type="text" class="<% 'autocomplete_'.$attr %>" id="<% 'autocomplete_'.$document->id.'_'.$attr %>" value="<% ref $doc ? $doc->name : defined $document->$attr ? '['.$document->$attr.']' : '' %>"
+ rel="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>">
+%					} elsif ($col->{type} eq 'lookup') {
+%						my %opts = %{ $col->{lookup_opts} };
+%						delete $opts{search_by}		if exists $opts{search_by};
+%						my $docs;
+%						if ( exists $lookup_elements{$col->{attr}} ) {
+%							$docs = $lookup_elements{$col->{attr}};
+%						} else {
+%							$docs = $keeper->get_documents( %opts, return_mode => 'array_ref', names => 1 );
+%							$lookup_elements{$col->{attr}} = $docs;
+%						}
+%						if ( ref $docs eq 'ARRAY' && @$docs ) {
+<td><select name="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>">
+<option value="<% $col->{allow_null} ? '' : 0 %>"></option>
+%							foreach my $case ( @$docs ) {
+%								my $selected = $case->[0] eq $document->$attr ? ' selected' : '';
+<option value="<% $case->[0] %>"<% $selected %>><% $case->[1] %>
+%							}
+</select>
+%						} else {
+<td><% $document->$attr %>\
+%						}
 %					}
 %
 %				} elsif ($col->{attr} eq 'class') {
@@ -174,7 +262,7 @@ function delete_check () {
 <td nowrap align="right"><% $document->{$col->{attr}} || '&nbsp;' %>\
 %					} elsif ($col->{type} eq 'integer') {
 <td align="right"><% $document->{$col->{attr}} %>&nbsp;\
-%					} elsif ($col->{type} eq 'lookup' || $col->{type} eq 'pickup') {
+%					} elsif ($col->{type} eq 'lookup' || $col->{type} eq 'pickup' || $col->{type} eq 'autocomplete') {
 <td align="left">\
 %						my $id = $document->{$col->{attr}};
 %						if ($id) {
@@ -211,7 +299,7 @@ function delete_check () {
 %		}
 %	}
 %	if ( $inline_status || $delete_status ) {
-<div style="text-align:right; padding:10px 0;">
+<div style="float:right; text-align:right; padding:5px 0 5px 10px; width:280px;">
 %		if ( $inline_status ) {
 <input type="submit" name="update" value="Сохранить изменения" class="input_btn">
 %		}
@@ -220,6 +308,13 @@ function delete_check () {
 %		}
 </div>
 %	}
+%	if ( $section->default_document_class || $section->default_table_class ) {
+<div style="float:left; width:450px; padding:5px 0;">
+<& /contenido/components/inputs/parent.msn, name => 'tree', check => $section->id &>
+<input type="submit" name="move" value="Перенести" class="input_btn"><input type="submit" name="link" value="Привязать" class="input_btn">
+</div>
+%	}
+<br clear="all">
 </form>
 <%args>
 
@@ -243,5 +338,7 @@ function delete_check () {
    my $params_unclassed = ref $filter eq 'HASH' ? join ('&', map { $_.'='.$filter->{$_} } grep { $_ ne 'class' } keys %$filter ) : '';
    my $params_unsection = ref $filter eq 'HASH' ? join ('&', map { $_.'='.$filter->{$_} } grep { $_ ne 's' } keys %$filter ) : '';
 
+   my %lookup_elements;
+   my @inline_pickups = grep { exists $_->{inline} && ($_->{type} eq 'pickup' || $_->{type} eq 'autocomplete') } @$columns;
 
 </%init>

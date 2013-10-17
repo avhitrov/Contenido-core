@@ -25,7 +25,7 @@
 </td></tr></table>
 %	} else {
 <div align="center" style="font-size:110%; color:red;">
-Не верный вызов документа!!! (отсутствуют id и class одновременно)
+Неверный вызов документа!!! (отсутствуют id и class одновременно)
 </div>
 <br><br>
 %	}
@@ -74,8 +74,10 @@
 </body>
 </html>
 <%ARGS>
+
 	$p		=> 1
 	$class		=> undef
+	$table		=> undef
 	$sect_id	=> undef
 	$s_alias	=> undef
 	$id		=> undef
@@ -84,10 +86,11 @@
 	$clone		=> undef
 	$activate	=> undef
 	$deactivate	=> undef
+
 </%ARGS>
 <%INIT>
 
-	&abort404	unless $class;
+	&abort404	unless $class || $table;
 	my $error='';
         ### !!! При добавлении переменных в ARGS их надо внести в список исключений в структуре ниже
 
@@ -97,7 +100,8 @@
 	my $new;
 
 	if ($id && ($id !~ /\D/) && ($id > 0)) {
-		$document = $keeper->get_document_by_id($id, class=>$class);
+		$document = $keeper->get_document_by_id($id, $class ? (class => $class) : (table => $table));
+		$class ||= $document->class	if ref $document;
 		if ( $clone && exists $document->{'attributes'}->{'dtime'} ) {
 			$document->dtime(undef);
 		}
@@ -109,7 +113,7 @@
 			foreach my $prop ( @properties ) {
 				my $attr = $prop->{attr};
 				### !!! Если не стандартная переменная, то можем инициализировать
-				if ( exists $ARGS{$attr} && ! grep { $prop->{attr} eq $_ } qw( class sect_id id delete save clone s_alias activate deactivate p s use_section alpha alpha_search search_by search ) ) {
+				if ( exists $ARGS{$attr} && ! grep { $prop->{attr} eq $_ } qw( class table sect_id id delete save clone s_alias activate deactivate p s use_section alpha alpha_search search_by search ) ) {
 					$document->$attr($ARGS{$attr});
 				}
 			}

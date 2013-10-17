@@ -43,8 +43,13 @@
   function lookfor_<% $name %>() {
 	var id = document.getElementById('<% $name %>_value').value;
 	if (id) {
-		var Class = '<% $prop->{lookup_opts}->{class} %>';
+% if ( exists $prop->{lookup_opts}{class} ) {
+		var Class = '<% $prop->{lookup_opts}{class} %>';
 		var Uri = 'document.html?id=' + id + '&class=' + Class;
+% } elsif ( exists $prop->{lookup_opts}{table} ) {
+		var Class = '<% $prop->{lookup_opts}{table} %>';
+		var Uri = 'document.html?id=' + id + '&table=' + Class;
+% }
 		var Width = screen.width;
 		var Height = screen.height;
 		window.open(Uri,'Interface','width='+Width+',height='+Height+',top=0,left=0,location=1,menubar=1,resizable=0,scrollbars=1,status=1,titlebar=1,toolbar=1,directories=1,hotkeys=1');
@@ -83,15 +88,13 @@
 
   my ($error, $doc, $lookup_string);
 
-  if ($prop && ref($prop) && ref($prop->{lookup_opts}) eq 'HASH' && exists $prop->{lookup_opts}->{class}) {
+  if ($prop && ref($prop) && exists $prop->{lookup_opts} && ref $prop->{lookup_opts} eq 'HASH' ) {
 	if ( $check ) {
 		$doc = $keeper->get_document_by_id ( $check, %{$prop->{lookup_opts}} );
 	}
 	$lookup_string = '/contenido/find_document.html?nf='.$name.'_docname&vf='.$name.'_value';
-	if ( exists $prop->{lookup_opts} && ref $prop->{lookup_opts} eq 'HASH' ) {
-		while ( my ($param, $value) = each %{ $prop->{lookup_opts} } ) {
-			$lookup_string .= '&'.$param.'='.$value;
-		}
+	while ( my ($param, $value) = each %{ $prop->{lookup_opts} } ) {
+		$lookup_string .= '&'.$param.'='.$value;
 	}
   } else {
 	$error = 'Похоже неверное описание lookup_opts в документе';

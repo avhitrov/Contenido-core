@@ -74,8 +74,10 @@
 	
 </style>
 <title>Редакторский интерфейс<% (length($title) > 0) ? " | $title" : "" %></title>
-<script language="javascript" type="text/javascript" src="/contenido/i/js/jquery-1.7.min.js"></script>
+<script language="javascript" type="text/javascript" src="/contenido/i/js/jquery-1.9.1.js"></script>
+<script language="javascript" type="text/javascript" src="/contenido/i/js/jquery-ui-1.10.3.custom/jquery-ui-1.10.3.custom.min.js"></script>
 <% $m->comp_exists('/contenido/components/custom_head.msn') ? $m->comp('/contenido/components/custom_head.msn') : '' %>
+<link rel="stylesheet" type="text/css" href="/contenido/i/js/jquery-ui-1.10.3.custom/css/flick/jquery-ui-1.10.3.custom.css" media="all" />
 <script language="javascript" type="text/javascript" src="/contenido/i/js/links.js"></script>
 <script language="javascript" type="text/javascript" src="/contenido/i/js/tiny_mce/jquery.tinymce.js"></script>
 <script language="javascript" type="text/javascript">

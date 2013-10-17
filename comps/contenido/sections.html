@@ -244,11 +244,21 @@ function set_create_button( oSelect, sBtnID ) {
 					foreach my $prop ( @props ) {
 						my $attr = $prop->{attr};
 						my $value = ref $fields && exists $fields->{$attr} ? $fields->{$attr} : undef;
-						if ( $prop->{db_type} eq 'float' ) {
-							for ( $value ) {
-								s/\,/\./;
-								s/^\s+//;
-								s/\s+$//;
+						if ( exists $prop->{db_type} ) {
+							if ( $prop->{db_type} eq 'float' ) {
+								for ( $value ) {
+									s/\,/\./;
+									s/^\s+//;
+									s/\s+$//;
+								}
+								if ( $value eq '' ) {
+									$value = undef;
+								}
+							} elsif ( $prop->{db_type} eq 'integer' || $prop->{db_type} eq 'smallint' ) {
+								$value =~ s/\D//sg	if $value;
+								if ( $value eq '' ) {
+									$value = undef;
+								}
 							}
 						}
 						if ( $prop->{type} eq 'checkbox' ) {
@@ -291,6 +301,53 @@ function set_create_button( oSelect, sBtnID ) {
 		}
 		$m->redirect("sections.html?id=".$id.($return_params ? '&'.$return_params : ''));
 	}
+	if ( $ARGS{move} || $ARGS{link} ) {
+		my $return_params = join ('&', map { $_.'='.$filter_params{$_} } grep { $_ ne 's' } keys %filter_params );
+		if ( exists $ARGS{tree} && $ARGS{tree} && $ARGS{tree} != $owner->id ) {
+			my %updated;
+			while ( my ($field, $value) = each %ARGS ) {
+				if ( $field =~ /^update_(\d+)_(\w+)$/ ) {
+					my $oid = $1;
+					my $attr = $2;
+					$updated{$oid}{$attr} = $value;
+				}
+			}
+			my %classes = map { $_->{class} => 1 } values %updated;
+			my $parent_new = $keeper->get_section_by_id( $ARGS{tree} );
+			my $document_access = $user->section_accesses($user, $parent_new->id);
+			if ( $document_access == 2 ) {
+				foreach my $update_class ( keys %classes ) {
+					my @ids;
+					while ( my ($oid, $attr) = each %updated) {
+						push @ids, $oid		if $attr->{class} eq $update_class;
+					}
+					my @objects = $keeper->get_documents (
+							id      => \@ids,
+							class	=> $update_class
+						)			if @ids;
+					my ($prop) = grep { $_->{attr} eq 'sections' } $update_class->new( $keeper )->structure;
+					if ( ref $prop && exists $prop->{db_type} && exists $prop->{db_field} ) {
+						foreach my $object ( @objects ) {
+							if ( $prop->{db_type} eq 'integer[]' ) {
+								my @sections = grep { $_ != $parent_new->id } $object->sections;
+								if ( @sections && $sections[0] == $owner->id ) {
+									unshift @sections, $parent_new->id;
+								} else {
+									push @sections, $parent_new->id;
+								}
+								@sections = grep { $_ == $owner->id } @sections		if $ARGS{move};
+								$object->sections( @sections );
+							} else {
+								$object->sections( $parent_new->id );
+							}
+							$object->store;
+						}
+					}
+				}
+			}
+		}
+		$m->redirect("sections.html?id=".$id.($return_params ? '&'.$return_params : ''));
+	}
 
 	my %filter=();
 	my $nothing_found = 0;
@@ -320,11 +377,11 @@ function set_create_button( oSelect, sBtnID ) {
 				$filter{$search_by} = int($search);
 			} elsif ( ref $prop && ($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup') && $search =~ /\D/ ) {
 				my $lookup_opts = $prop->{lookup_opts};
-				if ( ref $lookup_opts && exists $lookup_opts->{class} ) {
+				if ( ref $lookup_opts && (exists $lookup_opts->{class} || exists $lookup_opts->{table}) ) {
 					my $search_field = exists $lookup_opts->{search_by} ? $lookup_opts->{search_by} : 'name';
 					my @ids = $keeper->get_documents (
 							ids	=> 1,
-							class	=> $lookup_opts->{class},
+							exists $lookup_opts->{class} ? (class => $lookup_opts->{class}) : (table => $lookup_opts->{table}),
 							ilike	=> 1,
 							$search_field	=> '%'.$search.'%',
 						);
@@ -372,7 +429,6 @@ function set_create_button( oSelect, sBtnID ) {
 			@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first);
 		}
 	}
-
 	# набор колонок таблицы документов...
 	my @columns = $sorted ? ({attr => '_sort_', name => 'N'}) : ();
 

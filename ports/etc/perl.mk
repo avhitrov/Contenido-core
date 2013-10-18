@@ -7,8 +7,10 @@ PERL ?=				${shell which perl}
 PERL_LEVEL ?=			${shell ${PERL} -e '$$]=~/(\d+)\.(\d{3})(\d+)/; printf "%d%03d%02d", $$1,$$2,$$3;'}
 
 ifeq (${shell ${PERL} -e '${PERL_LEVEL}<500600 && print 1'},1)
-PERL_VER ?=			${shell ${PERL} -e '$$]=~/(\d+)\.(\d{3})(\d+)/; printf "%d.%03d", $$1,$$2;'}
-elif (${shell ${PERL} -e '${PERL_LEVEL}<501205 && print 1'},1)
+PERL_VER =			${shell ${PERL} -e '$$]=~/(\d+)\.(\d{3})(\d+)/; printf "%d.%03d", $$1,$$2;'}
+endif
+
+ifeq (${shell ${PERL} -e '${PERL_LEVEL}<501205 && print 1'},1)
 PERL_VER ?=			${shell ${PERL} -e '$$]=~/(\d+)\.(\d{3})(\d+)/; printf "%d.%d.%d", $$1,$$2,$$3;'}
 else
 PERL_VER ?=			${shell ${PERL} -e '$$]=~/(\d+)\.(\d{3})(\d+)/; printf "%d.%d", $$1,$$2;'}

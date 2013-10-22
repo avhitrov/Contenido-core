@@ -29,6 +29,10 @@ sub _auto {
 	return 0;
 }
 
+sub db_id_sequence {
+	return 'documents_id_seq';
+}
+
 sub available_filters {
 	return ();
 }

@@ -45,6 +45,8 @@ sub available_filters {
 # ----------------------------------------------------------------------------
 sub required_properties
 {
+	my $self = shift;
+	my $id_sequence = $self->db_id_sequence();
 	return (
 		{							# Идентификатор документа, сквозной по всем типам...
 			'attr'		=> 'id',
@@ -55,7 +57,7 @@ sub required_properties
 			'auto'		=> 1,
 			'db_field'	=> 'id',
 			'db_type'	=> 'integer',
-			'db_opts'	=> "not null default nextval('public.documents_id_seq'::text)", 
+			'db_opts'	=> "not null default nextval('public.$id_sequence'::text)", 
 		},
 		{							# Класс документа...
 			'attr'		=> 'class',

@@ -306,12 +306,13 @@ function set_create_button( oSelect, sBtnID ) {
 		if ( exists $ARGS{tree} && $ARGS{tree} && $ARGS{tree} != $owner->id ) {
 			my %updated;
 			while ( my ($field, $value) = each %ARGS ) {
-				if ( $field =~ /^update_(\d+)_(\w+)$/ ) {
+				if ( $field =~ /^delete_(\d+)_(\w+)$/ ) {
 					my $oid = $1;
 					my $attr = $2;
 					$updated{$oid}{$attr} = $value;
 				}
 			}
+			warn Dumper \%updated;
 			my %classes = map { $_->{class} => 1 } values %updated;
 			my $parent_new = $keeper->get_section_by_id( $ARGS{tree} );
 			my $document_access = $user->section_accesses($user, $parent_new->id);
@@ -319,7 +320,7 @@ function set_create_button( oSelect, sBtnID ) {
 				foreach my $update_class ( keys %classes ) {
 					my @ids;
 					while ( my ($oid, $attr) = each %updated) {
-						push @ids, $oid		if $attr->{class} eq $update_class;
+						push @ids, $oid		if exists $attr->{id} && $attr->{id} && ($attr->{class} eq $update_class);
 					}
 					my @objects = $keeper->get_documents (
 							id      => \@ids,

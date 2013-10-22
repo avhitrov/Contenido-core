@@ -596,7 +596,7 @@ sub store {
         }
         $sth->finish();
 
-        my $id = $self->keeper->TSQL->selectrow_array("SELECT currval('documents_id_seq')");
+        my $id = $self->keeper->TSQL->selectrow_array("SELECT currval('".$self->class_table->db_id_sequence()."')");
         $self->id($id);
         return $self->t_abort("Документу присвоен неверный идентификатор") if (! defined($self->{id}) || ($self->{id} <= 0));
 

@@ -28,8 +28,21 @@
   # Просекаем фишку
   my @ids = ref($object->$name) eq 'ARRAY' ? @{ $object->$name } : $object->$name;
   my %ids = map { $_ => 1 } @ids;
-  my @values = exists $prop->{values} && ref $prop->{values} eq 'ARRAY' ? @{ $prop->{values} } :
-		exists $prop->{cases} && ref $prop->{cases} eq 'ARRAY' ? @{ $prop->{cases} } : ();
+  my @values;
+  if ( $prop && ref $prop ) {
+	if ( exists $prop->{lookup_opts} && ref $prop->{lookup_opts} eq 'HASH' ) {
+		@values = $keeper->get_documents (
+			%{$prop->{lookup_opts}},
+			names	=> 1,
+		);
+	} elsif ( exists $prop->{values} && ref $prop->{values} eq 'ARRAY' ) {
+		@values = @{ $prop->{values} };
+	} elsif ( exists $prop->{cases} && ref $prop->{cases} eq 'ARRAY' ) {
+		@values = @{ $prop->{cases} };
+	}
+  } else {
+        $error = 'Похоже неверное описание lookup_opts в документе';
+  }
 
   $error = 'Не определен набор значений для поля'	unless @values;
 

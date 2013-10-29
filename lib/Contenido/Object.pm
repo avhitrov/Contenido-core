@@ -154,7 +154,7 @@ sub class_init {
         $func_end_encode = ', Encode::FB_HTMLCREF)';
     }
     
-    my @funct_default_fields = ("class=>'$class'", "keeper=>\$keeper");
+    my @funct_default_fields = ("class=>'$class'", "keeper=>\$keeper", "__light=>\$light");
     my @funct_exra_fields = ();
 
     #те вещи которые надо заранее подсчитать при инициализации класса
@@ -539,7 +539,7 @@ sub store {
     }
 
     #если использется toast то загоняется за 1 sql запрос и extra тоже
-    if (($self->keeper->store_method() eq 'toast') and $self->class_table->have_extra) {
+    if (($self->keeper->store_method() eq 'toast') and $self->class_table->have_extra and !$self->{__light}) {
         push @fields, 'data';
         push @values, $self->_create_extra_dump();
     }
@@ -569,7 +569,7 @@ sub store {
         }
         $sth->finish();
 
-        if (($self->keeper->store_method() ne 'toast') and $self->class_table->have_extra) {
+        if (($self->keeper->store_method() ne 'toast') and $self->class_table->have_extra and !$self->{__light}) {
             $self->store_extras(mode => $mode) || return $self->t_abort();
         }
 
@@ -600,7 +600,7 @@ sub store {
         $self->id($id);
         return $self->t_abort("Документу присвоен неверный идентификатор") if (! defined($self->{id}) || ($self->{id} <= 0));
 
-        if (($self->keeper->store_method() ne 'toast') and $self->class_table->have_extra) {
+        if (($self->keeper->store_method() ne 'toast') and $self->class_table->have_extra and !$self->{__light}) {
             $self->store_extras(mode => $mode) || return $self->t_abort();
         }
 
@@ -638,7 +638,8 @@ sub delete {
     my $keeper = $self->keeper;
     do { $log->error("В объекте документа не определена ссылка на базу данных"); die } unless ref($keeper);
 
-    if ( exists $opts{attachments} && $opts{attachments} ) {
+    my $delete_attachments = exists $opts{attachments} ? $opts{attachments} : 1;
+    if ( $delete_attachments ) {
 	my @props = $self->structure();
 	if ( @props ) {
 		@props = grep { $_->{type} =~ /^(image|images|multimedia_new|multimedia_multi)$/ } @props;

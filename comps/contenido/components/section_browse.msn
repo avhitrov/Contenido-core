@@ -188,8 +188,10 @@ function mydump(arr,level) {
 %							$doc = $keeper->get_document_by_id( $document->$attr, %opts );
 %						}
 <td><input type="hidden" name="<% 'update_'.$document->id.'_'.$attr %>" id="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr || '' %>">
-<input type="text" class="<% 'autocomplete_'.$attr %>" id="<% 'autocomplete_'.$document->id.'_'.$attr %>" value="<% ref $doc ? $doc->name : defined $document->$attr ? '['.$document->$attr.']' : '' %>"
- rel="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>">
+<input type="text" class="<% 'autocomplete_'.$attr %>" id="<% 'autocomplete_'.$document->id.'_'.$attr %>" value="<% ref $doc ? $doc->name : '' %>"
+ title="<% defined $document->$attr ? 'Значение: '.$document->$attr : '' %>"
+ rel="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>"
+ old-value="<% ref $doc ? $doc->name : '' %>" onfocus="if (  )" onblur="">
 %					} elsif ($col->{type} eq 'lookup') {
 %						my %opts = %{ $col->{lookup_opts} };
 %						delete $opts{search_by}		if exists $opts{search_by};

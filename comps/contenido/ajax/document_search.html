@@ -28,6 +28,10 @@
 	}
 	$opts{$search_by} = $search_string;
 	$opts{ilike} = 1;
+	while ( my ($key, $val) = each %ARGS ) {
+		next	if $key =~ /^(class|table|min|term|show|search_by)$/;
+		$opts{$key} = $val;
+	}
 	my $docs = $keeper->get_documents( %opts, return_mode => 'array_ref', light => 1, limit => 30 );
 	if ( ref $docs eq 'ARRAY' && @$docs ) {
 		@result = map { {id => $_->id, label => Encode::decode('utf-8', $_->$show), value => Encode::decode('utf-8', $_->$show)} } @$docs;

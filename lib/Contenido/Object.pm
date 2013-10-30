@@ -224,7 +224,7 @@ sub class_init {
                     $virtual_fields{$attr} = 1;
                 } else {
                     #инициализируем из dump все кроме виртуальных свойств
-                    push @funct_exra_fields, "$attr=>(\$keeper->serialize_with eq 'json' ? Encode::encode('utf-8', \$dump->{$attr}, Encode::FB_HTMLCREF) : $func_start_encode\$dump->{$attr}$func_end_encode)";
+                    push @funct_exra_fields, "$attr=>(\$keeper->serialize_with eq 'json' ? (ref \$dump->{$attr} ? Data::Recursive::Encode->encode_utf8(\$dump->{$attr}) : Encode::encode('utf-8', \$dump->{$attr}, Encode::FB_HTMLCREF) ) : $func_start_encode\$dump->{$attr}$func_end_encode)";
                 }
             }
         }

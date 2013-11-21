@@ -5,24 +5,41 @@ use warnings;
 
 use Contenido::Globals;
 use Data::Dumper;
+use IO::File;
 
 sub store {
     my $path = shift || return;
     my $fh = shift || return;
 
     local $/ = undef;
-
-    my $content = <$fh>;
-
     make_dir_recursive($path);
 
-    unless (open FILE, ">$path") {
-        warn $!;
-        return;
+    my $size = (stat $fh)[7];
+    if ( $size < 10485760 ) {
+	my $content = <$fh>;
+	unless (open FILE, "> $path") {
+		warn $!;
+		return;
+	}
+	print FILE $content;
+	close FILE;
+    } else {
+	my ($offset, $limit, $buff) = (0, 524288, undef);
+	my $dst = new IO::File;
+	unless ($dst->open("> $path")) {
+		warn $!;
+		return;
+	}
+	while ( $size ) {
+		my $len = $size > $limit ? $limit : $size;
+		$fh->sysread( $buff, $len, $offset );
+		$dst->syswrite( $buff, $len, $offset );
+		$offset += $len;
+		$size -= $len;
+		undef $buff;
+	}
+	undef $dst;
     }
-
-    print FILE $content;
-    close FILE;
 
     return 1;
 }

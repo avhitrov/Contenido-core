@@ -223,6 +223,7 @@ sub store_image {
     syswrite $fh_tmp, $buffer, $size;
 
     undef $fh_tmp;
+    undef $buffer;
 
     my $image_info = image_info($filename_tmp.'.'.$ext);
     if ( !(ref $image_info && $image_info->{width} && $image_info->{height}) || (ref $image_info && $image_info->{error}) ) {
@@ -502,6 +503,7 @@ sub store_binary {
     syswrite $fh_tmp, $buffer, $size;
 
     undef $fh_tmp;
+    undef $buffer;
 
     my $BINARY;
     if ( store($filename.'.'.$ext, $filename_tmp.'.'.$ext) ) {

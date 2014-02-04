@@ -225,7 +225,6 @@ function set_create_button( oSelect, sBtnID ) {
 				$updated{$oid}{$attr} = $value;
 			}
 		}
-		warn Dumper \%updated;
 		my %classes = map { $_->{class} => 1 } values %updated;
 		foreach my $update_class ( keys %classes ) {
 			my @ids;

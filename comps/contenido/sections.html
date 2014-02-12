@@ -336,7 +336,7 @@ function set_create_button( oSelect, sBtnID ) {
 								} else {
 									push @sections, $parent_new->id;
 								}
-								@sections = grep { $_ == $owner->id } @sections		if $ARGS{move};
+								@sections = grep { $_ != $owner->id } @sections		if $ARGS{move};
 								$object->sections( @sections );
 							} else {
 								$object->sections( $parent_new->id );

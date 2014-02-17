@@ -65,13 +65,14 @@
 	</tr>	
 	</table>
 </td></tr>
-%		if ($prop->{type} eq 'parent')
-%		{
+%		if ($prop->{type} eq 'parent') {
 <tr><td><& "/contenido/components/inputs/$prop->{type}.msn", prop => $prop, object=>$object, options=>$options, name => $name, check => ($object->$name || $prop->{default} || $sect_id ), id => $object->id() &></td></tr>
-%		}
-%		elsif( ( $prop->{type} ne 'flag' ) && ($prop->{type} ne 'checkbox') )
-%		{
+%		} elsif( ( $prop->{type} ne 'flag' ) && ($prop->{type} ne 'checkbox') ) {
+%			if ( $m->comp_exists( "/contenido/components/inputs/$prop->{type}.msn" ) ) {
 <tr><td><& "/contenido/components/inputs/$prop->{type}.msn", prop => $prop, object=>$object, options => $options, name => $name, check => ($object->$name || $object->{$name}), id => ($object->id() || 0) &></td></tr>
+%			} else {
+<tr><td style="color:red">Попытка вызвать компоненту неизвестного типа (<% Dumper $prop %>)</td></tr>
+%			}
 %		}
 %	}
 <tr>

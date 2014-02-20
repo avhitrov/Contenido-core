@@ -332,11 +332,18 @@ function set_create_button( oSelect, sBtnID ) {
 							if ( $prop->{db_type} eq 'integer[]' ) {
 								my @sections = grep { $_ != $parent_new->id } $object->sections;
 								if ( @sections && $sections[0] == $owner->id ) {
-									unshift @sections, $parent_new->id;
+									if ( $ARGS{move} ) {
+										shift @sections;
+										unshift @sections, $parent_new->id;
+									} else {
+										push @sections, $parent_new->id;
+									}
 								} else {
-									push @sections, $parent_new->id;
+									if ( $ARGS{move} ) {
+										@sections = grep { $_ != $owner->id } @sections;
+									}
+									unshift @sections, $parent_new->id;
 								}
-								@sections = grep { $_ != $owner->id } @sections		if $ARGS{move};
 								$object->sections( @sections );
 							} else {
 								$object->sections( $parent_new->id );

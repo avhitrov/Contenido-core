@@ -207,10 +207,17 @@
 		}
 
 
+		if ( $m->comp_exists('/contenido/components/pre_store.msn') ) {
+			$m->comp('/contenido/components/pre_store.msn', object => $document, SETS => \%ARGS);
+		}
+
 		unless ($document->store()) {
 			# Ошибка, надо бы обработать...
 			$error="Ошибка сохранения ($keeper->{last_error})";
 		} else {
+			if ( $m->comp_exists('/contenido/components/post_store.msn') ) {
+				$m->comp('/contenido/components/post_store.msn', object => $document, SETS => \%ARGS);
+			}
 
 			if ($ARGS{_save_and_leave}) {
 				$m->redirect("sections.html?id=".($filter_params{s} || $owner->id).($return_params ? '&'.$return_params : ''));

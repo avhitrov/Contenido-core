@@ -257,7 +257,7 @@ function mydump(arr,level) {
 %					}
 %
 %				} else {
-%
+%					my $attr = $col->{attr};
 %					if ($col->{type} eq 'date') {
 %						my $date=$document->{$col->{attr}};
 %						$date=~/(\d{4}-\d{2}-\d{2})/;
@@ -279,13 +279,15 @@ function mydump(arr,level) {
 %						} else {
 <span class="hiddensect">NULL</span>\
 %						}
+%					} elsif ($col->{type} eq 'checkbox') {
+<td align="center"><% $document->$attr ? '<img src="/contenido/i/checked-16x16.png" width="16" height="16">' : '&nbsp;' %>\
 %					} elsif ($col->{type} eq 'status') {
 %						my $status_map = ref $col->{cases} eq 'ARRAY' ? $col->{cases} : $keeper->default_status();
 %						my ($doc_status) = grep { $_->[0] eq $document->{$col->{attr}} } @$status_map; 
 %						$doc_status ||= [$document->{$col->{attr}}, 'Неизвестный'];
 		<td nowrap><% $doc_status->[1].'('.$doc_status->[0].')' %>\
 %					} else {
-<td><% defined($document->{$col->{attr}}) ? $document->{$col->{attr}} : '&nbsp;' %>\
+<td><% defined($document->$attr) ? $document->$attr : '&nbsp;' %>\
 %					}
 %				}
 </td>

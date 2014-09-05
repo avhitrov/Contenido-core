@@ -24,6 +24,15 @@ $keeper = $keeper_module->new($state);
 #PidFile->new($keeper, compat=>1);                # db-based locking (run only on one host)
 #PidFile->new($keeper, compat=>1, per_host=>1);   # db-based locking (run on whole cluster)
 
+# Plugins init
+#for my $plugin ( split(/\s+/, $state->plugins) ) {
+#	my $class = $plugin.'::Apache';
+#	eval { $class->child_init(); };
+#	if ( $@ ) {
+#		$log->error("Не могу выполнить метод child_init плагина $plugin ($class) по причине '$@'");
+#	}
+#}
+
 ############################################
 # please use:
 #     $state->{log_dir} for logging

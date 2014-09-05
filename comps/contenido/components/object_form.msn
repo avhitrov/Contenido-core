@@ -5,7 +5,7 @@
 <div style="text-align:right;"><& '/contenido/components/object_context_form.msn', object => $object &></div>
 % }
 
-<form enctype="multipart/form-data" action="<% $PROTOS->{$proto}->[1] %>" method="POST" name="form" onSubmit="javascript:Save()">
+<form enctype="multipart/form-data" action="<% $PROTOS->{$proto}->[1] %>" method="POST" name="form" onSubmit="return Save(this)">
 <table border="0" width="100%" cellspacing="0" cellpadding="6">
 <tr>
 <td style="font-size:110%;">

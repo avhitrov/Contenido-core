@@ -138,6 +138,23 @@ function Save()
 			document.form.obj_list_dest_id[i].selected = true;
 		}
 	}
+	var Check_day;
+	var Check_mon;
+	var Check_year;
+% foreach my $prop ( $object->structure ) {
+%    if ( !($prop->{hidden} || $prop->{readonly} || $prop->{auto}) && ($prop->{type} eq 'datetime' || $prop->{type} eq 'date') ) {
+%	my $name = $prop->{attr};
+	Check_day = oForm.<% $name %>_day.value;
+	Check_mon = oForm.<% $name %>_month.value;
+	Check_year = oForm.<% $name %>_year.value;
+	if ( ((Check_mon == 4 || Check_mon == 6 || Check_mon == 9 || Check_mon == 11) && Check_day > 30) ||
+		(Check_year % 4 > 0 && Check_mon == 2 && Check_day > 28) || (Check_year % 4 == 0 && Check_mon == 2 && Check_day > 29) ) {
+		alert('Дата [<% $prop->{attr} %>] указана неверно');
+		oForm.<% $name %>_day.focus();
+		return false;
+	}
+%    }
+% }
 
 	return true;	
 }

@@ -6,7 +6,8 @@ PORTVERSION =		1.75
 PERL_MAKEMAKER =	yes
 #PERL_MODBUILD =	yes
 MASTER_CPAN_SUBDIR =	DateTime
-PORT_DEPENDS =		Class-Load					\
+PORT_DEPENDS =		Scalar-List-Utils				\
+			Class-Load					\
 			List-AllUtils					\
 			Class-Singleton					\
 			Params-Validate

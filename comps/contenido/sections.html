@@ -79,7 +79,7 @@ function set_create_button( oSelect, sBtnID ) {
 %	if ($total || scalar @documents || defined($alpha) || defined($search) ) {
 %		if ($section_access == 2) {
 <& "/contenido/components/new_objects_form.msn", proto => 'documents',
-	sect_id => $owner->id,
+	sect_id => $owner->id, section => $owner,
 	default => ($owner->default_document_class ? $owner->default_document_class : undef) &>
 %		}
 <div style="font-size:12px; font-family:Arial;">
@@ -91,8 +91,8 @@ function set_create_button( oSelect, sBtnID ) {
 %		## Форма поиска. Работает при включенном фильтре класса
 %		## и описанной для класса функции search_fields
 %		########################################################
-%		if ( $filter{class} ) {
-%			my $document = $filter{class}->new ($keeper);
+%		if ( $filter{class} || $filter{table} ) {
+%			my ($document) = $filter{class} ? ($filter{class}->new( $keeper )) : grep { $_->new( $keeper )->class_table eq $owner->default_table_class } @{ $user->get_available_classes };
 %			my @fields = $document->search_fields;
 %			if ( @fields ) {
 %				my @props = $document->required_properties;

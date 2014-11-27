@@ -24,6 +24,7 @@ sub new {
 ##	$self->{variable_name} = 'VARIABLE_NAME_SURROUNDED_BY_@@';
 
 	$self->{contenido_notab} = 1;
+	$self->{tab_name} = '@PROJECT_NAME@';
 
 	$self->_init_();
 
@@ -55,6 +56,7 @@ sub _init_
 ## Здесь список параметров, указанных в new()
 	foreach my $attribute ( qw(
 				contenido_notab
+				tab_name
 			 ) )
 	{
 		$self->{attributes}->{ $attribute } = 'SCALAR';

@@ -14,6 +14,8 @@ sub new {
 	# configured
 	$self->{debug} =		(lc('@DEBUG@') eq 'yes');
 	$self->{project} =		'@PROJECT@';
+	$self->{contenido_notab} =	0;
+	$self->{tab_name} =		'@NAME@';
 
 	# зашитая конфигурация плагина
 	$self->{db_type} =		'none';		### For REAL database use 'remote'
@@ -63,6 +65,7 @@ sub _init_ {
 	$self->{attributes}->{$_} = 'SCALAR' for qw(
                 debug
                 project
+		tab_name
 
 		db_type
 		db_keepalive

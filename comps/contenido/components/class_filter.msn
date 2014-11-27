@@ -5,6 +5,7 @@
         <tr bgcolor="#efefef">
         <th align="center" width="1%">N</th>
         <th colspan=2>Название</th>
+	</tr>
 %	my $serial=0;
 %	foreach my $local_class (sort {$a->class_name cmp $b->class_name} @{ $user->get_available_classes }) {
 %		$serial++;

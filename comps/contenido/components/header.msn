@@ -26,12 +26,16 @@
 %		my $l_plugin = lc($plugin);
 %		next if $state->{$l_plugin}->{contenido_notab};
 %		my $uri = "$plugin/";
-%		if ($plugin eq $state->project)
-%		{
-%			$plugin = $state->project_name;
+%		my $tab_name;
+%		if (exists $state->{$plugin}{tab_name} && $state->{$plugin}{tab_name}) {
+%			$tab_name = $state->{$plugin}{tab_name};
+%		} elsif ($plugin eq $state->project) {
+%			$tab_name = $state->project_name;
+%		} else {
+%			$tab_name = $plugin;
 %		}
 %		my ($b1, $b2) = $r->uri =~ /^\/contenido\/(\w+)\//i && lc($1) eq $l_plugin ? ('<b>','</b>') : ('','');
-&nbsp;|&nbsp;<a href="/contenido/<% $uri %>"><% $b1.$plugin.$b2 %></a>
+&nbsp;|&nbsp;<a href="/contenido/<% $uri %>"><% $b1.$tab_name.$b2 %></a>
 %	}
 </td>
 <td align="right">

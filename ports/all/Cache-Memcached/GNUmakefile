@@ -5,7 +5,7 @@
 
 include ../../etc/perl.mk
 
-PORTVERSION =		1.18
+PORTVERSION =		1.30
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	Cache
 INSTALL_PRECMD =	${MAKE_RECURSIVE} pre-install

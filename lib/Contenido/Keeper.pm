@@ -860,18 +860,18 @@ sub MEMD {
 
     return undef unless $self->{state}->{memcached_enable};
 
-    unless ($self->{MEMD} && ref($self->{MEMD}) && $self->{MEMD}->{servers}) {
+    unless ( $self->{MEMD} && ref $self->{MEMD} &&  ref $self->{MEMD}->server_versions eq 'HASH' && keys %{$self->{MEMD}->server_versions} ) {
         my $implementation = $self->state()->memcached_backend();
         $self->{MEMD} = $implementation->new({
             servers => $self->state()->memcached_servers(),
-            debug => $DEBUG,
             compress_threshold => 10_000,
             namespace => $self->state()->memcached_namespace,
             enable_compress => $self->state()->memcached_enable_compress(),
             connect_timeout => 0.1,
-            select_timeout => $self->state()->memcached_select_timeout(),
+            io_timeout => $self->state()->memcached_select_timeout(),
             check_args => 'skip'
         });
+        $self->{MEMD}->enable_compress( $self->state()->memcached_enable_compress() );
     }
     return $self->{MEMD};
 }

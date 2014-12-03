@@ -3,7 +3,7 @@ package Contenido::Cache::MemcachedBackend;
 use strict;
 use warnings 'all';
 
-use Cache::Memcached;
+use Cache::Memcached::Fast;
 
 
 #########################################
@@ -17,7 +17,6 @@ sub new {
 	my $implementation = $opts->{mc_backend};
 	$memd ||= $implementation->new({
 			servers   => $$opts{mc_servers},
-			debug     => $$opts{mc_debug},
 			namespace => $$opts{mc_namespace},
 		});
 	bless {memd=>$memd}, $class;

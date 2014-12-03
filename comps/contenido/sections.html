@@ -92,7 +92,7 @@ function set_create_button( oSelect, sBtnID ) {
 %		## и описанной для класса функции search_fields
 %		########################################################
 %		if ( $filter{class} || $filter{table} ) {
-%			my ($document) = $filter{class} ? ($filter{class}->new( $keeper )) : grep { $_->new( $keeper )->class_table eq $owner->default_table_class } @{ $user->get_available_classes };
+%			my ($document) = $filter{class} ? ($filter{class}->new( $keeper )) : map { $_->new( $keeper ) } grep { $_->new( $keeper )->class_table eq $owner->default_table_class } @{ $user->get_available_classes };
 %			my @fields = $document->search_fields;
 %			if ( @fields ) {
 %				my @props = $document->required_properties;

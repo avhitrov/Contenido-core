@@ -9,13 +9,13 @@
 
 SHELL=/bin/sh
 PATH=/etc:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
-LANG=ru_RU.KOI8-R
+LANG=ru_RU.UTF-8
 #MAILTO=CHANGEIT
 
 #minute	hour	mday	month	wday	command
-#3		2		*		*		*		@CORE_USR@/services/logz @PROJECT_VAR@/log >> @PROJECT_VAR@/log/logz
-#*/10	10-19	*		*		1-5		@PROJ_USR@/@PROJECT_NAME@/services/CHANGEIT >> @PROJECT_VAR@/log/CHANGEIT
-#*/10	10-19	*		*		1-5		@PROJ_USR@/@PROJECT_NAME@/services/CHANGEIT | @LOCAL@/bin/cronolog @PROJECT_VAR@/log/CHANGEIT-%Y-%m-%d
+#3	2	*	*	*	@CORE_USR@/services/logz @PROJECT_VAR@/log >> @PROJECT_VAR@/log/logz
+#*/10	10-19	*	*	1-5	@PROJ_USR@/@PROJECT@/services/CHANGEIT >> @PROJECT_VAR@/log/CHANGEIT
+#*/10	10-19	*	*	1-5	@PROJ_USR@/@PROJECT@/services/CHANGEIT | @LOCAL@/bin/cronolog @PROJECT_VAR@/log/CHANGEIT-%Y-%m-%d
 
 
 # vim: set ft=crontab ts=4 sw=4:

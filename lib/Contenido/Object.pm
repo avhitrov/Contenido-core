@@ -372,7 +372,7 @@ sub _serialize {
     my $self = shift;
     my $data = shift;
     if ( $self->keeper->serialize_with eq 'json' ) {
-	return $json_n->encode($data);
+	return $json_n->encode(ref $data ? $data : {});
     } else {
 	local $Data::Dumper::Indent = 0;
 	return Data::Dumper::Dumper($data);

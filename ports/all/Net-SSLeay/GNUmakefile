@@ -2,7 +2,7 @@
 #
 ###############################################################################
 
-PORTVERSION =		1.54
+PORTVERSION =		1.68
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	Net
 

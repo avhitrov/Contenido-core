@@ -1,0 +1,76 @@
+<textarea \
+% if ($request->{images_staff_printed}) {
+onclick="storeCaret(this)" onkeyup="storeCaret(this)" onselect="storeCaret(this)" \
+% }
+<% $prop->{readonly} ? 'readonly ' : '' %> name="<% $name %>" id="<% $name %>_textarea" rows="<% $prop->{rows} || 8 %>" cols="<% $prop->{cols} || 8 %>" style="width: 95%;" onkeyup="<% $name %>_changed();"><% $check %></textarea>
+
+<table id="<% $name %>_prev_table" style="width: 95%; display: none;" cellspacing="0" cellpadding="0" border="0">
+	<tr>
+		<td width="100%" id="<% $name %>_prev_text" class="bb undo" style="padding: 3px;"></td>
+		<td style="padding-left: 3px; vertical-align: top;"><a href="#" onclick="return <% $name %>_show();" title="Показать/спрятать прежнее значение"><img src="/contenido/i/modified-19x19.gif" width="19" height="19" class="bb gb"></a></td>
+		<td style="padding-left: 3px; vertical-align: top;"><a href="#" onclick="return <% $name %>_undo();" title="Отменить изменения"><img src="/contenido/i/undo-19x19.gif" width="19" height="19" class="bb gb"></a></td>
+	</tr>
+</table>
+% if ( exists $prop->{rem} && $prop->{rem} ) {
+<div style="color:gray; font-size:85%; padding:4px">&raquo; <% $prop->{rem} %></div>
+% }
+<textarea id="<% $name %>_prev_value" style="display: none;"><% $check %></textarea>
+
+<script type="text/javascript">
+	var <% $name %>_show_modified = false;
+	var <% $name %>_show_modified_text = "Прежнее значение не показано. Нажмите кнопку '<b>Показать/спрятать</b>' для просмотра.";
+
+	function <% $name %>_changed() {
+		var t = document.getElementById('<% $name %>_prev_table');
+		if (document.getElementById('<% $name %>_textarea').value==document.getElementById('<% $name %>_prev_value').value) {
+			if (t.style.display!='none') {
+				t.style.display = 'none';
+			}
+			return;
+		}
+		if (t.style.display=='none') {
+			document.getElementById('<% $name %>_prev_text').innerHTML = <% $name %>_show_modified_text;
+			t.style.display = '';
+		}
+	}
+
+	function <% $name %>_undo() {
+		document.getElementById('<% $name %>_textarea').value = document.getElementById('<% $name %>_prev_value').value;
+		<% $name %>_changed();
+		return false;
+	}
+
+	function <% $name %>_show() {
+		if (<% $name %>_show_modified) {
+			document.getElementById('<% $name %>_prev_text').innerHTML = <% $name %>_show_modified_text;
+		} else {
+			if (document.all) { // IE
+				document.getElementById('<% $name %>_prev_text').innerText = document.getElementById('<% $name %>_prev_value').innerText || ' ';
+			} else {
+				document.getElementById('<% $name %>_prev_text').innerHTML = document.getElementById('<% $name %>_prev_value').innerHTML || '&nbsp;';
+			}
+		}
+		<% $name %>_show_modified = !<% $name %>_show_modified;
+		return false;
+	}
+</script>
+<%once>
+
+    use JSON::XS;
+
+</%once>
+<%args>
+	$name	=> undef
+	$check	=> undef
+	$prop	=> {}
+	$object	=> undef
+</%args>
+<%init>
+
+	$check = html_escape($check) unless $prop->{no_escape};
+
+	if ( ref $check ) {
+		$check = Encode::encode('utf-8', JSON::XS->new->utf8->encode( $check ));
+	}
+
+</%init>

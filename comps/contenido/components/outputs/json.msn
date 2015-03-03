@@ -1,0 +1,32 @@
+<%once>
+
+    use JSON::XS;
+
+</%once>
+<%args>
+
+        $name	=> undef
+        $SETS	=> undef
+	$object	=> undef
+
+</%args>
+<%init>
+
+	return undef	unless ref($SETS);
+	return undef	unless $name;
+	return undef	unless $SETS->{$name};
+
+	my ($prop) = grep { $_->{attr} eq $name } $object->structure;
+	my $class = $object->class;
+	my $is_extra = grep { ref $_ && $_->{attr} eq $name } $class->extra_properties ? 1 : 0;
+
+	my $result;
+	if ( $is_extra && !$prop->{serialize} ) {
+		eval { $result = JSON::XS->new->decode( $SETS->{$name} ) };
+	} else {
+		$result = $SETS->{$name};
+	}
+	warn Dumper $result;
+	return $result;
+
+</%init>

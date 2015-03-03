@@ -74,25 +74,42 @@
 	
 </style>
 <title>Редакторский интерфейс<% (length($title) > 0) ? " | $title" : "" %></title>
-<script language="javascript" type="text/javascript" src="/contenido/i/js/jquery-1.9.1.js"></script>
-<script language="javascript" type="text/javascript" src="/contenido/i/js/jquery-ui-1.10.3.custom/jquery-ui-1.10.3.custom.min.js"></script>
-<% $m->comp_exists('/contenido/components/custom_head.msn') ? $m->comp('/contenido/components/custom_head.msn') : '' %>
 <link rel="stylesheet" type="text/css" href="/contenido/i/js/jquery-ui-1.10.3.custom/css/flick/jquery-ui-1.10.3.custom.css" media="all" />
+<script language="javascript" type="text/javascript" src="/contenido/i/js/jquery-1.9.1.min.js"></script>
+<% $m->comp_exists('/contenido/components/custom_head.msn') ? $m->comp('/contenido/components/custom_head.msn') : '' %>
 <script language="javascript" type="text/javascript" src="/contenido/i/js/links.js"></script>
-<script language="javascript" type="text/javascript" src="/contenido/i/js/tiny_mce/jquery.tinymce.js"></script>
+<script language="javascript" type="text/javascript" src="/contenido/i/js/tinymce-3.5.11/jquery.tinymce.js"></script>
+<script language="javascript" type="text/javascript" src="/contenido/i/js/jquery-ui-1.10.3.custom/jquery-ui-1.10.3.custom.min.js"></script>
+% if ( @plugins ) {
+%	foreach my $plugin ( @plugins ) {
+%		my ($include_dir, $include_comp);
+%		if ( $plugin eq $state->project ) {
+%			$include_dir = $state->{mason_comp}.'/contenido/'.$plugin.'/components/';
+%		} else {
+%			$include_dir = $state->{plug_src}.'/'.$plugin.'/comps/contenido/'.$plugin.'/components/';
+%		}
+%		$include_comp = '/contenido/'.$plugin.'/components/title_inc.msn';
+%		if ( -e $include_dir && $m->comp_exists($include_comp) ) {
+<& $include_comp &>
+%		}
+%	}
+% }
 <script language="javascript" type="text/javascript">
+<!--
 var WYSIWYGControls = new Array();
 var sDocumentClass;
 var nDocumentID;
-$().ready(function() {
-  var sControls;
+$(document).ready(function() {
 	$('textarea.tinymce').tinymce({
 			// Location of TinyMCE script
-			script_url : '/contenido/i/js/tiny_mce/tiny_mce.js',
+			script_url : '/contenido/i/js/tinymce-3.5.11/tiny_mce.js',
 
 			// General options
 			theme : "advanced",
 			plugins : "style,layer,table,advhr,advimage,advlink,inlinepopups,preview,media,contextmenu,paste,noneditable,visualchars,nonbreaking,template,advlist",
+			// TinyMCE 4.x
+			//theme : "modern",
+			//plugins : "style,layer,table,hr,image,link,code,textcolor,preview,media,contextmenu,paste,noneditable,visualchars,nonbreaking,template,advlist",
 
 			// Theme options
 			theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,formatselect,fontselect,fontsizeselect,|,forecolor,backcolor,|,undo,redo,|,preview,help,code",
@@ -123,30 +140,6 @@ $().ready(function() {
 			external_image_list_url : "/contenido/image_list.js?class=" + sDocumentClass + "&id=" + nDocumentID
 
 	});
-<%doc>
-  if ( WYSIWYGControls.length ) {
-	sControls = WYSIWYGControls.join(',');
-	$('textarea.tinymce').tinymce({
-		// Location of TinyMCE script
-		script_url : '/contenido/i/js/tiny_mce/tiny_mce.js',
-
-		theme : "advanced",
-		plugins : "safari,paste,advimage,table",
-		paste_create_paragraphs : false,
-		paste_create_linebreaks : false,
-		paste_use_dialog : true,
-		paste_auto_cleanup_on_paste : true,
-		paste_convert_middot_lists : false,
-		paste_unindented_list_class : "unindentedList",
-		paste_convert_headers_to_strong : true,
-		paste_insert_word_content_callback : "convertWord",
-		theme_advanced_buttons3_add : "pastetext,pasteword,selectall,|,forecolor,backcolor,|,tablecontrols",
-		convert_urls : false,
-
-		external_image_list_url : "/contenido/image_list.js?class=" + sDocumentClass + "&id=" + nDocumentID
-	});
-  }
-</%doc>
 });
 <%doc>
 function convertWord(type, content) {
@@ -165,7 +158,7 @@ function convertWord(type, content) {
 	return content;
 }
 </%doc>
-
+//-->
 </script>
 </head>
 <body>
@@ -177,6 +170,10 @@ function convertWord(type, content) {
 
 </%args>
 <%init>
+
 	my $pn = $state->project_name();
 	my ($pn_name, $pn_domen) = split(/\./, $pn);
+
+	my @plugins = ($state->project, split(/\s+/, $state->plugins));
+
 </%init>

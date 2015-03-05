@@ -1,6 +1,7 @@
 <%once>
 
     use JSON::XS;
+    use Data::Recursive::Encode;
 
 </%once>
 <%args>
@@ -18,14 +19,15 @@
 
 	my ($prop) = grep { $_->{attr} eq $name } $object->structure;
 	my $class = $object->class;
-	my $is_extra = grep { ref $_ && $_->{attr} eq $name } $class->extra_properties ? 1 : 0;
+	my $is_extra = scalar (grep { ref $_ && $_->{attr} eq $name } $class->class_table->required_properties) ? 0 : 1;
 
 	my $result;
 	if ( $is_extra && !$prop->{serialize} ) {
-		eval { $result = JSON::XS->new->decode( $SETS->{$name} ) };
+		eval { $result = Data::Recursive::Encode->encode_utf8( JSON::XS->new->utf8->decode($SETS->{$name}) ) };
 	} else {
 		$result = $SETS->{$name};
 	}
+	warn "\nJSON\n";
 	warn Dumper $result;
 	return $result;
 

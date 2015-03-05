@@ -57,6 +57,7 @@ onclick="storeCaret(this)" onkeyup="storeCaret(this)" onselect="storeCaret(this)
 <%once>
 
     use JSON::XS;
+    use Data::Recursive::Encode;
 
 </%once>
 <%args>
@@ -67,10 +68,9 @@ onclick="storeCaret(this)" onkeyup="storeCaret(this)" onselect="storeCaret(this)
 </%args>
 <%init>
 
-	$check = html_escape($check) unless $prop->{no_escape};
-
 	if ( ref $check ) {
-		$check = Encode::encode('utf-8', JSON::XS->new->utf8->encode( $check ));
+		$check = Encode::encode('utf-8', JSON::XS->new->encode( Data::Recursive::Encode->decode_utf8($check) ));
 	}
+	$check = html_escape($check) unless $prop->{no_escape};
 
 </%init>

@@ -1,13 +1,14 @@
 ##############################################################################
-# $Id: GNUmakefile 1243 2008-06-17 11:05:36Z abavykin $
+#
 ###############################################################################
 
-PORTVERSION =		1.00
+PORTVERSION =		1.10
 PERL_MODBUILD =		yes
 #PERL_MAKEMAKER =	yes
-MASTER_CPAN_SUBDIR =	ExtUtils
-PORT_DEPENDS =		ExtUtils-CBuilder			\
-			Module-Build
+MASTER_CPAN_SUBDIR =	Params
+PORT_DEPENDS =		Module-Implementation			\
+			Test-Fatal				\
+			Test-Requires
 
 include ../../etc/perl.mk
 

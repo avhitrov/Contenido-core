@@ -6,9 +6,6 @@
 		<td style="padding-left: 3px; vertical-align: top;"><a href="#" onclick="return <% $name %>_undo();" title="Отменить изменения"><img src="/contenido/i/undo-19x19.gif" width="19" height="19" class="bb gb"></a></td>
 	</tr>
 </table>
-% if ( exists $prop->{rem} && $prop->{rem} ) {
-<div style="color:gray; font-size:85%; padding:4px">&raquo; <% $prop->{rem} %></div>
-% }
 <textarea id="<% $name %>_prev_value" style="display: none;"><% $check %></textarea>
 
 <script type="text/javascript">

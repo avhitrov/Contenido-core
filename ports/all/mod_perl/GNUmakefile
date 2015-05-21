@@ -1,6 +1,5 @@
 ##############################################################################
-# $HeadURL: http://svn.dev.rambler.ru/Contenido/branches/utf8/ports/all/mod_perl/GNUmakefile $
-# $Id: GNUmakefile 1526 2010-03-29 11:11:10Z ahitrov $
+#
 ###############################################################################
 
 include ../../etc/perl.mk
@@ -19,6 +18,15 @@ CONFIGURE_POSTARGS =	APACHE_SRC=${APACHE_WRKSRC}/src			\
 			DO_HTTPD=1					\
 			PREP_HTTPD=1					\
 			EVERYTHING=1
+
+CONFIGURE_PRECMD =      ${MAKE_RECURSIVE} pre-configure
+pre-configure:
+ifeq (${shell ${PERL} -e 'print 1 if ${PERL_LEVEL}>=501400'},1)
+	cd ${WRKSRC} && patch -p0 < ${PORTDIR}/patch.perl5.14
+endif
+ifeq (${shell ${PERL} -e 'print 1 if ${PERL_LEVEL}>=501600'},1)
+	cd ${WRKSRC} && patch -p0 < ${PORTDIR}/patch.perl5.16
+endif
 
 
 include ../../etc/ports.mk

@@ -1,6 +1,5 @@
 ##############################################################################
-# $HeadURL: http://svn.dev.rambler.ru/Contenido/branches/utf8/ports/all/DBD-Pg/GNUmakefile $
-# $Id: GNUmakefile 1418 2009-06-05 09:17:07Z phoinix $
+#
 ###############################################################################
 
 
@@ -9,8 +8,10 @@ include ../../etc/perl.mk
 
 ifeq (${shell perl -e 'print 1 if ${PERL_LEVEL}<500600'},1)
 PORTVERSION =		1.32
-else
+elif (${shell perl -e 'print 1 if ${PERL_LEVEL}<501000'},1)
 PORTVERSION =		2.11.8
+else
+PORTVERSION =		2.19.3
 endif
 
 PERL_MAKEMAKER =	yes

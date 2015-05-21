@@ -30,8 +30,7 @@ MASTER_CPAN_SITES ?=														\
 
 
 MASTER_SITES ?=			/usr/local/dist							\
-				http://contenido.me/repos/Contenido/cnddist			\
-				http://svn.dat.ru/repos/cnddist/trunk
+				http://contenido.me/repos/Contenido/cnddist
 
 MASTER_POST_SITES ?=
 

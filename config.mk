@@ -20,7 +20,6 @@ CORE_REQUIRED +=		DateTime
 CORE_REQUIRED +=		HTML-Mason
 CORE_REQUIRED +=		apache13
 CORE_REQUIRED +=		libapreq
-CORE_REQUIRED +=		ImageMagick
 CORE_REQUIRED +=		IO-stringy
 CORE_REQUIRED +=		DateTime-Format-Pg
 CORE_REQUIRED +=		Cache-Memcached-Fast
@@ -52,3 +51,8 @@ MAX_REQUESTS_PER_CHILD ?=	10000
 DEVELOPMENT ?=			NO
 
 OPTIONS_EXPIRE ?=		600
+
+CONVERT =			${shell export PATH=${LOCAL}/bin:$${PATH}; which convert}
+ifeq (${CONVERT},)
+CORE_REQUIRED +=		ImageMagick
+endif

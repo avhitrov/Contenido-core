@@ -207,7 +207,7 @@ RSYNC =				${shell export PATH=${LOCAL}/bin:$${PATH};		\
 					fi;}
 
 COMPOSITE =				${shell export PATH=${LOCAL}/bin:$${PATH}; which composite}
-CONVERT =				${shell export PATH=${LOCAL}/bin:$${PATH}; which convert}
-ifeq (${CONVERT},)
-${error ERROR: No executable convert found, you need to install ImageMagick first}
-endif
+#CONVERT =				${shell export PATH=${LOCAL}/bin:$${PATH}; which convert}
+#ifeq (${CONVERT},)
+#${error ERROR: No executable convert found, you need to install ImageMagick first}
+#endif

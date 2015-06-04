@@ -1,12 +1,17 @@
 ##############################################################################
-# $HeadURL: svn://cvs1.rambler.ru/Contenido/trunk/ports/all/apache13/GNUmakefile $
-# $Id: GNUmakefile 511 2006-10-10 14:49:33Z lonerr $
+#
 ###############################################################################
 
 PORTVERSION =		0.1
+#CONFIGURE_POSTCMD =	${MAKE_RECURSIVE} post-configure
 
 do-configure:
 	@sed -i'' -e '/^__FBSDID/d' ${WRKSRC}/clogger.c
+	@echo ${WRKSRC}/Makefile
+	@sed -i'' -e 's/gcc/cc/g' ${WRKSRC}/Makefile
+
+#post-configure:
+#	@echo 'GCC change'
 
 do-install:
 	@test -d ${PREFIX}/bin || mkdir -p ${PREFIX}/bin

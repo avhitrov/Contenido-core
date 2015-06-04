@@ -8,6 +8,15 @@ DISTFILE =		apache_${PORTVERSION}.tar.gz
 MASTER_POST_SITES =	http://archive.apache.org/dist/httpd
 CONFIGURE_ARGS =	--prefix=${PREFIX}/apache			\
 			--disable-rule=EXPAT
+
+OPSYS ?=		${shell uname}
+ifeq (${OPSYS},Linux)
+CONFIGURE_COMMAND ?=	OPTIM="-fgnu89-inline" bash ./configure
+else
+CONFIGURE_COMMAND ?=	OPTIM="-fgnu89-inline" ./configure
+endif
+
+
 ifndef WITHOUT_REWRITE
 CONFIGURE_ARGS +=	--enable-module=rewrite
 endif

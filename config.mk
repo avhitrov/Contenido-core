@@ -1,6 +1,5 @@
 ##############################################################################
-# $HeadURL$
-# $Id$
+#
 ###############################################################################
 
 # independent required
@@ -32,6 +31,11 @@ CORE_REQUIRED +=		mtt
 CORE_REQUIRED +=		SQL-Abstract
 CORE_REQUIRED +=		Log-Dispatch
 CORE_REQUIRED +=		Text-Wrapper
+
+OPSYS ?=			${shell uname}
+ifeq (${OPSYS},Linux)
+CORE_REQUIRED +=		Linux-Pid
+endif
 
 # depends on DB_TYPE
 ifeq (${DB_TYPE},SINGLE)

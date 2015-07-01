@@ -155,7 +155,18 @@ function mydump(arr,level) {
 %					my $attr = $col->{attr};
 %					if ( $col->{type} =~ /^(string|integer|float)$/ && $col->{inline} ) {
 %						my $style = $col->{inline_style} ? $col->{inline_style} : ($col->{type} =~ /^(integer|float)$/ ? 'text-align:right; ' : '' );
-<td><input type="text" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : 'width:65px; ' %> <% $col->{inline_style} || '' %>">
+%						$style .= $col->{inline_width} ? ' width:'.$col->{inline_width}.'px; ' : ' width:65px; ';
+<td><input type="text" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr |h %>" style="<% $style %>">
+%					} elsif ($col->{type} eq 'text') {
+%						my $style = $col->{inline_style} ? $col->{inline_style} : '';
+%						$style .= $col->{inline_width} ? ' width:'.$col->{inline_width}.'px; ' : ' width:100px; ';
+%						$style .= $col->{inline_height} ? ' width:'.$col->{inline_height}.'px; ' : ' height:70px; ';
+%						my $value = $document->$attr;
+%						for ( $value ) {
+%							s/</&lt;/sgi;
+%							s/>/&gt;/sgi;
+%						}
+<td><textarea name="<% 'update_'.$document->id.'_'.$attr %>" style="<% $style %>"><% $value %></textarea>
 %					} elsif ($col->{type} eq 'checkbox') {
 %						my $checked = $document->$attr ? ' checked' : '';
 <td align="center"><input type="checkbox" class="<% $attr %>-check" name="<% 'update_'.$document->id.'_'.$attr %>"<% $checked %>>
@@ -215,6 +226,8 @@ function mydump(arr,level) {
 %						} else {
 <td><% $document->$attr %>\
 %						}
+%					} else {
+<td><input type="hidden" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr |h %>" style="<% $style %>">
 %					}
 %
 %				} elsif ($col->{attr} eq 'class') {

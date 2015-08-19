@@ -17,5 +17,6 @@ PERL_LIB ?=			${PREFIX}/lib/perl5/${PERL_VER}					\
 				${PREFIX}/lib/perl5/${PERL_VER}/${PERL_ARCH}			\
 				${PREFIX}/lib/perl5/site_perl					\
 				${PREFIX}/lib/perl5/site_perl/${PERL_VER}			\
-				${PREFIX}/lib/perl5/site_perl/${PERL_VER}/${PERL_ARCH}
+				${PREFIX}/lib/perl5/site_perl/${PERL_VER}/${PERL_ARCH}		\
+				${PREFIX}/lib/perl5/site_perl/${PERL_ARCH}/${PERL_VER}
 PERL_LIBCOL ?=			${shell echo ${PERL_LIB} | perl -pe 's/\s+$$//; s/\s+/:/g'}

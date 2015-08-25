@@ -227,7 +227,7 @@ function mydump(arr,level) {
 <td><% $document->$attr %>\
 %						}
 %					} else {
-<td><input type="hidden" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr |h %>" style="<% $style %>">
+<td><input type="hidden" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr |h %>">
 %					}
 %
 %				} elsif ($col->{attr} eq 'class') {

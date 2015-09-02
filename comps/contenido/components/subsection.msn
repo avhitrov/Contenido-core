@@ -5,8 +5,9 @@
 	<tr bgcolor="#efefef">
 	<th align="center" width="1%">N</th>
 	<th>Название</th>
+	<th align="center" width="1%">...</th>
 
-<& "/contenido/components/__section_tree__.msn", root=>$section->id, level=>3, mode=>0, width_limit => 30 &>
+<& "/contenido/components/__section_tree__.msn", root=>$section->id, level=>3, mode=>0, width_limit => 40 &>
 
 	</table>
 %	if ($section_access == 2)

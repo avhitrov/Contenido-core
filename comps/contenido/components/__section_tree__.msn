@@ -60,14 +60,17 @@
 </td>
 EOT
 
-            if ($viewmode)
-            {
+            if ($viewmode) {
                 my $fhref = '/contenido/?set_context=filter-'.$sect->id();
                 my $new_doc_class = $sect->default_document_class;
                 $m->out(qq^\n<td align="center" nowrap>^);
                 $m->out(qq^<a href="section.html?id=$sect->{id}" title="Редактировать параметры секции"><img src="/contenido/i/actions/edit.gif" width="15" height="17" align="absmiddle" border="0"></a>&nbsp;&nbsp;&nbsp;^);
                 $m->out(qq^<a href="$fhref">фильтр</a>^);
                 $m->out(qq^&nbsp;&nbsp;&nbsp;<a href="document.html?sect_id=$sect->{id}&class=$new_doc_class">доб.докум</a>^) if $section_access == 2 and $new_doc_class;
+                $m->out("</td>");
+            } else {
+                $m->out(qq^\n<td align="center" nowrap>^);
+                $m->out(qq^<a href="section.html?id=$sect->{id}" title="Редактировать параметры секции"><img src="/contenido/i/actions/edit.gif" width="15" height="17" align="absmiddle" border="0"></a>&nbsp;&nbsp;&nbsp;^);
                 $m->out("</td>");
             }
 
@@ -98,7 +101,7 @@ EOT
 	@avail_classes = keys( %{ $request->{cCLASSES} } );
     }
     push @avail_classes, 'Contenido::Section'		unless exists $request->{cCLASSES}{'Contenido::Section'};
-    my $sect = $keeper->get_section_tree(root=>$root, class => \@avail_classes);
+    my $sect = $keeper->get_section_tree(root=>$root, class => \@avail_classes, light => undef);
     return undef unless ref $sect && exists $sect->{$root};
 
     $user->get_accesses();

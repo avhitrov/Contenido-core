@@ -54,8 +54,14 @@ function SetActive ( sControl ) {
 %				$auto .= '&from='.$from.'&to='.$document->$to;
 %			}
 %		}
+%		my $class_param;
+%		if ( ref $link->{class} eq 'ARRAY' ) {
+%			$class_param = join '&', map { 'class='.$_ } @{$link->{class}};
+%		} else {
+%			$class_param = 'class='.$link->{class};
+%		}
 <span id="tab_<% $i %>" class="tab<% $i ? 'i' : ''  %>"><a onclick="SetActive('tab_<% $i %>')"
- href="/contenido/document_filter_list.html?class=<% $link->{class} %>&filter=<% $link->{filter} %>&field=<% $link->{field} %><% $auto %>&id=<% $document->$id %><% exists $link->{order_by} ? '&order_by='.$link->{order_by} : '' %>"
+ href="/contenido/document_filter_list.html?<% $class_param %>&filter=<% $link->{filter} %>&field=<% $link->{field} %><% $auto %>&id=<% $document->$id %><% exists $link->{order_by} ? '&order_by='.$link->{order_by} : '' %>"
  target="filtered"><% $link->{name} %></a></span>\
 %		$i++;
 %	}

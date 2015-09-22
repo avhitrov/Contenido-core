@@ -1,6 +1,14 @@
 <& "/contenido/components/title.msn" &>
+% if ( ref $class eq 'ARRAY' ) {
+<div style="font:bold 13px Verdana; margin:4px;">Классы: 
+%	foreach my $cls ( @$class ) {
+    <span style="color:teal;"><% $cls %></span>&nbsp;<span style="font:11px Verdana;">(<a href="document.html?class=<% $cls %>&<% $field %>=<% $id %><% $defaults %>" target="_blank">создать</a>)</span> | 
+%	}
+</div>
+% } else {
 <div style="font:bold 13px Verdana; margin:4px;">Класс: <span style="color:teal;"><% $class %></span>
 <span style="font:11px Verdana;">(<a href="document.html?class=<% $class %>&<% $field %>=<% $id %><% $defaults %>" target="_blank">создать новый</a>)</span></div>
+% }
 % if ( ref $docs eq 'ARRAY' && @$docs ) {
 %	if ($total > $size) {
 <div style="font-size:12px; font-family:Arial; text-align:center;">

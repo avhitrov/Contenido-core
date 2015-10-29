@@ -342,7 +342,7 @@ function set_create_button( oSelect, sBtnID ) {
 									if ( $ARGS{move} ) {
 										@sections = grep { $_ != $owner->id } @sections;
 									}
-									unshift @sections, $parent_new->id;
+									push @sections, $parent_new->id;
 								}
 								$object->sections( @sections );
 							} else {

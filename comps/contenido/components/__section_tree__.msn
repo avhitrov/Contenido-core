@@ -35,6 +35,7 @@
 
             my $sname = decode("utf-8", $sect->name());
             if ( defined $width_limit && $offset + length($sname) > $width_limit ) {
+		$sname =~ s/<[^>]+>//sgi;
 		$sname = substr($sname, 0, $width_limit - $offset);
 		$sname .= '&nbsp;...';
             }
@@ -47,34 +48,18 @@
             my $html_sect = '<span'.($statstyle).(!$sect->status ? ' class="hiddensect"' : '').'>'.($section_access ? '<a href="'.$href.'"'.$statstyle.'>' : '').$sname.($section_access ? '</a>' : '') . '&nbsp;'.($sect->status != 1 && $statname ? '&nbsp;<span style="font-size:11px;">('.$statname.')</span>' : '').'</span>';
             my $style = ($offset == 1) ? ($viewmode ? ' style="font-size:16px;font-weight:bold;"':' style="font-size:14px;"') : ' style="font-size:12px;"';
 
-            $m->out(<<EOT);
-<tr>
-<td align="right">&nbsp;${$line_ref}&nbsp;<a href="section.html?id=$sect->{id}&move=up&ret=$root"><img src="/contenido/i/ico-up-9x10.gif" border=0 alt="Переместить секцию на шаг вверх"></a>&nbsp;<a href="section.html?id=$sect->{id}&move=down&ret=$root"><img src="/contenido/i/ico-down-9x10.gif" border=0 alt="Переместить секцию на шаг вниз"></a></td>
-<td><table cellpadding="0" cellspacing="0" border="0">
-    <tr valign="top">
-    <td width="10">&nbsp;</td>
-    <td>$spacer</td>
-    <td nowrap $style>$html_sect</td>
-    </tr>
-    </table>
-</td>
-EOT
+            $m->out( $m->scomp( '.table_row.msn', 
+			sect	=> $sect, 
+			root	=> $root, 
+			style	=> $style, 
+			spacer	=> $spacer,
+			viewmode	=> $viewmode,
+			html_sect	=> $html_sect, 
+			line_ref	=> $line_ref, 
+			section_access	=> $section_access,
+		)
+            );
 
-            if ($viewmode) {
-                my $fhref = '/contenido/?set_context=filter-'.$sect->id();
-                my $new_doc_class = $sect->default_document_class;
-                $m->out(qq^\n<td align="center" nowrap>^);
-                $m->out(qq^<a href="section.html?id=$sect->{id}" title="Редактировать параметры секции"><img src="/contenido/i/actions/edit.gif" width="15" height="17" align="absmiddle" border="0"></a>&nbsp;&nbsp;&nbsp;^);
-                $m->out(qq^<a href="$fhref">фильтр</a>^);
-                $m->out(qq^&nbsp;&nbsp;&nbsp;<a href="document.html?sect_id=$sect->{id}&class=$new_doc_class">доб.докум</a>^) if $section_access == 2 and $new_doc_class;
-                $m->out("</td>");
-            } else {
-                $m->out(qq^\n<td align="center" nowrap>^);
-                $m->out(qq^<a href="section.html?id=$sect->{id}" title="Редактировать параметры секции"><img src="/contenido/i/actions/edit.gif" width="15" height="17" align="absmiddle" border="0"></a>&nbsp;&nbsp;&nbsp;^);
-                $m->out("</td>");
-            }
-
-            $m->out('</tr>');
         }
         
         my $childs = $sect->{children} || [];
@@ -109,3 +94,49 @@ EOT
     my $line = 0;
 
 </%init>
+
+<%def .table_row.msn>
+<%args>
+
+	$sect	=> undef
+	$root	=> undef
+	$style	=> ''
+	$spacer	=> ''
+	$viewmode	=> undef
+	$html_sect	=> ''
+	$line_ref	=> undef
+	$section_access	=> undef
+
+</%args>
+<%init>
+
+    my ($fhref, $new_doc_class);
+    if ( $viewmode ) {
+	$fhref = '/contenido/?set_context=filter-'.$sect->id;
+	$new_doc_class = $sect->default_document_class;
+    }
+
+</%init>
+<tr>
+<td align="right">&nbsp;<% $$line_ref %>&nbsp;<a href="section.html?id=<% $sect->id %>&move=up&ret=<% $root %>"><img src="/contenido/i/ico-up-9x10.gif" border=0 alt="Переместить секцию на шаг вверх"></a>&nbsp;<a href="section.html?id=<% $sect->id %>&move=down&ret=<% $root %>"><img src="/contenido/i/ico-down-9x10.gif" border=0 alt="Переместить секцию на шаг вниз"></a></td>
+<td><table cellpadding="0" cellspacing="0" border="0">
+    <tr valign="top">
+    <td width="10">&nbsp;</td>
+    <td><% $spacer %></td>
+    <td nowrap <% $style %>><% $html_sect %></td>
+    </tr>
+    </table>
+</td>
+% if ( $viewmode ) {
+<td align="center" nowrap>
+<a href="section.html?id=<% $sect->id %>" title="Редактировать параметры секции"><img src="/contenido/i/actions/edit.gif" width="15" height="17" align="absmiddle" border="0"></a>&nbsp;&nbsp;&nbsp;<a
+ href="$fhref">фильтр</a>\
+%	if ( $section_access == 2 and $new_doc_class ) {
+&nbsp;&nbsp;&nbsp;<a href="document.html?sect_id=<% $sect->id %>&class=<% $new_doc_class %>">доб.докум</a>\
+%	}
+</td>
+% } else {
+<td align="center" nowrap><a href="section.html?id=<% $sect->id %>" title="Редактировать параметры секции"><img src="/contenido/i/actions/edit.gif" width="15" height="17" align="absmiddle" border="0"></a></td>
+% }
+</tr>
+</%def>

@@ -312,7 +312,7 @@ function set_create_button( oSelect, sBtnID ) {
 					$updated{$oid}{$attr} = $value;
 				}
 			}
-			warn Dumper \%updated;
+			warn Dumper \%updated					if $DEBUG;
 			my %classes = map { $_->{class} => 1 } values %updated;
 			my $parent_new = $keeper->get_section_by_id( $ARGS{tree} );
 			my $document_access = $user->section_accesses($user, $parent_new->id);
@@ -350,6 +350,44 @@ function set_create_button( oSelect, sBtnID ) {
 							}
 							$object->store;
 						}
+					}
+				}
+			}
+		}
+		$m->redirect("sections.html?id=".$id.($return_params ? '&'.$return_params : ''));
+	} elsif ( $ARGS{unlink} ) {
+		my $return_params = join ('&', map { $_.'='.$filter_params{$_} } grep { $_ ne 's' } keys %filter_params );
+		my $document_access = $user->section_accesses($user, $owner->id);
+		my %updated;
+		while ( my ($field, $value) = each %ARGS ) {
+			if ( $field =~ /^delete_(\d+)_(\w+)$/ ) {
+				my $oid = $1;
+				my $attr = $2;
+				$updated{$oid}{$attr} = $value;
+			}
+		}
+		warn Dumper \%updated					if $DEBUG;
+		my %classes = map { $_->{class} => 1 } values %updated;
+		if ( $document_access == 2 ) {
+			foreach my $update_class ( keys %classes ) {
+				my @ids;
+				while ( my ($oid, $attr) = each %updated) {
+					push @ids, $oid		if exists $attr->{id} && $attr->{id} && ($attr->{class} eq $update_class);
+				}
+				my @objects = $keeper->get_documents (
+						id	=> \@ids,
+						class	=> $update_class
+					)			if @ids;
+				my ($prop) = grep { $_->{attr} eq 'sections' } $update_class->new( $keeper )->structure;
+				if ( ref $prop && exists $prop->{db_type} && exists $prop->{db_field} ) {
+					foreach my $object ( @objects ) {
+						if ( $prop->{db_type} eq 'integer[]' ) {
+							my @sections = grep { $_ != $owner->id } $object->sections;
+							$object->sections( @sections );
+						} else {
+							$object->sections( undef );
+						}
+						$object->store;
 					}
 				}
 			}

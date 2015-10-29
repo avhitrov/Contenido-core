@@ -11,7 +11,7 @@ function checkbox_common_toggle ( sClassSelector ) {
    });
 }
 % if ( @inline_pickups ) {
-$().ready(function() {
+$(document).ready(function() {
 %	foreach my $pickup ( @inline_pickups ) {
 %		my $lookup_opts = $pickup->{lookup_opts};
 %		my $search_opts = join( '&', map { $_.'='.$lookup_opts->{$_} } keys %$lookup_opts );
@@ -130,7 +130,7 @@ function mydump(arr,level) {
 %					my $name=$document->name ? $document->name : 'Безымянный документ N'.$document->id;
 %					if ($document_access == 2) {
 %
-<a<% $document->contenido_status_style ? ' style="' . $document->contenido_status_style . '"' : '' %> href="document.html?id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>"><% $name | h %>&nbsp;</a>\
+<a<% $document->contenido_status_style ? ' style="' . $document->contenido_status_style . '"' : '' %> href="document.html?id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>"><% $name | h %></a>\
 %
 %					} else {
 %
@@ -157,6 +157,9 @@ function mydump(arr,level) {
 %						my $style = $col->{inline_style} ? $col->{inline_style} : ($col->{type} =~ /^(integer|float)$/ ? 'text-align:right; ' : '' );
 %						$style .= $col->{inline_width} ? ' width:'.$col->{inline_width}.'px; ' : ' width:65px; ';
 <td><input type="text" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr |h %>" style="<% $style %>">
+%					} elsif ($col->{type} eq 'checkbox') {
+%						my $checked = $document->$attr ? ' checked' : '';
+<td align="center"><input type="checkbox" class="<% $attr %>-check" name="<% 'update_'.$document->id.'_'.$attr %>"<% $checked %>>
 %					} elsif ($col->{type} eq 'text') {
 %						my $style = $col->{inline_style} ? $col->{inline_style} : '';
 %						$style .= $col->{inline_width} ? ' width:'.$col->{inline_width}.'px; ' : ' width:100px; ';
@@ -167,9 +170,6 @@ function mydump(arr,level) {
 %							s/>/&gt;/sgi;
 %						}
 <td><textarea name="<% 'update_'.$document->id.'_'.$attr %>" style="<% $style %>"><% $value %></textarea>
-%					} elsif ($col->{type} eq 'checkbox') {
-%						my $checked = $document->$attr ? ' checked' : '';
-<td align="center"><input type="checkbox" class="<% $attr %>-check" name="<% 'update_'.$document->id.'_'.$attr %>"<% $checked %>>
 %					} elsif ($col->{type} eq 'select') {
 %						my $options = {};
 %						if ($toopi && (ref($toopi) eq 'HASH') && (exists($toopi->{$document->class}))) {
@@ -224,10 +224,10 @@ function mydump(arr,level) {
 %							}
 </select>
 %						} else {
-<td><% $document->$attr %>\
+<td><% $document->$attr %><input type="hidden" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr |h %>">\
 %						}
 %					} else {
-<td><input type="hidden" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr |h %>">
+<td><% $document->$attr %><input type="hidden" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr |h %>">\
 %					}
 %
 %				} elsif ($col->{attr} eq 'class') {
@@ -317,20 +317,24 @@ function mydump(arr,level) {
 <input type="hidden" name="<% $key %>" value="<% $value |h %>">
 %		}
 %	}
+%	if ( $section->default_document_class || $section->default_table_class ) {
+<div style="display:inline-block; width:45%; margin:10px 0; min-height:80px; vertical-align:top;">
+<& /contenido/components/inputs/parent.msn, name => 'tree', check => $section->id, style => 'width:100%;' &>
+	<div style="text-align:left; margin-top:5px;">
+<input type="submit" name="move" value="Перенести" class="input_btn"><input
+ type="submit" name="link" value="Привязать" class="input_btn"><input
+ type="submit" name="unlink" value="Отвязать от текущей" class="input_btn" onclick="return confirm('Объекты, не привязанные к другим секциям могут быть потеряны');">
+	</div>
+</div>
+%	}
 %	if ( $inline_status || $delete_status ) {
-<div style="float:right; text-align:right; padding:5px 0 5px 10px; width:280px;">
+<div style="display:inline-block; width:45%; text-align:right; margin:5px; padding-top:29px; vertical-align:top;">
 %		if ( $inline_status ) {
-<input type="submit" name="update" value="Сохранить изменения" class="input_btn">
+<input type="submit" name="update" value="Сохранить изменения" class="input_btn">\
 %		}
 %		if ( $delete_status ) {
 <input type="submit" name="delete" value="Удалить выбранные" class="input_btn" onclick="return confirm('Все отмеченные позиции будут удалены');">
 %		}
-</div>
-%	}
-%	if ( $section->default_document_class || $section->default_table_class ) {
-<div style="float:left; width:450px; padding:5px 0;">
-<& /contenido/components/inputs/parent.msn, name => 'tree', check => $section->id &>
-<input type="submit" name="move" value="Перенести" class="input_btn"><input type="submit" name="link" value="Привязать" class="input_btn">
 </div>
 %	}
 <br clear="all">

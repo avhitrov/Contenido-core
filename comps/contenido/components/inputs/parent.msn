@@ -1,13 +1,14 @@
-<select name="<% $name %>" class="selects">
+<select name="<% $name %>" class="selects"<% $style ? ' style="'.$style.'"' : '' %>>
 %	select_index_tree( $root_sect, 0, $level, $check, \$color, $tree );
 </select>
 <%args>
 
-	$name => undef
-	$check => undef
+	$name	=> undef
+	$check	=> undef
 
-	$root => 1
-	$level => 15
+	$root	=> 1
+	$level	=> 15
+	$style	=> undef
 
 </%args>
 <%init>

@@ -45,7 +45,7 @@
 
 		my $prop = $properties[$_];
 		my $name = $prop->{attr};
-		next if ($prop->{hidden} == 1) || ($prop->{type} eq 'image') || ($prop->{type} eq 'external') || ($prop->{type} =~ /^array/i) || ($prop->{type} =~ /^image/) || ($prop->{type} eq 'multimedia') || ($prop->{type} eq 'multimedia_new') || ($prop->{type} eq 'multimedia_multi') || ($prop->{type} eq 'audio');
+		next if ($prop->{hidden} == 1) || ($prop->{type} eq 'external') || ($prop->{type} =~ /^array/i) || ($prop->{type} =~ /^image/) || ($prop->{type} eq 'multimedia') || ($prop->{type} eq 'multimedia_new') || ($prop->{type} eq 'multimedia_multi') || ($prop->{type} eq 'audio');
 
 </%perl>
 <tr><td height="8"></td></tr>

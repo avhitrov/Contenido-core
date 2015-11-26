@@ -674,14 +674,6 @@ sub delete {
 						}
 					}
 				}
-			} elsif ( $prop->{type} eq 'multimedia_multi' ) {
-				for ( 1..100 ) {
-					next	unless exists $att->{"file_$_"};
-					my $file = $att->{"file_$_"};
-					if ( ref $file && exists $file->{filename} && $file->{filename} ) {
-						Contenido::File::remove( $file->{filename} );
-					}
-				}
 			} elsif ( $prop->{type} eq 'multimedia_new' ) {
 				if ( ref $att && exists $att->{filename} && $att->{filename} ) {
 					Contenido::File::remove( $att->{filename} );

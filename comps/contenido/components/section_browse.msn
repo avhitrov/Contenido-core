@@ -176,7 +176,7 @@ function mydump(arr,level) {
 %							%{ $options } = %{ $toopi->{$document->class} };
 %						}
 %						my $values = $options->{$col->{attr}};
-<td><select name="<% 'update_'.$document->id.'_'.$attr %>">
+<td><select name="<% 'update_'.$document->id.'_'.$attr %>" autocomplete="off">
 %						if ( ref $values eq 'ARRAY' ) {
 %							foreach my $val ( @$values ) {
 %								my $selected = $val eq $document->$attr ? ' selected' : '';
@@ -187,7 +187,7 @@ function mydump(arr,level) {
 %					} elsif ($col->{type} eq 'status') {
 %						my $cases = $col->{cases};
 %						if ( ref $cases eq 'ARRAY' ) {
-<td><select name="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>">
+<td><select name="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>" autocomplete="off">
 %							foreach my $case ( @$cases ) {
 %								my $selected = $case->[0] eq $document->$attr ? ' selected' : '';
 <option value="<% $case->[0] %>"<% $selected %>><% $case->[1] %>
@@ -216,7 +216,7 @@ function mydump(arr,level) {
 %							$lookup_elements{$col->{attr}} = $docs;
 %						}
 %						if ( ref $docs eq 'ARRAY' && @$docs ) {
-<td><select name="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>">
+<td><select name="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>" autocomplete="off">
 <option value="<% $col->{allow_null} ? '' : 0 %>"></option>
 %							foreach my $case ( @$docs ) {
 %								my $selected = $case->[0] eq $document->$attr ? ' selected' : '';

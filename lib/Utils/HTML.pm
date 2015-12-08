@@ -247,16 +247,16 @@ sub server_name { return $ENV{'HTTP_X_HOST'} || $state->httpd_server() }
 # обрезает текст до нужной длины, предварительно удаляя html-теги (бывшая /inc/text_trim.msn)
 sub text_trim {
     my %opts = @_;
-    my $text = $opts{'text'};
+    my $text = Encode::decode('utf-8', $opts{'text'});
     my $length = $opts{'length'} || 200;
-    my $ellipsis = $opts{'ellipsis'} || '&hellip;';
+    my $ellipsis = Encode::decode('utf-8', $opts{'ellipsis'}) || '&hellip;';
     $text =~ s/<[^>]*>//g;
     if (length($text) > $length) {
         $text = substr($text, 0, $length);
         $text =~ s/\s+\S*$//;
         $text .= $ellipsis;
     }
-    return $text;
+    return Encode::encode('utf-8', $text);
 }
 # limit_words('text', { min_words => 70, max_words => 100, ending => '...' })
 sub limit_words {

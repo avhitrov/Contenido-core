@@ -27,26 +27,41 @@
 	$emailfrom = $efrom;
   }
 
-  my $emailto;
-  my ($to, $eto) = $email->{to} =~ /^(.*?)<(.*?)>/ ? ($1, $2) : $email->{to} =~ /<(.*?)>/ ? ('',$1) : ('',$email->{to});
-  if ( $to ) {
-	$to = MIME::Base64::encode($to);
-	$to =~ s/\s+$//si;
-	$to = '=?utf-8?B?'.$to.'?=';
-	$emailto = $to.' <'.$eto.'>';
+  my ($emailto, @to);
+  if ( ref $email->{to} eq 'ARRAY' ) {
+	foreach my $tostr ( @{$email->{to}} ) {
+		my ($to, $eto) = $tostr =~ /^(.*?)<(.*?)>/ ? ($1, $2) : $tostr =~ /<(.*?)>/ ? ('',$1) : ('',$tostr);
+		if ( $to ) {
+			$to = MIME::Base64::encode($to);
+			$to =~ s/\s+$//si;
+			$to = '=?utf-8?B?'.$to.'?=';
+			push @to, $to.' <'.$eto.'>';
+		} else {
+			push @to, $eto;
+		}
+	}
+	$emailto = shift @to;
   } else {
-	$emailto = $eto;
+	my ($to, $eto) = $email->{to} =~ /^(.*?)<(.*?)>/ ? ($1, $2) : $email->{to} =~ /<(.*?)>/ ? ('',$1) : ('',$email->{to});
+	if ( $to ) {
+		$to = MIME::Base64::encode($to);
+		$to =~ s/\s+$//si;
+		$to = '=?utf-8?B?'.$to.'?=';
+		$emailto = $to.' <'.$eto.'>';
+	} else {
+		$emailto = $eto;
+	}
   }
   my $ccmail;
   if ( exists $email->{cc} && ref $email->{cc} eq 'ARRAY' ) {
-	foreach my $cc ( @{ $email->{cc} } ) {
+	foreach my $cc ( @{ $email->{cc}, @to } ) {
 		my ($cce, $ecce) = $cc =~ /^(.*?)<(.*?)>/ ? ($1, $2) : $cc =~ /<(.*?)>/ ? ('',$1) : ('',$cc);
 		$cc = $ecce;
 	}
-	$ccmail = join ', ', @{$email->{cc}};
+	$ccmail = join ', ', (@to, @{$email->{cc}});
   } elsif ( exists $email->{cc} && $email->{cc} ) {
 	my ($cce, $ecce) = $email->{cc} =~ /^(.*?)<(.*?)>/ ? ($1, $2) : $email->{cc} =~ /<(.*?)>/ ? ('',$1) : ('',$email->{cc});
-	$ccmail = $ecce;
+	$ccmail = join ', ', (@to, $ecce);
   }
 
 

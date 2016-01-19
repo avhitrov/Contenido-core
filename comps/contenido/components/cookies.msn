@@ -7,7 +7,6 @@
 	if (defined $value)
 	{
 		my $cookie = new CGI::Cookie (
-		##	-domain => '.rambler.ru',
 			-name 	=> $name,
 			-value 	=> $value,
 			defined $expires ? (-expires => $expires) : (),

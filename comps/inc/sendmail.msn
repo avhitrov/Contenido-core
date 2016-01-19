@@ -54,7 +54,7 @@
   }
   my $ccmail;
   if ( exists $email->{cc} && ref $email->{cc} eq 'ARRAY' ) {
-	foreach my $cc ( @{ $email->{cc}, @to } ) {
+	foreach my $cc ( @{ $email->{cc}} ) {
 		my ($cce, $ecce) = $cc =~ /^(.*?)<(.*?)>/ ? ($1, $2) : $cc =~ /<(.*?)>/ ? ('',$1) : ('',$cc);
 		$cc = $ecce;
 	}

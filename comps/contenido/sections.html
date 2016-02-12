@@ -418,9 +418,20 @@ function set_create_button( oSelect, sBtnID ) {
 			my @props = $doc_class->new( $keeper )->structure();
 			my ($prop) = grep { $_->{attr} eq $search_by } @props	if @props;
 			if ( ref $prop && ($prop->{type} eq 'integer' || $prop->{type} eq 'checkbox' || 
-			     (($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup') && $search =~ /^\d+$/) || 
+			     (($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup' || $prop->{type} eq 'status') && $search =~ /^\d+$/) || 
 			     (exists $prop->{db_type} && $prop->{db_type} =~ /integer\[\]/)    )) {
 				$filter{$search_by} = int($search);
+			} elsif ( ref $prop && $prop->{type} eq 'status' && $search =~ /\D/ ) {
+				my $str;
+				foreach my $pair ( @{$prop->{cases}} ) {
+					if ( lc(Encode::decode('utf-8', $pair->[1])) eq lc(Encode::decode('utf-8', $search)) || lc(Encode::decode('utf-8', $pair->[0])) eq lc(Encode::decode('utf-8', $search)) ) {
+						$str = $pair->[0];
+						last;
+					}
+				}
+				if ( $str ) {
+					$filter{$search_by} = $str;
+				}
 			} elsif ( ref $prop && ($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup') && $search =~ /\D/ ) {
 				my $lookup_opts = $prop->{lookup_opts};
 				if ( ref $lookup_opts && (exists $lookup_opts->{class} || exists $lookup_opts->{table}) ) {

@@ -1,0 +1,24 @@
+<%args>
+
+	$name => undef
+	$SETS => undef
+
+</%args>
+<%init>
+
+	return unless ref $SETS;
+	return unless $name;
+
+	my $result = [];
+	foreach my $key (keys %$SETS) {
+		if ($key =~ /^${name}_(num|name|value)_(\d+)$/) {
+			my $field = $1;
+			my $i = $2;
+			$result->[$i-1]->{$field} = $SETS->{$key}	if defined $SETS->{$key};
+		}
+	}
+	@$result = map { delete $_->{num}; $_ } sort { $a->{num} <=> $b->{num} } grep { $_->{name} } @$result;
+
+	return $result;
+
+</%init>

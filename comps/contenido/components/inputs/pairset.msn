@@ -1,0 +1,64 @@
+Добавить значение
+<script type="text/javascript">
+<!--
+var sFirstIndex_<% $name %> = 1;
+var sLastIndex_<% $name %> = <% $i %>;
+//-->
+</script>
+<%args>
+
+	$name		=> undef
+	$rusname	=> undef
+	$check		=> undef
+	$object		=> undef
+
+</%args>
+<%init>
+
+  return	unless ref $object;
+
+  my $fields = ref $object->$name ? $object->$name : $object->get_image($name);
+  $fields = [] unless $fields && ref $fields eq 'ARRAY';
+
+  $m->out('');
+  $m->out('<table width="95%" style="margin:5px 0;padding:5 6 5 6;border:1px solid #ccc;font-size:70%;font-family:Tahoma;background-color:#f5f5f5;color:#000;" id="parset-table-'.$name.'">');
+  $m->out('<tr><th width="1%"><h5 style="margin:0; padding:4px; font-size:11px; color:blue; background:silver;">#</h5></th>');
+  $m->out('<th width="33%"><h5 style="margin:0; padding:4px; font-size:11px; color:blue; background:silver;">Параметр:</h5></th>');
+  $m->out('<th width="66%"><h5 style="margin:0; padding:4px; font-size:11px; color:blue; background:silver;">Значение:</h5></th></tr>');
+  my $i = 1;
+  foreach my $field (@$fields) {
+	my $rusname = "$rusname N$i";
+	$m->comp('.field',
+		name	=> $name,
+		fname	=> $field->{name},
+		value	=> $field->{value},
+		number	=> $i);
+	$i++;
+  }
+  $rusname = "$rusname N$i";
+  for (1..5) {
+	$m->comp('.field', name => $name, fname => '', value => '', number => $i++);
+  }
+  $m->out('</table>');
+</%init>
+
+<%def .field>
+<%args>
+
+	$name	=> undef
+	$fname	=> undef
+	$value	=> undef
+	$number	=> undef
+
+</%args>
+<%init>
+
+    $value =~ s/&/&amp;/g;
+
+</%init>
+<tr valign="top">
+<td><input type="text" name="<% $name.'_num_'.$number %>" value="<% $number %>" size="2" maxlength="3"></td>
+<td><input type="text" name="<% $name.'_name_'.$number %>" value="<% $fname %>" style="width:97%"></td>
+<td><textarea class="textarea" name="<% $name.'_value_'.$number %>" rows="2" style="width:97%;"><% $value %></textarea></td>
+</tr>
+</%def>

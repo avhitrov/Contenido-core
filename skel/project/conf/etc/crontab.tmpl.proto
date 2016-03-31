@@ -1,5 +1,5 @@
 #######################################################
-# crontab for project '@PROJECT_NAME@'
+# crontab for project '@NAME@'
 #
 # For automatic installation during 'make conf' at host:
 #	FULLY.QUALIFIED.DOMAIN.NAME (see `hostname`)
@@ -14,8 +14,8 @@ LANG=ru_RU.UTF-8
 
 #minute	hour	mday	month	wday	command
 #3	2	*	*	*	@CORE_USR@/services/logz @PROJECT_VAR@/log >> @PROJECT_VAR@/log/logz
-#*/10	10-19	*	*	1-5	@PROJ_USR@/@PROJECT@/services/CHANGEIT >> @PROJECT_VAR@/log/CHANGEIT
-#*/10	10-19	*	*	1-5	@PROJ_USR@/@PROJECT@/services/CHANGEIT | @LOCAL@/bin/cronolog @PROJECT_VAR@/log/CHANGEIT-%Y-%m-%d
+#*/10	10-19	*	*	1-5	@PROJ_USR@/@NAME@/services/CHANGEIT >> @PROJECT_VAR@/log/CHANGEIT
+#*/10	10-19	*	*	1-5	@PROJ_USR@/@NAME@/services/CHANGEIT | @LOCAL@/bin/cronolog @PROJECT_VAR@/log/CHANGEIT-%Y-%m-%d
 
 
 # vim: set ft=crontab ts=4 sw=4:

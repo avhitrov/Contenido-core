@@ -33,9 +33,17 @@
 %	}
 %
 %	foreach my $iattr (sort (@{ $iattrs })) {
-%		next	if ( ($iattr eq 'filename') || ($iattr eq 'mini') || ($iattr eq 'width') || ($iattr eq 'height') );
+%		next	if ( !ref $iattr && ($iattr eq 'filename') || ($iattr eq 'mini') || ($iattr eq 'width') || ($iattr eq 'height') );
+%		if ( ref $iattr eq 'ARRAY' ) {
+<tr><td><font size="-1" color="#888888"><% $iattr->[1] %> (<% $iattr->[0] %>):</font></td></tr>
+<tr><td><input type="text" name="<% $attr %>.<% $iattr->[0] %>" size="60" value="<% html_escape($MULTI->{$iattr->[0]}) %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+%		} elsif ( ref $iattr eq 'HASH' ) {
+<tr><td><font size="-1" color="#888888"><% $iattr->{name} %> (<% $iattr->{attr} %>):</font></td></tr>
+<tr><td><input type="text" name="<% $attr %>.<% $iattr->{attr} %>" size="60" value="<% html_escape($MULTI->{$iattr->{attr}}) %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+%		} else {
 <tr><td><font size="-1" color="#888888"><% $ATTRNAMES->{$iattr} %> (<% $iattr %>):</font></td></tr>
 <tr><td><input type="text" name="<% $attr %>.<% $iattr %>" size="60" value="<% html_escape($MULTI->{$iattr}) %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+%		}
 %	}
 <tr><td><input type="checkbox" name="_delete_multi.<% $attr %>" value="1">Удалить<br><br></td></tr>
 </td></tr></table>
@@ -56,7 +64,7 @@
 <%INIT>
 
 	my $iattrs = $prop->{iattrs};
-	$iattrs ||= ['alt'];
+	$iattrs = ['alt']	unless $iattrs;
 
 	my $ATTRNAMES = {
 		'alt' => 'Название',

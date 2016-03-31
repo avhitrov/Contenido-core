@@ -33,8 +33,14 @@
 
 %	foreach my $iattr (@{ $iattrs })
 %	{
-%		next	if ( ($iattr eq 'filename') || ($iattr eq 'width') || ($iattr eq 'height') );
-%		if($iattr eq 'mini') {
+%		next	if ( !ref $iattr && ($iattr eq 'filename') || ($iattr eq 'width') || ($iattr eq 'height') );
+%		if ( ref $iattr eq 'ARRAY' ) {
+<tr><td><font size="-1" color="#888888"><% $iattr->[1] %> (<% $iattr->[0] %>):</font></td></tr>
+<tr><td><input type="text" name="<% $attr %>.<% $iattr->[0] %>" size="60" value="<% html_escape($IMAGE->{$iattr->[0]}) %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+%		} elsif ( ref $iattr eq 'HASH' ) {
+<tr><td><font size="-1" color="#888888"><% $iattr->{name} %> (<% $iattr->{attr} %>):</font></td></tr>
+<tr><td><input type="text" name="<% $attr %>.<% $iattr->{attr} %>" size="60" value="<% html_escape($IMAGE->{$iattr->{attr}}) %>" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
+%		} elsif ( $iattr eq 'mini' ) {
 <tr><td><font size="-1" color="#888888">name="<% $attr %>_mini"</font> </td></tr>
 <tr><td><input type="file" name="<% $attr %>_mini" style="width:95%;font-family:arial;font-size:9pt;"></td></tr>
 %			if (exists($IMAGE->{mini}->{filename}) )
@@ -73,7 +79,7 @@
 <%INIT>
 
 	my $iattrs = $prop->{iattrs};
-	$iattrs ||= ['alt'];
+	$iattrs = ['alt']	unless $iattrs;
 
 	my $ATTRNAMES = {
 		'alt' => 'Подпись',

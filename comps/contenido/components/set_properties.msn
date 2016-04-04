@@ -128,12 +128,8 @@
 		$object->_delete_binary( $BINARY );
 		$object->$name('');
             } else {
-                my $MULTI = undef;
-                if (length($object->{ $name }) > 8)
-                {
-                    $MULTI = eval ('my '.$object->{ $name });
-                    if (ref($MULTI) ne 'HASH') {  $MULTI = {} };
-                }
+                my $MULTI = $object->get_image( $name );
+		$MULTI = ref $MULTI ? $MULTI : {};
                 $MULTI = $m->comp('/contenido/components/set_multimedia_new.msn', default=>$MULTI, field=>$name, SETS=>$SETS, object=>$object, prop => $prop);
                 if (exists($MULTI->{filename}))
                 {

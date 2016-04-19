@@ -246,18 +246,12 @@ sub _generic_intarray_filter {
 
 		if (@$value) {
 			my $op = (ref($opts) eq 'HASH' and ($opts->{intersect} or $opts->{contains})) ? '@>' : '&&';
-#           old versions DBD::Pg is SO STUPID!!!!
-#			if ($DBD::Pg::VERSION<1.49) {
-#				my $value_string = '{'.join(',',@{$value}).'}';
-#				return [" ($field $op ?) "], [$value_string];
-#			} else {
-#           all versions before 2.0.0 also stupid
-            if ($DBD::Pg::VERSION=~/^1\./) {
-                my $ph_string = '?, 'x$#{$value}.'?';
+			if ($DBD::Pg::VERSION=~/^1\./) {
+				my $ph_string = '?, 'x$#{$value}.'?';
 				return [" ($field $op ARRAY[$ph_string]::integer[]) "], $value;
 			} else {
-                return [" ($field $op ?::integer[]) "], [$value];
-            }                    
+				return [" ($field $op ?::integer[]) "], [$value];
+			}                    
 		} else {
 			return [' FALSE '], [];
 		}

@@ -209,7 +209,7 @@ sub get_items {
     # ----------------------------------------------------------------------------------------
     unless ($sth->execute(@$binds)) {
        $self->error;
-       $log->error("DBI execute error on $$query\n".Data::Dumper::Dumper($binds)."\ncalled with opts:\n".Data::Dumper::Dumper(\%opts));
+       $log->error("DBI execute error on $$query\n".Data::Dumper::Dumper($DBD::Pg::VERSION >= '3' ? Data::Recursive::Encode->encode_utf8($binds) : $binds)."\ncalled with opts:\n".Data::Dumper::Dumper(\%opts));
        return;
     }
     my $finish1 = Time::HiRes::time() if ($DEBUG);
@@ -235,18 +235,18 @@ sub get_items {
         $Contenido::Globals::CORE_TIME += $finish2-$finish1;
         $Contenido::Globals::DB_COUNT++;
 
-        $log->info("get_items($proto) ".($mason_file ? "called from $mason_file" : '')." SQL: '$$query' with binds: '".join("', '", @$binds)."' fetched: $total records (total work time: $total_time ms, database time $db_time ms, core time $core_time ms)");
+        $log->info("get_items($proto) ".($mason_file ? "called from $mason_file" : '')." SQL: '$$query' with binds: '".join("', '", map { ref $_ ? Data::Dumper::Dumper($DBD::Pg::VERSION >= '3' ? Data::Recursive::Encode->encode_utf8($_) : $_) : $DBD::Pg::VERSION >= '3' ? Encode::encode('utf-8', $_) : $_ } @$binds)."' fetched: $total records (total work time: $total_time ms, database time $db_time ms, core time $core_time ms)");
     }
 
     #выдает предупреждение если полученно более 500 обьектов но не выставлен no_limit
     if ($total>999 and !($opts{no_limit} or $opts{limit})) {
         my $mason_comp = ref($HTML::Mason::Commands::m) ? $HTML::Mason::Commands::m->current_comp() : undef;
         my $mason_file = ref($mason_comp) ? $mason_comp->path : undef;
-        $log->error("get_items($proto) ".($mason_file ? "called from $mason_file" : '')." SQL: '$$query' with binds: '".join("', '", @$binds)."' fetched 1000 records... гарантированно часть записей не получена из базы... или добавьте no_limit=>1 или разберитесь почему так много данных получаете");
+        $log->error("get_items($proto) ".($mason_file ? "called from $mason_file" : '')." SQL: '$$query' with binds: '".join("', '", map { ref $_ ? Data::Dumper::Dumper($DBD::Pg::VERSION >= '3' ? Data::Recursive::Encode->encode_utf8($_) : $_) : $DBD::Pg::VERSION >= '3' ? Encode::encode('utf-8', $_) : $_ } @$binds)."' fetched 1000 records... гарантированно часть записей не получена из базы... или добавьте no_limit=>1 или разберитесь почему так много данных получаете");
     } elsif ($total>500 and !($opts{no_limit} or $opts{limit})) {
         my $mason_comp = ref($HTML::Mason::Commands::m) ? $HTML::Mason::Commands::m->current_comp() : undef;
         my $mason_file = ref($mason_comp) ? $mason_comp->path : undef;
-        $log->warning("get_items($proto) ".($mason_file ? "called from $mason_file" : '')." SQL: '$$query' with binds: '".join("', '", @$binds)."' fetched over 500 ($total) records... или добавьте no_limit=>1 или разберитесь почему так много данных получаете");
+        $log->warning("get_items($proto) ".($mason_file ? "called from $mason_file" : '')." SQL: '$$query' with binds: '".join("', '", map { ref $_ ? Data::Dumper::Dumper($DBD::Pg::VERSION >= '3' ? Data::Recursive::Encode->encode_utf8($_) : $_) : $DBD::Pg::VERSION >= '3' ? Encode::encode('utf-8', $_) : $_ } @$binds)."' fetched over 500 ($total) records... или добавьте no_limit=>1 или разберитесь почему так много данных получаете");
     }
 
     # -----------------------------------------------------------------------------------------

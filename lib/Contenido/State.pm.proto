@@ -36,7 +36,7 @@ sub new
     $self->{db_password} = '@BASE_PASSWD@';
     $self->{db_port} = '@PGSQL_PORT@';
     $self->{db_prepare} = lc('@PGSQL_REAL_PREPARE@') eq 'yes' ? 1 : 0;
-    $self->{db_enable_utf8} = lc('@PGSQL_ENABLE_UTF@') eq 'yes' ? 1 : 0;
+    $self->{db_enable_utf8} = lc('@PGSQL_ENABLE_UTF@') eq 'yes' ? -1 : 0;
     $self->{db_client_encoding} = '@PGSQL_CLIENT_ENCODING@';
 
     $self->{db_encode_data} = '@PGSQL_ENCODE_DATA@';

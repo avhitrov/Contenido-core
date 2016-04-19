@@ -317,7 +317,7 @@ sub _create_extra_dump {
             return Encode::decode('utf-8', $json_n->encode ({map { $_=> Encode::decode($state->db_encode_data, $self->{$_}, Encode::FB_HTMLCREF) } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields}));
         } else {
             my $content = Encode::decode('utf-8', $json_n->encode ({map { $_=>$self->{$_} } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields}));
-#            warn "Store content is [$content]. UTF-8 Flag [".Encode::is_utf8($content)."]\n";
+            warn "Store content is [".Encode::encode('utf-8', $content)."]. UTF-8 Flag [".Encode::is_utf8($content)."]\n";
             return $content;
         }
     } else {
@@ -460,6 +460,10 @@ sub _get_sql {
         foreach my $i (0..$#{$binds}) {
             $binds->[$i] = Encode::decode($state->db_encode_data, $binds->[$i], Encode::FB_HTMLCREF);
         }
+    } elsif ( $DBD::Pg::VERSION >= '3' ) {
+        foreach my $i (0..$#{$binds}) {
+            $binds->[$i] = Encode::decode('utf-8', $binds->[$i], Encode::FB_HTMLCREF);
+        }
     }
 
     return $query, $binds;
@@ -525,6 +529,8 @@ sub store {
                 push @binary_fields, scalar(@fields) if ($_->{db_type} eq 'bytea');
                 if ($state->db_encode_data) {
                     push @values, Encode::decode($state->db_encode_data, $value, Encode::FB_HTMLCREF);
+                } elsif ($DBD::Pg::VERSION >= '3') {
+                    push @values, Encode::decode('utf-8', $value, Encode::FB_HTMLCREF);
                 } else {
                     push @values, $value;
                 }
@@ -563,7 +569,7 @@ sub store {
             $sth->bind_param($_, undef, {pg_type => DBD::Pg::PG_BYTEA});
         }
         unless ($sth->execute(@values, $self->{id})) {
-            $log->error("DBI execute error on $sql\n".Data::Dumper::Dumper(\@values));
+            $log->error("DBI execute error on $sql\n".Data::Dumper::Dumper( $DBD::Pg::VERSION >= '3' ? Data::Recursive::Encode->encode_utf8( \@values ) : \@values ));
             $sth->finish();
             return $self->t_abort();
         }
@@ -590,7 +596,7 @@ sub store {
             $sth->bind_param($_, undef, {pg_type => DBD::Pg::PG_BYTEA});
         }
         unless ($sth->execute(@values)) {
-            $log->error("DBI execute error on $sql\n".Data::Dumper::Dumper(\@values));
+            $log->error("DBI execute error on $sql\n".Data::Dumper::Dumper( $DBD::Pg::VERSION >= '3' ? Data::Recursive::Encode->encode_utf8( \@values ) : \@values ));
             $sth->finish();
             return $self->t_abort();
         }

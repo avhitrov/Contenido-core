@@ -112,6 +112,7 @@
 %	for (0..$#properties)
 %	{
 %		my $prop = $properties[$_];
+%		next	if exists $prop->{hidden} && $prop->{hidden};
 %
 %		if ($prop->{type} eq 'image')
 %		{

@@ -317,7 +317,6 @@ sub _create_extra_dump {
             return Encode::decode('utf-8', $json_n->encode ({map { $_=> Encode::decode($state->db_encode_data, $self->{$_}, Encode::FB_HTMLCREF) } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields}));
         } else {
             my $content = Encode::decode('utf-8', $json_n->encode ({map { $_=>$self->{$_} } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields}));
-            warn "Store content is [".Encode::encode('utf-8', $content)."]. UTF-8 Flag [".Encode::is_utf8($content)."]\n";
             return $content;
         }
     } else {

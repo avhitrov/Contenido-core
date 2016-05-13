@@ -42,7 +42,7 @@
 		$IMAGE = ref $IMAGE ? $IMAGE : {};
 		$IMAGE = $m->comp('/contenido/components/set_image.msn', default=>$IMAGE, field=>$name, SETS=>$SETS, object=>$object, prop => $prop);
 		if ( exists $IMAGE->{filename} ) {
-			$object->$name( $object->_serialize($IMAGE) );
+			$object->$name( $IMAGE );
                 }
             }
 
@@ -92,7 +92,7 @@
 			$maxnumber = $_		if exists $IMAGES->{"image_$_"} && $_ > $maxnumber;
 		}
 		$IMAGES->{maxnumber} = $maxnumber;
-		$object->$name( $object->_serialize($IMAGES) );
+		$object->$name( $IMAGES );
 	    }
 
 	} elsif ( $prop->{type} eq 'multimedia' ) {
@@ -114,7 +114,7 @@
                 $MULTI = $m->comp('/contenido/components/set_multi.msn', default=>$MULTI, field=>$name, SETS=>$SETS, object=>$object);
                 if (exists($MULTI->{filename}))
                 {
-                    $object->$name ( $object->_serialize($MULTI) );
+                    $object->$name ( $MULTI );
                 }
             }
 
@@ -133,7 +133,7 @@
                 $MULTI = $m->comp('/contenido/components/set_multimedia_new.msn', default=>$MULTI, field=>$name, SETS=>$SETS, object=>$object, prop => $prop);
                 if (exists($MULTI->{filename}))
                 {
-                    $object->$name( $object->_serialize($MULTI) );
+                    $object->$name( $MULTI );
                 }
             }
 
@@ -183,7 +183,7 @@
 			$maxnumber = $_		if exists $FILES->{"file_$_"} && $_ > $maxnumber;
 		}
 		$FILES->{maxnumber} = $maxnumber;
-		$object->$name( $object->_serialize($FILES) );
+		$object->$name( $FILES );
 	    }
 
 	} elsif ( $prop->{type} eq 'audio' ) {
@@ -209,7 +209,7 @@
                 $MULTI = $m->comp('/contenido/components/set_audio.msn', default=>$MULTI, field=>$name, SETS=>$SETS, object=>$object, prop => $prop);
                 if (exists($MULTI->{filename}))
                 {
-                    $object->$name( $object->_serialize($MULTI) );
+                    $object->$name( $MULTI );
                 }
             }
 

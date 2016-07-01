@@ -27,6 +27,8 @@ endif
 ifeq (${shell ${PERL} -e 'print 1 if ${PERL_LEVEL}>=501600'},1)
 	cd ${WRKSRC} && patch -p0 < ${PORTDIR}/patch.perl5.16
 endif
-
+ifeq (${shell ${PERL} -e 'print 1 if ${PERL_LEVEL}>=502000'},1)
+	cd ${WRKSRC} && patch -p0 < ${PORTDIR}/patch.perl5.20
+endif
 
 include ../../etc/ports.mk

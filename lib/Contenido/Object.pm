@@ -457,11 +457,19 @@ sub _get_sql {
 
     if ($state->db_encode_data) {
         foreach my $i (0..$#{$binds}) {
-            $binds->[$i] = Encode::decode($state->db_encode_data, $binds->[$i], Encode::FB_HTMLCREF);
+            if ( ref $binds->[$i] ) {
+                $binds->[$i] = Data::Recursive::Encode->decode($state->db_encode_data, $binds->[$i], Encode::FB_HTMLCREF);
+            } else {
+                $binds->[$i] = Encode::decode($state->db_encode_data, $binds->[$i], Encode::FB_HTMLCREF);
+            }
         }
     } elsif ( $DBD::Pg::VERSION >= '3' ) {
         foreach my $i (0..$#{$binds}) {
-            $binds->[$i] = Encode::decode('utf-8', $binds->[$i], Encode::FB_HTMLCREF);
+            if ( ref $binds->[$i] ) {
+                $binds->[$i] = Data::Recursive::Encode->decode_utf8($binds->[$i]);
+            } else {
+                $binds->[$i] = Encode::decode('utf-8', $binds->[$i], Encode::FB_HTMLCREF);
+            }
         }
     }
 

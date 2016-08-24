@@ -329,6 +329,9 @@ sub _create_extra_dump {
         local $Data::Dumper::Indent = 0;
         if ($state->db_encode_data) {
             return Data::Dumper::Dumper({map { $_=> Encode::decode($state->db_encode_data, $self->{$_}, Encode::FB_HTMLCREF) } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields});
+        } elsif ( $DBD::Pg::VERSION >= '3' ) {
+            warn "Store extras: ".Data::Dumper::Dumper({map { $_=>$self->{$_} } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields});
+            return Encode::decode( 'utf-8', Data::Dumper::Dumper({map { $_=>$self->{$_} } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields}) );
         } else {
             return Data::Dumper::Dumper({map { $_=>$self->{$_} } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields});
         }
@@ -1046,8 +1049,13 @@ sub AUTOLOAD {
 
 sub eval_dump {
     no strict 'vars';
-	return {} unless ${$_[0]};
-    return eval ${$_[0]};
+    if ( ref ${$_[0]} ) {
+        return ${$_[0]};
+    } elsif ( ${$_[0]} ) {
+        return eval ${$_[0]};
+    } else {
+        return {};
+    }
 }
 
 sub eval_json {
@@ -1055,7 +1063,6 @@ sub eval_json {
     my $str = ${$_[0]};
     my $chr = substr($str, 0, 1); return $str	unless $chr eq '{' || $chr eq '[';
     my $value = $json_u->decode( $str );
-#    map { $_ = Encode::encode(\'utf-8\', $_) unless ref $_; } values %$value;
     return $value;
 }
 

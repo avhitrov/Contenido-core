@@ -192,25 +192,28 @@ sub store_recursive {
     my $new_pid;
 
     if (ref $data eq "HASH") {
-    if (defined $key) {
-        $insert->execute($pid, $key, undef, "HASH");
-        $new_pid = $local_keeper->TSQL->selectrow_array("SELECT currval('documents_id_seq')");
-    }
+        if (defined $key) {
+            $insert->execute($pid, $DBD::Pg::VERSION >= '3' ? Encode::decode( 'utf-8', $key) : $key, undef, "HASH");
+            $new_pid = $local_keeper->TSQL->selectrow_array("SELECT currval('documents_id_seq')");
+        }
 
-    foreach my $new_key (keys %$data) {
-        store_recursive($new_pid, $new_key, $data->{$new_key}, $insert, $local_keeper);
-    }
+        foreach my $new_key (keys %$data) {
+            store_recursive($new_pid, $new_key, $data->{$new_key}, $insert, $local_keeper);
+        }
     } elsif (ref $data eq "ARRAY") {
-    if (defined $key) {
-        $insert->execute($pid, $key, undef, "ARRAY");
-        $new_pid = $local_keeper->TSQL->selectrow_array("SELECT currval('documents_id_seq')");
-    }
+        if (defined $key) {
+            $insert->execute($pid, $DBD::Pg::VERSION >= '3' ? Encode::decode( 'utf-8', $key) : $key, undef, "ARRAY");
+            $new_pid = $local_keeper->TSQL->selectrow_array("SELECT currval('documents_id_seq')");
+        }
 
-    foreach my $new_key (0 .. $#$data) {
-        store_recursive($new_pid, $new_key, $data->[$new_key], $insert, $local_keeper);
-    }
+        foreach my $new_key (0 .. $#$data) {
+            store_recursive($new_pid, $new_key, $data->[$new_key], $insert, $local_keeper);
+        }
     } else {
-    $insert->execute($pid, $key, $data, "SCALAR") || return $local_keeper->t_abort();
+        $insert->execute($pid, 
+                $DBD::Pg::VERSION >= '3' ? Encode::decode( 'utf-8', $key) : $key, 
+                $DBD::Pg::VERSION >= '3' ? Encode::decode( 'utf-8', $data) : $data, 
+                "SCALAR") || return $local_keeper->t_abort();
     }
 }
 

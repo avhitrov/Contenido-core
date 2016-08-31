@@ -1,9 +1,8 @@
 ##############################################################################
-# $HeadURL: http://svn.dev.rambler.ru/Contenido/branches/utf8/ports/all/libnet/GNUmakefile $
-# $Id: GNUmakefile 556 2006-10-30 15:04:58Z lonerr $
+#
 ###############################################################################
 
-PORTVERSION =		1.19
+PORTVERSION =		3.10
 PERL_MAKEMAKER =	yes
 CONFIGURE_PRECMD =	touch ${WRKSRC}/libnet.cfg
 INSTALL_PRECMD =	${MAKE_RECURSIVE} pre-install

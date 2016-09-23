@@ -1196,6 +1196,13 @@ sub get {
     return $keeper->get_documents( class => $class, %opts );
 }
 
+#   Template method for object url in project.
+#   /contenido/document.html will use it in future.
+###################################################
+sub get_url {
+    return;
+}
+
 sub contenido_is_available {
     return 1;
 }

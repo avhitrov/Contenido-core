@@ -2,7 +2,7 @@
 #
 ###############################################################################
 
-PORTVERSION =		6.62
+PORTVERSION =		6.64
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	ExtUtils
 

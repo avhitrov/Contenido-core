@@ -10,8 +10,10 @@ ifeq (${shell perl -e 'print 1 if ${PERL_LEVEL}<500600'},1)
 PORTVERSION =		1.32
 elif (${shell perl -e 'print 1 if ${PERL_LEVEL}<501000'},1)
 PORTVERSION =		2.11.8
-else
+elif (${shell perl -e 'print 1 if ${PERL_LEVEL}<501400'},1)
 PORTVERSION =		2.19.3
+else
+PORTVERSION =		3.5.3
 endif
 
 PERL_MAKEMAKER =	yes

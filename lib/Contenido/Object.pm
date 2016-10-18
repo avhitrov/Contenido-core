@@ -390,8 +390,12 @@ sub get_data {
     my $self = shift;
     my $attr = shift;
     my $encode = shift;
-    my $data  = $self->keeper->serialize_with eq 'json' ? ( $encode ? Data::Recursive::Encode->encode_utf8(eval_json(\$self->{$attr})) : eval_json(\$self->{$attr}) ) : eval_dump(\$self->{$attr});
-    return ($data || {});
+    if ( ref $self->$attr ) {
+	return $self->$attr;
+    } else  {
+	my $data  = $self->keeper->serialize_with eq 'json' ? ( $encode ? Data::Recursive::Encode->encode_utf8(eval_json(\$self->{$attr})) : eval_json(\$self->{$attr}) ) : eval_dump(\$self->{$attr});
+	return ($data || {});
+    }
 }
 
 # ----------------------------------------------------------------------------

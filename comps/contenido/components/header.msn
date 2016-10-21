@@ -13,7 +13,7 @@
 %	my @TABS = ();
 %	my @plugins = ($state->project, split(/\s+/, $state->plugins));
 %	my %plugins = map { lc($_) => 1 } @plugins;
-%	for my $tab_id (keys(%{ $toopi })) {
+%	for my $tab_id ( sort { $a cmp $b } keys %{ $toopi } ) {
 %		my ($b1, $b2) = $tab_id eq $profile ? ('<b>', '</b>') : ('', '');
 %		if ($r->uri() =~ /keywords\.html$/ || ($r->uri =~ /^\/contenido\/(\w+)\//i && exists $plugins{lc($1)} ) ) {
 %			($b1, $b2) = ('', '');

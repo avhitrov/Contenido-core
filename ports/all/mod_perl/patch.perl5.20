@@ -1,16 +1,16 @@
---- src/modules/perl/mod_perl.h.p20     2016-06-29 18:45:10.983090562 +0000
-+++ src/modules/perl/mod_perl.h 2016-06-29 18:45:37.319300313 +0000
+--- src/modules/perl/mod_perl.h.p20	2016-10-21 04:09:58.000000000 +0400
++++ src/modules/perl/mod_perl.h	2016-10-21 04:10:51.000000000 +0400
 @@ -186,11 +186,11 @@
  #endif
-
+ 
  #ifndef ERRSV
--#define ERRSV GvSV(errgv)
-+#define ERRSV GvSV(PL_errgv)
+-#define ERRSV GvSV(errgv) 
++#define ERRSV GvSV(PL_errgv) 
  #endif
-
+ 
  #ifndef ERRHV
 -#define ERRHV GvHV(errgv)
 +#define ERRHV GvHV(PL_errgv)
  #endif
-
+ 
  #ifndef AvFILLp

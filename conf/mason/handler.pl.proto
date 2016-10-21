@@ -23,7 +23,6 @@ Contenido::Init->init();
 package HTML::Mason::Commands;
 
 use Data::Dumper;
-use CGI::Cookie;
 use Convert::Cyrillic;
 use Image::Size;
 use Time::HiRes qw(gettimeofday);

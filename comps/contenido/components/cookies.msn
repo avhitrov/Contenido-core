@@ -4,20 +4,20 @@
 	$expires => undef
 </%args>
 <%init>
-	if (defined $value)
-	{
-		my $cookie = new CGI::Cookie (
+
+    if (defined $value) {
+	my $cookie = Apache::Cookie->new( $request->r(),
 			-name 	=> $name,
 			-value 	=> $value,
 			defined $expires ? (-expires => $expires) : (),
 			-secure => 0,
 		);
-		$r->headers_out->add('Set-cookie' => $cookie);
-	}
-	else
-	{
-		my %cookies = fetch CGI::Cookie;
-		my $value = $cookies{$name}->value() if exists $cookies{$name} && $cookies{$name};
-		return $value;
-	}
+	$cookie->bake();
+	# $r->headers_out->add('Set-cookie' => $cookie);
+    } else {
+	my %cookies = Apache::Cookie->fetch;
+	my $value = $cookies{$name}->value()	if exists $cookies{$name} && $cookies{$name};
+	return $value;
+    }
+
 </%init>

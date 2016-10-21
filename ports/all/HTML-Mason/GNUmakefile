@@ -5,9 +5,9 @@
 
 #include ../../etc/perl.mk
 
-PORTVERSION =		1.47
+PORTVERSION =		1.56
 MASTER_CPAN_SUBDIR =	HTML
-PERL_MODBUILD =		yes
+PERL_MAKEMAKER =	yes
 PORT_DEPENDS =		Params-Validate				\
 			Exception-Class				\
 			Log-Any					\

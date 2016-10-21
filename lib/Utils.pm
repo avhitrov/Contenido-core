@@ -20,7 +20,6 @@ require Exporter;
 $VERSION = '0.1';
 
 use Data::Dumper;
-use CGI;
 use locale;
 use File::Find;
 use Time::Local;
@@ -116,7 +115,7 @@ sub query_string
 		%no_encode = map { $_ => 1; } @$no_urlencode if $no_urlencode ;
 	}
 
-	my $one_param = sub { my ($k,$v)=@_; "$k=". ($no_encode{$k} ? $v : CGI::escape($v)) };
+	my $one_param = sub { my ($k,$v)=@_; "$k=". ($no_encode{$k} ? $v : URI::Escape::uri_escape($v)) };
 
 	my $params = join('&', 
 		map { my $k=$_; ref ($Args{$k}) eq 'ARRAY' ? join('&', map { &$one_param($k, $_) } @{$Args{$k}}) : &$one_param($k, $Args{$k}) }

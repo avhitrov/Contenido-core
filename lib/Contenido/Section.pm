@@ -64,6 +64,44 @@ sub _get_table {
     class_table()->new();
 }
 
+sub pre_store {
+    my $self = shift;
+
+    if ( $self->id && !$self->{__light} ) {
+	### Autofill or autoflush documents order if applicable
+	if ( $self->_sorted && !$self->_sorted_order ) {
+		my %opts;
+		if ( $self->default_document_class ) {
+			$opts{class} = $self->default_document_class;
+		} elsif ( $self->default_table_class ) {
+			$opts{table} = $self->default_table_class;
+		} else {
+			$opts{table} = 'Contenido::SQL::DocumentTable';
+		}
+		if ( $self->order_by ) {
+			$opts{order_by} = $self->order_by;
+		}
+		if ( $self->filters ) {
+			no strict 'vars';
+			my $filters = eval($self->filters);
+			if ($@) {
+				warn "Bad filter: " . $self->filters . " in section " . $self->id;
+			} elsif (ref $filters eq 'HASH') {
+				while ( my ($key, $val) = each %$filters ) {
+					$opts{$key} = $val;
+				}
+			}
+		}
+		my $ids = $keeper->get_documents( s => $self->id, %opts, ids => 1, return_mode => 'array_ref' );
+		$self->_sorted_order( join(',', @$ids) );
+	} elsif ( !$self->_sorted && $self->_sorted_order ) {
+		$self->_sorted_order( undef );
+	}
+    }
+
+    1;
+}
+
 #доработка метода store
 sub store {
     my $self=shift;

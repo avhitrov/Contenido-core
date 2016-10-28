@@ -54,8 +54,42 @@ function openWin(wUri, wName, wWidth, wHeight, wScroll, wMenu) {
 	var myW = window.open(wUri,wName,'width='+wWidth+',height='+wHeight+',top='+positionTop+',left='+positionLeft+',location=0,menubar='+menuBars+',resizable=0,scrollbars='+scrollBars+',status=0,titlebar=0,toolbar=0,directories=0,hotkeys=0')
 	myW.focus();
 }
--->
+$(document).ready(function() {
+    $('.width-toggler').on('click', function(ev) {
+	ev.preventDefault();
+	var $col_side = $('#column-side');
+	var $col_content = $('#column-content');
+
+	if ( $col_side.width() < 40 ) {
+		$col_content.width('65%');
+		$col_side.width('35%').children('fieldset').fadeIn(300);
+		setCookie('<% $cookie_width %>', '0');
+	} else {
+		$col_side.children('fieldset').fadeOut(300, function(){
+			$col_side.width('0');
+			$col_content.width('100%');
+		});
+		setCookie('<% $cookie_width %>', '1');
+	}
+    });
+});
+//-->
 </script>
+<style>
+% if ( $content_fullwidth ) {
+#column-side { width:0; }
+#column-side fieldset { display:none; }
+#column-content { width:100%; }
+% } else {
+#column-side { width:35%; }
+#column-content { width:65%; }
+% }
+</style>
+<%once>
+
+    my $cookie_width = 'content_fullwidth';
+
+</%once>
 <%args>
 
 	$style => undef
@@ -69,5 +103,6 @@ function openWin(wUri, wName, wWidth, wHeight, wScroll, wMenu) {
 	my $toopi = $project->tabs();
 
 	my $profile = $m->comp('/contenido/components/context.msn', name => 'profile');
+	my $content_fullwidth = $m->comp('/contenido/components/cookies.msn', name => $cookie_width);
 
 </%init>

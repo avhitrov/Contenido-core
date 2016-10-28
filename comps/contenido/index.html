@@ -3,7 +3,7 @@
 
 <table width="100%" cellspacing="0" cellpadding="0" border="0">
 <tr valign="top">
-<td width="35%">
+<td width="35%" id="column-side">
 
 %	my @LEFT = $m->comp('/contenido/components/tasks.msn');
 %	my %LEFTh = map { $_->{attr} => $_ } (@LEFT);
@@ -17,8 +17,8 @@
 %	}
 
 </td>
-<td width="2%" nowrap>&nbsp;</td>
-<td width="63%">
+<td width="2%"><a href="javascript:void()" class="width-toggler"><img src="/contenido/i/icons/left-right.png" width="30"></a></td>
+<td width="63%" id="column-content">
 
 <& "/contenido/components/index_tree.msn", root => $Contenido::Section::ROOT, level => $request->{tab}{level} || 3 &>
 

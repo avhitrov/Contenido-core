@@ -15,7 +15,7 @@ function set_create_button( oSelect, sBtnID ) {
 
 <table width="100%" cellspacing="0" cellpadding="0" border="0">
 <tr valign="top">
-<td width="35%">
+<td id="column-side">
 
 <& "/contenido/components/subsection.msn", section => $owner &>
 <& "/contenido/components/class_filter.msn", class=> $class, section => $owner &>
@@ -54,9 +54,8 @@ function set_create_button( oSelect, sBtnID ) {
 	</fieldset>
 
 </td>
-<td width="2%">&nbsp;</td>
-<td width="65%">
-
+<td width="2%"><a href="javascript:void()" class="width-toggler"><img src="/contenido/i/icons/left-right.png" width="30"></a></td>
+<td id="column-content">
 % if($owner->id) {
 
 	<fieldset>
@@ -160,6 +159,11 @@ function set_create_button( oSelect, sBtnID ) {
 
 </body>
 </html>
+<%once>
+
+    my $cookie_name = 'content_fullwidth';
+
+</%once>
 <%args>
 
 	$id		=> undef
@@ -177,6 +181,8 @@ function set_create_button( oSelect, sBtnID ) {
 <%init>
 
 	$id = 0 if $id =~ /\D/;
+	my $content_fullwidth = $m->comp('/contenido/components/cookies.msn', name => $cookie_name);
+
 	my $owner;
 
 	# Операции...
@@ -481,7 +487,7 @@ function set_create_button( oSelect, sBtnID ) {
 		if ($class && !$use_section) {
 			@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first);
 		} elsif ($sorted) {
-			@documents = $keeper->get_sorted_documents(%filter, limit=>$n, offset=>$first);
+			@documents = $keeper->get_sorted_documents(%filter);
 		} else {
 			@documents = $keeper->get_documents(%filter, %order, limit=>$n, offset=>$first);
 		}

@@ -13,7 +13,6 @@
 			-secure => 0,
 		);
 	$cookie->bake();
-	# $r->headers_out->add('Set-cookie' => $cookie);
     } else {
 	my %cookies = Apache::Cookie->fetch;
 	my $value = $cookies{$name}->value()	if exists $cookies{$name} && $cookies{$name};

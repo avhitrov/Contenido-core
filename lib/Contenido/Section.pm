@@ -64,52 +64,27 @@ sub _get_table {
     class_table()->new();
 }
 
-sub pre_store {
-    my $self = shift;
-
-    if ( $self->id && !$self->{__light} ) {
-	### Autofill or autoflush documents order if applicable
-	if ( $self->_sorted && !$self->_sorted_order ) {
-		my %opts;
-		if ( $self->default_document_class ) {
-			$opts{class} = $self->default_document_class;
-		} elsif ( $self->default_table_class ) {
-			$opts{table} = $self->default_table_class;
-		} else {
-			$opts{table} = 'Contenido::SQL::DocumentTable';
-		}
-		if ( $self->order_by ) {
-			$opts{order_by} = $self->order_by;
-		}
-		if ( $self->filters ) {
-			no strict 'vars';
-			my $filters = eval($self->filters);
-			if ($@) {
-				warn "Bad filter: " . $self->filters . " in section " . $self->id;
-			} elsif (ref $filters eq 'HASH') {
-				while ( my ($key, $val) = each %$filters ) {
-					$opts{$key} = $val;
-				}
-			}
-		}
-		my $ids = $keeper->get_documents( s => $self->id, %opts, ids => 1, return_mode => 'array_ref' );
-		$self->_sorted_order( join(',', @$ids) );
-	} elsif ( !$self->_sorted && $self->_sorted_order ) {
-		$self->_sorted_order( undef );
-	}
-    }
-
-    1;
-}
 
 #доработка метода store
 sub store {
-    my $self=shift;
+    my $self = shift;
+    my (%opts) = @_;
 
     #для новосозданных секций ставим новый sorder
-    unless ($self->{id}) {
-        my ($sorder) = $self->keeper->SQL->selectrow_array("select max(sorder) from ".$self->class_table->db_table(), {});
-        $self->{sorder} = $sorder + 1;
+    if ( $self->{id} ) {
+	my $without_sort = delete $opts{without_sort};
+	unless ( $without_sort || $self->{__light} ) {
+		### Autofill or autoflush documents order if applicable
+		if ( $self->_sorted ) {
+			my $ids = $self->_get_document_order;
+			$self->_sorted_order( join(',', @$ids) );
+		} elsif ( !$self->_sorted && $self->_sorted_order ) {
+			$self->_sorted_order( undef );
+		}
+	}
+    } else {
+	my ($sorder) = $self->keeper->SQL->selectrow_array("select max(sorder) from ".$self->class_table->db_table(), {});
+	$self->{sorder} = $sorder + 1;
     }
 
     return $self->SUPER::store();
@@ -223,6 +198,51 @@ sub childs {
 }
 
 
+sub _get_document_order {
+    my ($self) = shift;
+
+    my @order = $self->_sorted_order ? split( /,/, $self->_sorted_order ) : ();
+
+    my %opts;
+    if ( $self->default_document_class ) {
+	$opts{class} = $self->default_document_class;
+    } elsif ( $self->default_table_class ) {
+	$opts{table} = $self->default_table_class;
+    } else {
+	$opts{table} = 'Contenido::SQL::DocumentTable';
+    }
+    if ( $self->order_by ) {
+	$opts{order_by} = $self->order_by;
+    }
+    if ( $self->filters ) {
+	no strict 'vars';
+	my $filters = eval($self->filters);
+	if ($@) {
+		warn "Bad filter: " . $self->filters . " in section " . $self->id;
+	} elsif (ref $filters eq 'HASH') {
+		while ( my ($key, $val) = each %$filters ) {
+			$opts{$key} = $val;
+		}
+	}
+    }
+    my $ids = $keeper->get_documents( s => $self->id, %opts, ids => 1, return_mode => 'array_ref' );
+    my %ids = map { $_ => 1 } @$ids;
+    my @new_order;
+    foreach my $iid ( @order ) {
+	if ( exists $ids{$iid} ) {
+		push @new_order, $iid;
+		delete $ids{$iid};
+	}
+    }
+    foreach my $iid ( @$ids ) {
+	if ( exists $ids{$iid} ) {
+		push @new_order, $iid;
+		delete $ids{$iid};
+	}
+    }
+    return \@new_order;
+}
+
 
 # ----------------------------------------------------------------------------
 # Метод для перемещение секции вверх/вниз по рубрикатору (изменение
@@ -289,7 +309,7 @@ sub move {
 #   $doc->dmove($doc_id, $direction); Направление задается строкой 'up'/'down'
 # ----------------------------------------------------------------------------
 sub dmove {
-    my ($self, $doc_id, $direction) = @_;
+    my ($self, $doc_id, $direction, $anchor) = @_;
     do { $log->error("Метод ->dmove() можно вызывать только у объектов, но не классов"); die } unless ref($self);
 
     return undef if ($self->keeper->state->readonly());
@@ -300,59 +320,61 @@ sub dmove {
                                                 unless (exists($self->{id}) && ($self->{id} > 0));
 
     $direction = lc($direction);
-    if ( ($direction ne 'up') && ($direction ne 'down') ) { $log->warning("Направление перемещения документа задано неверно"); return undef };
-
-    my $sorder_;
-    if ($self->_sorted()) {
-        my @ids = $keeper->get_documents( ids =>1, s => $self->id(), 
-			($self->default_document_class ? (class => $self->default_document_class) : $self->default_table_class ? (table => $self->default_table_class) : ()), 
-			order => ['date', undef], light => 1
-		);
-        my %ids = map { $_ => 1 } @ids;
-        unless ($self->{_sorted_order}) {
-            $self->{_sorted_order} = join ',', @ids;
-        }
-
-        my @order = split(/,/, $self->{_sorted_order});
-        @order = grep {
-            my $res;
-            if (exists $ids{$_}) {
-                $res = 1;
-                delete $ids{$_};
-            }
-            $res
-        } @order;
-
-        push @order, keys %ids;
-
-        foreach my $i (0 .. $#order) {
-            if ($order[$i] == $doc_id) {
-                my $t;
-                if ($direction eq 'up') {
-                    last if $i == 0;
-                    $t = $order[$i-1];
-                    $order[$i-1] = $order[$i];
-                    $order[$i] = $t;
-                    $sorder_ = $i - 1;
-                    last;
-                } elsif ($direction eq 'down') {
-                    last if $i == $#order;
-                    $t = $order[$i+1];
-                    $order[$i+1] = $order[$i];
-                    $order[$i] = $t;
-                    $sorder_ = $i + 1;
-                    last;
-                }
-            }
-        }
-
-        $self->{_sorted_order} = join ',', @order;
-        $self->store();
-    } else {
-        $log->warning("dmove called for section without enabled sorted feature... $self->{id}/$self->{class}");
+    unless ( $direction eq 'up' || $direction eq 'down' || $direction eq 'first' || $direction eq 'last' || $direction eq 'before' || $direction eq 'after' ) { 
+	$log->warning("Направление перемещения документа задано неверно"); return undef 
+    };
+    my $anchor_flag = 0;
+    if ( ($direction eq 'before' || $direction eq 'after') && !$anchor ) {
+	$log->warning("Неверный вызов функции dmove для направления '$direction'. Необходимо указать дополнительно id в списке документов"); return undef;
+    } elsif ( $direction eq 'before' || $direction eq 'after' ) {
+	$anchor_flag = 1;
     }
 
-    $self->{sorder} = $sorder_;
+    if ($self->_sorted()) {
+	my $order = $self->_get_document_order;
+	my @new_order;
+	if ( $direction eq 'first' ) {
+		push @new_order, $doc_id;
+	}
+	for ( my $i = 0; $i < scalar @$order; $i++ ) {
+		if ( ($direction eq 'first' || $direction eq 'last' || $direction eq 'after' || $direction eq 'before') && $order->[$i] == $doc_id ) {
+			next;
+		} elsif ( $direction eq 'up' && $order->[$i] == $doc_id ) {
+			if ( $i ) {
+				my $id = pop @new_order;
+				push @new_order, ($doc_id, $id);
+			} else {
+				push @new_order, $doc_id;
+			}
+		} elsif ( $direction eq 'down' && $order->[$i] == $doc_id ) {
+			if ( $i < scalar(@$order) - 1 ) {
+				push @new_order, ($order->[++$i], $doc_id);
+			} else {
+				push @new_order, $doc_id;
+			}
+		} elsif ( $direction eq 'before' && $order->[$i] == $anchor ) {
+			push @new_order, ($doc_id, $order->[$i]);
+			$anchor_flag = 0;
+		} elsif ( $direction eq 'after' && $order->[$i] == $anchor ) {
+			push @new_order, ($order->[$i], $doc_id);
+			$anchor_flag = 0;
+		} else {
+			push @new_order, $order->[$i];
+		}
+	}
+	if ( $anchor_flag ) {
+		$log->warning("Неверный вызов функции dmove для направления '$direction'. Не найден якорь [$anchor]"); return undef;
+	}
+	if ( $direction eq 'last' ) {
+		push @new_order, $doc_id;
+	}
+
+	$self->{_sorted_order} = join ',', @new_order;
+	$self->store( without_sort => 1 );
+    } else {
+	$log->warning("dmove called for section without enabled sorted feature... ".$self->id."/".$self->class);
+    }
+
     return 1;
 }
 

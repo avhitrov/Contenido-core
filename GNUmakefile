@@ -67,6 +67,7 @@ endif
 			core_commit			cci				\
 			core_install			cin				\
 			core_info			cinfo				\
+			core_rsync			crs				\
 											\
 			project_status			pst				\
 			project_update			pup				\
@@ -576,6 +577,66 @@ project_rsync:: check_project
 			echo -e "done\n";						\
 		done;									\
 	done;
+	@echo $@ done
+
+# rsync core static files directly to frontend
+crs: core_rsync ;
+core_rsync:: check_core_installed
+	@for D in ${RSYNC_CORE_DIRS}; do						\
+		if [ -d ${RSYNC_CORE_ROOT}/$${D} ]; then				\
+			D=$${D}/;							\
+		elif [ \! -f ${RSYNC_CORE_ROOT}/$${D} ]; then				\
+			echo "ERROR: no such dir or file: ${RSYNC_CORE_ROOT}/$${D}";	\
+			exit 1;								\
+		fi;									\
+		for S in ${RSYNC_SERVERS}; do						\
+			echo "#######################################";			\
+			echo "# rsync $${D} to $${S}";					\
+			echo "#######################################";			\
+			cd ${RSYNC_CORE_ROOT} && ${RSYNC} -rtRv				\
+				--delete --delete-excluded --exclude .svn --chmod=u+w	\
+			$${D} $${S};							\
+			echo -e "done\n";						\
+		done;									\
+	done;
+	@echo $@ done
+
+assets: project_assets ;
+project_assets:: check_project
+	@rm -rf ${ASSETS_ROOT}/assets;
+	@cd ${PROJ_SRC}/${PROJECT} && echo ${PROJ_SRC}/${PROJECT} &&			\
+	npm install;
+	@cd ${PROJ_SRC}/${PROJECT} && npm run build;
+	@if [ -d ${ASSETS_ROOT}/assets ]; then						\
+		echo "Assets generated in ${ASSETS_ROOT}/assets";			\
+	fi;
+	@echo $@ done
+
+assdev: project_assets_dev ;
+project_assets_dev:: check_project
+	@rm -rf ${ASSETS_ROOT}/assets;
+	@cd ${PROJ_SRC}/${PROJECT} && echo ${PROJ_SRC}/${PROJECT} &&			\
+	npm install;
+	@cd ${PROJ_SRC}/${PROJECT} && npm run dev;
+
+# rsync project assets directly to frontend
+ars: project_assets_rsync ;
+project_assets_rsync:: check_project
+	@if [ -d ${ASSETS_ROOT}/assets ]; then						\
+		echo "Found assets in ${ASSETS_ROOT}/assets";				\
+		for S in ${RSYNC_SERVERS}; do						\
+			echo "#######################################################";	\
+			echo "# rsync ${ASSETS_ROOT}/assets to $${S}";			\
+			echo "#######################################################";	\
+			cd ${ASSETS_ROOT} && ${RSYNC} -rtRv				\
+				--delete --delete-excluded --exclude .svn --chmod=u+w	\
+			assets $${S};							\
+			echo -e "done\n";						\
+		done;									\
+	elif [ \! -f ${ASSETS_ROOT} ]; then						\
+		echo "ERROR: no such dir or file: ${ASSETS_ROOT}";			\
+		exit 1;									\
+	fi;
 	@echo $@ done
 
 # start project

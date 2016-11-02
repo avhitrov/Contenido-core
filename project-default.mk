@@ -65,6 +65,7 @@ PREAMBLE_HANDLER ?=
 PREAMBLE_HANDLER_PATH ?= 
 
 RSYNC_DIRS ?=
+RSYNC_CORE_DIRS +=		contenido/i
 
 # apache pool
 ${PROJECT_LC}_START_SERVERS ?=	1
@@ -139,6 +140,8 @@ PLUGIN_COMP ?=			${shell perl -e 'print lc "${DEVELOPMENT}" eq "yes" ? "${PLUG_S
 MASON_COMP ?=			${shell perl -e 'print lc "${DEVELOPMENT}" eq "yes" ? "${PROJ_SRC}" : "${PROJ_USR}"'}/${PROJECT}/comps
 CORE_COMP ?=			${shell perl -e 'print lc "${DEVELOPMENT}" eq "yes" ? "${CORE_SRC}" : "${CORE_USR}"'}/comps
 RSYNC_ROOT ?=			${PROJ_USR}/${PROJECT}/comps
+RSYNC_CORE_ROOT ?=		${CORE_USR}/comps
+ASSETS_ROOT ?=			${PROJ_VAR}/${PROJECT}
 BINARY ?=			${MASON_COMP}/binary
 ifdef FRONTENDS
 FILES ?=			${addprefix http://, ${addsuffix /dav/${PROJECT_LC}, ${FRONTENDS}}}

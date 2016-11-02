@@ -8,7 +8,9 @@
 </td>
 %
 %			for my $col (@$columns) {
-%				if ($col->{attr} eq '_sort_') {
+%				my $attr = $col->{attr};
+%				my $type = exists $col->{inline_type} ? $col->{inline_type} : $col->{type};
+%				if ($attr eq '_sort_') {
 %
 <td width="20px"><% $document->{sorder} %>&nbsp;<a class="move-up" data-id="<% $document->id %>"
  href="document_move.html?id=<% $document->{id} %>&move=up&s=<% $id %><% $params_unsection ? '&'.$params_unsection : '' %>"><img
@@ -16,7 +18,7 @@
  href="document_move.html?id=<% $document->{id} %>&move=down&s=<% $id %><% $params_unsection ? '&'.$params_unsection : '' %>"><img
  src="/contenido/i/ico-down-9x10.gif" border=0 alt="Переместить документ на шаг вниз"></a>\
 %
-%				} elsif ($col->{attr} eq 'dtime') {
+%				} elsif ($attr eq 'dtime') {
 %
 <td nowrap><& "/contenido/components/show_dtime.msn", dtime=>$document->{dtime} &>\
 %
@@ -27,7 +29,7 @@
 %
 %					}
 %
-%				} elsif ($col->{attr} eq 'name') {
+%				} elsif ($attr eq 'name') {
 %
 <td><span<% $document->contenido_status_style ? ' style="' . $document->contenido_status_style . '"' : '' %> class="<% $document->status ? '':'hiddensect' %>">\
 %
@@ -44,7 +46,7 @@
 %
 </span>\
 %
-%				} elsif ($col->{attr} eq 'id') {
+%				} elsif ($attr eq 'id') {
 %
 <td><span class="<% $document->status ? '':'hiddensect' %>">\
 %					if ($document_access == 2) {
@@ -55,8 +57,6 @@
 </span>\
 %
 %				} elsif ( exists $col->{inline} && $col->{inline} ) {
-%					my $attr = $col->{attr};
-%					my $type = exists $col->{inline_type} ? $col->{inline_type} : $col->{type};
 %					if ( $type =~ /^(string|integer|float)$/ && $col->{inline} ) {
 %						my $style = $col->{inline_style} ? $col->{inline_style} : ($col->{type} =~ /^(integer|float)$/ ? 'text-align:right; ' : '' );
 %						$style .= $col->{inline_width} ? ' width:'.$col->{inline_width}.'px; ' : ' width:65px; ';
@@ -79,7 +79,7 @@
 %						if ($toopi && (ref($toopi) eq 'HASH') && (exists($toopi->{$document->class}))) {
 %							%{ $options } = %{ $toopi->{$document->class} };
 %						}
-%						my $values = $options->{$col->{attr}};
+%						my $values = $options->{$attr};
 <td><select name="<% 'update_'.$document->id.'_'.$attr %>" autocomplete="off">
 %						if ( ref $values eq 'ARRAY' ) {
 %							foreach my $val ( @$values ) {
@@ -113,12 +113,12 @@
 %						my %opts = %{ $col->{lookup_opts} };
 %						delete $opts{search_by}		if exists $opts{search_by};
 %						my $docs;
-%						if ( ref $lookup_elements eq 'HASH' && exists $lookup_elements->{$col->{attr}} ) {
-%							$docs = $lookup_elements->{$col->{attr}};
+%						if ( ref $lookup_elements eq 'HASH' && exists $lookup_elements->{$attr} ) {
+%							$docs = $lookup_elements->{$attr};
 %						} else {
 %							$docs = $keeper->get_documents( %opts, return_mode => 'array_ref', names => 1 );
 %							if ( ref $lookup_elements eq 'HASH' ) {
-%								$lookup_elements->{$col->{attr}} = $docs;
+%								$lookup_elements->{$attr} = $docs;
 %							}
 %						}
 %						if ( ref $docs eq 'ARRAY' && @$docs ) {
@@ -136,15 +136,15 @@
 <td><% $document->$attr %><input type="hidden" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr |h %>">\
 %					}
 %
-%				} elsif ($col->{attr} eq 'class') {
+%				} elsif ($attr eq 'class') {
 %
 <td><% $document->class_name %>&nbsp;<font color="#999999">(<% $document->class %>)</font>\
 %
 %				} elsif ($type eq 'datetime') {
 %
-<td nowrap><& "/contenido/components/show_dtime.msn", dtime=>$document->{$col->{attr}} &>\
+<td nowrap><& "/contenido/components/show_dtime.msn", dtime=>$document->{$attr} &>\
 %
-%				} elsif ($col->{attr} eq '_act_') {
+%				} elsif ($attr eq '_act_') {
 %
 <td nowrap>\
 %					if ($document_access == 2) {
@@ -176,24 +176,24 @@
 %					}
 %
 %				} else {
-%					my $attr = $col->{attr};
+%					my $attr = $attr;
 %					if ($type eq 'date') {
-%						my $date=$document->{$col->{attr}};
+%						my $date=$document->{$attr};
 %						$date=~/(\d{4}-\d{2}-\d{2})/;
 <td nowrap align="right"><% $1 || '&nbsp;' %>\
 %					} elsif ($type eq 'datetime') {
-<td nowrap align="right"><% $document->{$col->{attr}} || '&nbsp;' %>\
+<td nowrap align="right"><% $document->{$attr} || '&nbsp;' %>\
 %					} elsif ($type eq 'integer') {
-<td align="right"><% $document->{$col->{attr}} %>&nbsp;\
+<td align="right"><% $document->{$attr} %>&nbsp;\
 %					} elsif ($type eq 'lookup' || $type eq 'pickup' || $type eq 'autocomplete') {
 <td align="left">\
-%						my $id = $document->{$col->{attr}};
+%						my $id = $document->{$attr};
 %						if ($id) {
 %							my ($doc)=$keeper->get_documents( ( ref($col->{lookup_opts}) ? %{$col->{lookup_opts}} : () ), id=>$id);
 %							if ($doc) {
 <a href="document.html?id=<% $doc->id %>&class=<% $doc->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>"><% $doc->name || $doc->id %></a>&nbsp;\
 %							} else {
-<span class="hiddensect"><% $document->{$col->{attr}} %>???</span>\
+<span class="hiddensect"><% $document->{$attr} %>???</span>\
 %							}
 %						} else {
 <span class="hiddensect">NULL</span>\
@@ -202,8 +202,8 @@
 <td align="center"><% $document->$attr ? '<img src="/contenido/i/checked-16x16.png" width="16" height="16">' : '&nbsp;' %>\
 %					} elsif ($type eq 'status') {
 %						my $status_map = ref $col->{cases} eq 'ARRAY' ? $col->{cases} : $keeper->default_status();
-%						my ($doc_status) = grep { $_->[0] eq $document->{$col->{attr}} } @$status_map; 
-%						$doc_status ||= [$document->{$col->{attr}}, 'Неизвестный'];
+%						my ($doc_status) = grep { $_->[0] eq $document->{$attr} } @$status_map; 
+%						$doc_status ||= [$document->{$attr}, 'Неизвестный'];
 		<td nowrap><% $doc_status->[1].'('.$doc_status->[0].')' %>\
 %					} else {
 <td><% defined($document->$attr) ? $document->$attr : '&nbsp;' %>\

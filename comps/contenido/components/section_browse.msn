@@ -42,7 +42,6 @@ $(document).ready(function() {
 });
 % }
 
-
 function mydump(arr,level) {
     var dumped_text = "";
     if(!level) level = 0;
@@ -67,7 +66,42 @@ function mydump(arr,level) {
     return dumped_text;
 }
 
-
+$(document).ready(function(){
+    $('.move-up').on('click', function( ev ){
+	ev.preventDefault();
+	var $nID = $(this).data('id');
+	$.ajax({
+		'url'	: '/contenido/ajax/document_move.html',
+		'data'	: { 's' : <% ref $section ? $section->id : 0 %>, 'id' : $nID, 'move' : 'up' },
+		'dataType'	: 'json',
+		'success'	: function( data ){
+			if ( data.error ) {
+				alert( data.error );
+			} else if ( data.before ) {
+				var $nBefore = data.before;
+				$('#row-' + $nID).insertBefore('#row-' + $nBefore);
+			}
+		}
+	});
+    });
+    $('.move-down').on('click', function( ev ){
+	ev.preventDefault();
+	var $nID = $(this).data('id');
+	$.ajax({
+		'url'	: '/contenido/ajax/document_move.html',
+		'data'	: { 's' : <% ref $section ? $section->id : 0 %>, 'id' : $nID, 'move' : 'up' },
+		'dataType'	: 'json',
+		'success'	: function( data ){
+			if ( data.error ) {
+				alert( data.error );
+			} else if ( data.after ) {
+				var $nAfter = data.after;
+				$('#row-' + $nID).insertAfter('#row-' + $nAfter);
+			}
+		}
+	});
+    });
+});
 //-->
 </script>
 <form name="section_browse" action="sections.html" method="POST">
@@ -151,7 +185,10 @@ function mydump(arr,level) {
    my $params_unsection = ref $filter eq 'HASH' ? join ('&', map { $_.'='.$filter->{$_} } grep { $_ ne 's' } keys %$filter ) : '';
 
    my %lookup_elements;
-   my @inline_pickups = grep { exists $_->{inline} && ($_->{type} eq 'pickup' || $_->{type} eq 'autocomplete') } @$columns;
+   my @inline_pickups = grep {
+		my $type = exists $_->{inline_type} ? $_->{inline_type} : $_->{type};
+		exists $_->{inline} && ($type eq 'pickup' || $type eq 'autocomplete')
+	} @$columns;
 
    map {
 	$_->{document_access} = $user->section_accesses($user, $_->section);

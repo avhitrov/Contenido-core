@@ -200,6 +200,7 @@ sub childs {
 
 sub _get_document_order {
     my ($self) = shift;
+    return	unless $self->_sorted;
 
     my @order = $self->_sorted_order ? split( /,/, $self->_sorted_order ) : ();
 
@@ -241,6 +242,35 @@ sub _get_document_order {
 	}
     }
     return \@new_order;
+}
+
+
+sub _get_document_pos {
+    my ($self) = shift;
+    my ($doc_id) = shift;
+    return	unless $doc_id && $doc_id =~ /^\d+$/;
+    return	unless $self->_sorted;
+
+    my @order = $self->_sorted_order ? split( /,/, $self->_sorted_order ) : ();
+    my %pos;
+    for ( my $i = 0; $i < scalar @order; $i++ ) {
+	if ( $order[$i] == $doc_id ) {
+		$pos{index} = $i;
+		if ( $i > 0 ) {
+			$pos{after} = $order[$i-1];
+		}
+		if ( $i < $#order ) {
+			$pos{before} = $order[$i+1];
+		}
+		if ( $i == $#order ) {
+			$pos{last} = 1;
+		} elsif ( $i == 0 ) {
+			$pos{first} = 1;
+		}
+		last;
+	}
+    }
+    return  (exists $pos{index} ? \%pos : undef);
 }
 
 

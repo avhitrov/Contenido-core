@@ -1,0 +1,64 @@
+<% $json %>
+<%once>
+
+    use JSON::XS;
+
+</%once>
+<%args>
+
+	$id	=> undef
+	$aid	=> undef
+	$s	=> undef
+	$move	=> undef
+
+</%args>
+<%init>
+
+    my %result;
+
+    if ( $id && $id =~ /^\d+$/ && $s && $s =~ /^\d+$/ && $move && $move =~ /^(up|down|first|last|before|after)$/ && (!$aid || $aid && $aid =~ /^\d+$/) ) {
+	my $section = $keeper->get_section_by_id( $s );
+	if ( ref $section ) {
+		if ( $section->_sorted ) {
+			if ( $section->dmove( $id, $move, $aid ) ) {
+				my $position = $section->_get_document_pos( $id );
+				warn Dumper( $position );
+				if ( ref $position && exists $position->{index} ) {
+					if ( exists $position->{before} ) {
+						$result{before} = $position->{before};
+						$result{success} = 1;
+					}
+					if ( exists $position->{after} ) {
+						$result{after} = $position->{after};
+						$result{success} = 1;
+					}
+					if ( exists $position->{first} ) {
+						$result{first} = 1;
+						$result{success} = 1;
+					}
+					if ( exists $position->{last} ) {
+						$result{last} = 1;
+						$result{success} = 1;
+					}
+					unless ( exists $result{success} ) {
+						$result{error} = Encode::decode('utf-8', 'Ошибка индексации. Для разбора полетов обратитесь к разработчикам');
+					}
+				} else {
+					$result{error} = Encode::decode('utf-8', 'Ошибка индексации. Для разбора полетов обратитесь к разработчикам');
+				}
+			} else {
+				$result{error} = Encode::decode('utf-8', 'Ошибка перемещения. Для разбора полетов обратитесь к разработчикам');
+			}
+		} else {
+			$result{error} = Encode::decode('utf-8', 'В данной секции отключен режим ручной сортировки');
+		}
+	} else {
+		$result{error} = Encode::decode('utf-8', 'Секция не найдена');
+	}
+    } else {
+	$result{error} = Encode::decode('utf-8', 'Переданы неверные параметры');
+    }
+
+    my $json = encode_json \%result;
+
+</%init>

@@ -1,4 +1,4 @@
-<tr valign="top">
+<tr valign="top" id="row-<% $document->id %>">
 <td nowrap>\
 %			if ($document_access == 2) {
 <input type="checkbox" class="common-check" name="<% 'delete_'.$document->id.'_id' %>">
@@ -10,9 +10,9 @@
 %			for my $col (@$columns) {
 %				if ($col->{attr} eq '_sort_') {
 %
-<td width="20px"><% $document->{sorder} %>&nbsp;<a
+<td width="20px"><% $document->{sorder} %>&nbsp;<a class="move-up" data-id="<% $document->id %>"
  href="document_move.html?id=<% $document->{id} %>&move=up&s=<% $id %><% $params_unsection ? '&'.$params_unsection : '' %>"><img
- src="/contenido/i/ico-up-9x10.gif" border=0 alt="Переместить документ на шаг вверх"></a>&nbsp;<a
+ src="/contenido/i/ico-up-9x10.gif" border=0 alt="Переместить документ на шаг вверх"></a>&nbsp;<a class="move-down" data-id="<% $document->id %>"
  href="document_move.html?id=<% $document->{id} %>&move=down&s=<% $id %><% $params_unsection ? '&'.$params_unsection : '' %>"><img
  src="/contenido/i/ico-down-9x10.gif" border=0 alt="Переместить документ на шаг вниз"></a>\
 %
@@ -56,14 +56,15 @@
 %
 %				} elsif ( exists $col->{inline} && $col->{inline} ) {
 %					my $attr = $col->{attr};
-%					if ( $col->{type} =~ /^(string|integer|float)$/ && $col->{inline} ) {
+%					my $type = exists $col->{inline_type} ? $col->{inline_type} : $col->{type};
+%					if ( $type =~ /^(string|integer|float)$/ && $col->{inline} ) {
 %						my $style = $col->{inline_style} ? $col->{inline_style} : ($col->{type} =~ /^(integer|float)$/ ? 'text-align:right; ' : '' );
 %						$style .= $col->{inline_width} ? ' width:'.$col->{inline_width}.'px; ' : ' width:65px; ';
 <td><input type="text" name="<% 'update_'.$document->id.'_'.$attr %>" value="<% $document->$attr |h %>" style="<% $style %>">
-%					} elsif ($col->{type} eq 'checkbox') {
+%					} elsif ($type eq 'checkbox') {
 %						my $checked = $document->$attr ? ' checked' : '';
 <td align="center"><input type="checkbox" class="<% $attr %>-check" name="<% 'update_'.$document->id.'_'.$attr %>"<% $checked %>>
-%					} elsif ($col->{type} eq 'text') {
+%					} elsif ($type eq 'text') {
 %						my $style = $col->{inline_style} ? $col->{inline_style} : '';
 %						$style .= $col->{inline_width} ? ' width:'.$col->{inline_width}.'px; ' : ' width:100px; ';
 %						$style .= $col->{inline_height} ? ' width:'.$col->{inline_height}.'px; ' : ' height:70px; ';
@@ -73,7 +74,7 @@
 %							s/>/&gt;/sgi;
 %						}
 <td><textarea name="<% 'update_'.$document->id.'_'.$attr %>" style="<% $style %>"><% $value %></textarea>
-%					} elsif ($col->{type} eq 'select') {
+%					} elsif ($type eq 'select') {
 %						my $options = {};
 %						if ($toopi && (ref($toopi) eq 'HASH') && (exists($toopi->{$document->class}))) {
 %							%{ $options } = %{ $toopi->{$document->class} };
@@ -87,7 +88,7 @@
 %							}
 %						}
 </select>
-%					} elsif ($col->{type} eq 'status') {
+%					} elsif ($type eq 'status') {
 %						my $cases = $col->{cases};
 %						if ( ref $cases eq 'ARRAY' ) {
 <td><select name="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>" autocomplete="off">
@@ -97,7 +98,7 @@
 %							}
 </select>
 %						}
-%					} elsif ($col->{type} eq 'pickup' || $col->{type} eq 'autocomplete') {
+%					} elsif ($type eq 'pickup' || $type eq 'autocomplete') {
 %						my %opts = %{ $col->{lookup_opts} };
 %						my $doc;
 %						if ( $document->$attr ) {
@@ -108,7 +109,7 @@
  title="<% defined $document->$attr ? 'Значение: '.$document->$attr : '' %>"
  rel="<% 'update_'.$document->id.'_'.$attr %>" style="<% $col->{inline_width} ? 'width:'.$col->{inline_width}.'px;' : '' %> <% $col->{inline_style} || '' %>"
  old-value="<% (ref $doc ? $doc->name : '') |h %>" onfocus="" onblur="">
-%					} elsif ($col->{type} eq 'lookup') {
+%					} elsif ($type eq 'lookup') {
 %						my %opts = %{ $col->{lookup_opts} };
 %						delete $opts{search_by}		if exists $opts{search_by};
 %						my $docs;
@@ -139,7 +140,7 @@
 %
 <td><% $document->class_name %>&nbsp;<font color="#999999">(<% $document->class %>)</font>\
 %
-%				} elsif ($col->{type} eq 'datetime') {
+%				} elsif ($type eq 'datetime') {
 %
 <td nowrap><& "/contenido/components/show_dtime.msn", dtime=>$document->{$col->{attr}} &>\
 %
@@ -176,15 +177,15 @@
 %
 %				} else {
 %					my $attr = $col->{attr};
-%					if ($col->{type} eq 'date') {
+%					if ($type eq 'date') {
 %						my $date=$document->{$col->{attr}};
 %						$date=~/(\d{4}-\d{2}-\d{2})/;
 <td nowrap align="right"><% $1 || '&nbsp;' %>\
-%					} elsif ($col->{type} eq 'datetime') {
+%					} elsif ($type eq 'datetime') {
 <td nowrap align="right"><% $document->{$col->{attr}} || '&nbsp;' %>\
-%					} elsif ($col->{type} eq 'integer') {
+%					} elsif ($type eq 'integer') {
 <td align="right"><% $document->{$col->{attr}} %>&nbsp;\
-%					} elsif ($col->{type} eq 'lookup' || $col->{type} eq 'pickup' || $col->{type} eq 'autocomplete') {
+%					} elsif ($type eq 'lookup' || $type eq 'pickup' || $type eq 'autocomplete') {
 <td align="left">\
 %						my $id = $document->{$col->{attr}};
 %						if ($id) {
@@ -197,9 +198,9 @@
 %						} else {
 <span class="hiddensect">NULL</span>\
 %						}
-%					} elsif ($col->{type} eq 'checkbox') {
+%					} elsif ($type eq 'checkbox') {
 <td align="center"><% $document->$attr ? '<img src="/contenido/i/checked-16x16.png" width="16" height="16">' : '&nbsp;' %>\
-%					} elsif ($col->{type} eq 'status') {
+%					} elsif ($type eq 'status') {
 %						my $status_map = ref $col->{cases} eq 'ARRAY' ? $col->{cases} : $keeper->default_status();
 %						my ($doc_status) = grep { $_->[0] eq $document->{$col->{attr}} } @$status_map; 
 %						$doc_status ||= [$document->{$col->{attr}}, 'Неизвестный'];

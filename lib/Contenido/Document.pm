@@ -74,7 +74,9 @@ sub search_fields {
 ####
 # Шаблонный метод для описания полей в документах других классов,
 # связанных с данным документом связью многие-к-одному от поля
-# field документа класса class к id (или source_field) данного документа
+# field документа класса class к id (или source_field) данного документа.
+# auto - дополнительная инициализация полей создаваемого (target) документа
+# на базе значений полей текущего (source) документа
 #
 # Пример:
 #	{
@@ -83,7 +85,7 @@ sub search_fields {
 #		filter	=> 'filter_name that will be set to "get_documents" request'
 #		field	=> 'table_field which is linked to the current table'
 #		source_field	=> 'field (except id) to which target table is linked to'
-#		auto	=> { source_field1 => target_field1, source_field2 => target_field2 ... }
+#		auto	=> { target_field1 => source_field1, target_field2 => source_field2 ... }
 #	}
 #
 ##################################################################

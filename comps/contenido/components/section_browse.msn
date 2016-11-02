@@ -89,7 +89,7 @@ $(document).ready(function(){
 	var $nID = $(this).data('id');
 	$.ajax({
 		'url'	: '/contenido/ajax/document_move.html',
-		'data'	: { 's' : <% ref $section ? $section->id : 0 %>, 'id' : $nID, 'move' : 'up' },
+		'data'	: { 's' : <% ref $section ? $section->id : 0 %>, 'id' : $nID, 'move' : 'down' },
 		'dataType'	: 'json',
 		'success'	: function( data ){
 			if ( data.error ) {

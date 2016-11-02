@@ -1065,6 +1065,9 @@ sub eval_dump {
 sub eval_json {
     return undef	unless ${$_[0]};
     my $str = ${$_[0]};
+    if ( $str =~ /^\$VAR/ ) {
+	return Data::Recursive::Encode->decode_utf8(Contenido::Object::eval_dump( \$str ));
+    }
     my $chr = substr($str, 0, 1); return $str	unless $chr eq '{' || $chr eq '[';
     my $value = $json_u->decode( $str );
     return $value;
@@ -1263,7 +1266,7 @@ sub _store_binary {
     my $input = shift;
     my (%opts) = @_;
 
-    return Contenido::File::store_binary( $input, object => $self, attr => $opts{attr} );
+    return Contenido::File::store_binary( $input, object => $self, %opts );
 }
 
 # ----------------------------------------------------------------------------

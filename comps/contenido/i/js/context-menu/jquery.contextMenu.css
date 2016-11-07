@@ -130,7 +130,7 @@
   left: 0;
   width: 2em; 
   font-family: "context-menu-icons";
-  font-size: 1em;
+  font-size: 0.9em;
   font-style: normal;
   font-weight: normal;
   line-height: 1;
@@ -169,7 +169,7 @@
   left: 0;
   width: 2em; 
   font-family: FontAwesome;
-  font-size: 1em;
+  font-size: 0.9em;
   font-style: normal;
   font-weight: normal;
   line-height: 1;
@@ -198,7 +198,7 @@
   padding: .25em 0;
   margin: .3em;
   font-family: inherit;
-  font-size: inherit;
+  font-size: 0.8em;
   list-style-type: none;
   background: #fff;
   border: 1px solid #bebebe;

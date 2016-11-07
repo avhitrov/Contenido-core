@@ -1,0 +1,35 @@
+<form action="/contenido/set_section_pager.html" name="formpager">
+	<table border="0" cellpadding="3" cellspacing="0" class="tform">
+	<tr><td>Показывать&nbsp;по:</td>
+	<td width="100%">
+<select name="size" onChange="set_pager(this);" autocomplete="off">
+% for ( qw( 40 80 120 200 500 1000 ) ) {
+%	my $selected = $size == $_ ? ' selected' : '';
+	<option value="<% $_ %>"<% $selected %>><% $_ %></option>
+% }
+</select>
+	</td>
+	<td><input type="hidden" name="sect_id" value="<% $section->id %>"></td>
+	</tr></table>
+</form>
+<script>
+<!--
+function set_pager( oSelect ) {
+    var oForm = document.forms['formpager'];
+    oForm.submit();
+}
+//-->
+</script>
+<%args>
+
+	$section	=> undef
+
+</%args>
+<%init>
+
+    return	unless ref $section;
+    return	if $section->_sorted;
+
+    my $size = $section->_page_size || 40;
+
+</%init>

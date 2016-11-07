@@ -1,0 +1,27 @@
+<%args>
+
+	$sect_id	=> undef
+	$size		=> undef
+
+</%args>
+<%init>
+
+    my $redirect = $r->header_in('Referer');
+    $redirect =~ s/\?(.+)$//;
+    if ( $1 ) {
+	my $params = join '&', grep { $_ !~ /^p=\d+/ } split /\&/, $1;
+	$redirect .= '?'.$params;
+    }
+
+    my $section;
+    if ( $sect_id && $sect_id =~ /^\d+$/ ) {
+	$section = $keeper->get_section_by_id( $sect_id );
+    }
+    if ( ref $section && !$section->_sorted && $size && $size =~ /^\d+$/ ) {
+	$section->_page_size( $size );
+	$section->store;
+    }
+
+    $m->redirect( $redirect );
+
+</%init>

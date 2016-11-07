@@ -76,11 +76,13 @@
 </style>
 <title>Редакторский интерфейс<% (length($title) > 0) ? " | $title" : "" %></title>
 <link rel="stylesheet" type="text/css" href="/contenido/i/js/jquery-ui-1.10.3.custom/css/flick/jquery-ui-1.10.3.custom.css" media="all" />
+<link rel="stylesheet" type="text/css" href="/contenido/i/js/context-menu/jquery.contextMenu.css" media="all" />
 <script language="javascript" type="text/javascript" src="/contenido/i/js/jquery-1.9.1.min.js"></script>
 <% $m->comp_exists('/contenido/components/custom_head.msn') ? $m->comp('/contenido/components/custom_head.msn') : '' %>
 <script language="javascript" type="text/javascript" src="/contenido/i/js/links.js"></script>
 <script language="javascript" type="text/javascript" src="/contenido/i/js/tinymce-3.5.11/jquery.tinymce.js"></script>
 <script language="javascript" type="text/javascript" src="/contenido/i/js/jquery-ui-1.10.3.custom/jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="/contenido/i/js/context-menu/jquery.contextMenu.min.js"></script>
 % if ( @plugins ) {
 %	foreach my $plugin ( @plugins ) {
 %		my ($include_dir, $include_comp);

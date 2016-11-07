@@ -76,11 +76,20 @@ function set_create_button( oSelect, sBtnID ) {
 	</legend>
 
 %	if ($total || scalar @documents || defined($alpha) || defined($search) ) {
+<table border="0" cellspacing="0" cellpadding="2" width="100%">
+<tr>
 %		if ($section_access == 2) {
+	<td width="99%">
 <& "/contenido/components/new_objects_form.msn", proto => 'documents',
-	sect_id => $owner->id, section => $owner,
-	default => ($owner->default_document_class ? $owner->default_document_class : undef) &>
+		sect_id => $owner->id, section => $owner,
+		default => ($owner->default_document_class ? $owner->default_document_class : undef) &>
+	</td>
 %		}
+	<td width="1%">
+<& "/contenido/components/section_page_size.msn", section => $owner &>
+	</td>
+</tr>
+</table>
 <div style="font-size:12px; font-family:Arial;">
 <table border="0" cellspacing="0" cellpadding="2" width="100%" style="margin:4px 0 0; border:1px solid gray;">
 <tr bgcolor="#e0e0e0"><th colspan="4">Поиск по букве:&nbsp;&nbsp;[<a href="?id=<% $id %>" style="font-weight:normal;">сброс фильтра</a>]</th></tr>
@@ -479,7 +488,7 @@ function set_create_button( oSelect, sBtnID ) {
 
 	$total = $keeper->get_documents(%filter, count=>1)	unless $owner->no_count;
 
-	my $n = 40;
+	my $n = ref $owner && $owner->_page_size ? $owner->_page_size : 40;
 	my $first = $n * ($p - 1);
 	($first,$p)=(0,0) if (!$owner->no_count && $first>$total);
 

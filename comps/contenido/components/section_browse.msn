@@ -23,10 +23,7 @@ $(document).ready(function() {
 		{
 			var sStoreId = $(this).attr('rel');
 			var item = ui.item;
-//			alert(mydump(item));
 			$('#' + sStoreId).val( item.id );
-//			$(this).val(item.label);
-//			alert( $('#' + sStoreId).val() );
 		},
 		change	: function( event, ui )
 		{
@@ -101,6 +98,51 @@ $(document).ready(function(){
 		}
 	});
     });
+% foreach my $class ( keys %document_classes ) {
+%	my $class_name = $class;
+%	$class_name =~ s/:/-/g;
+%	my ($prop) = grep { $_->{attr} eq 'status' } $class->new( $keeper )->structure;
+%	if ( ref $prop && exists $prop->{cases} && ref $prop->{cases} eq 'ARRAY' ) {
+%		my @menu;
+%		foreach my $case ( @{$prop->{cases}} ) {
+%			my $name = $case->[1];
+%			$name =~ s/'/\\'/g;
+%			my $key = $case->[0];
+%			if ( $key =~ /^\d+$/ && $key >= 0 && $key <= 10 ) {
+%				push @menu, "'$key' : { 'name' : '$name', icon: '$key' }";
+%			} else {
+%				push @menu, "'$key' : { 'name' : '$name' }";
+%			}
+%		}
+    $.contextMenu({
+	selector: '.context-menu-<% $class_name %>', 
+	trigger: 'left',
+	callback: function(key, options) {
+		var nID = parseInt($(this).data('id'));
+		if ( nID != key ) {
+			$.ajax({
+				'url'	: '/contenido/ajax/document_status.html',
+				'data'	: { 'class' : '<% $class %>', 'id' : nID, 'status' : key, 's' : <% ref $section ? $section->id : 0 %>, 'params' : '<% $params %>' },
+				'dataType'	: 'json',
+				'success'	: function( data ) {
+					if ( data.error ) {
+						alert( data.error );
+					}
+					if ( data.success ) {
+						$('#row-' + nID).html(data.html);
+					}
+				}
+			});
+		}
+//		var m = "clicked: " + key;
+//		window.console && console.log(m) || alert(m); 
+	},
+	items: {
+		<% join(",\n", @menu) %>
+	}
+    });
+%	}
+% }
 });
 //-->
 </script>
@@ -185,6 +227,7 @@ $(document).ready(function(){
    my $params_unsection = ref $filter eq 'HASH' ? join ('&', map { $_.'='.$filter->{$_} } grep { $_ ne 's' } keys %$filter ) : '';
 
    my %lookup_elements;
+   my %document_classes;
    my @inline_pickups = grep {
 		my $type = exists $_->{inline_type} ? $_->{inline_type} : $_->{type};
 		exists $_->{inline} && ($type eq 'pickup' || $type eq 'autocomplete')
@@ -195,6 +238,7 @@ $(document).ready(function(){
 	if ( $_->{document_access} == 2 ) {
 		$delete_status = 1;
 	}
+	$document_classes{$_->class} = 1;
    } @$documents;
    map {
 	if ( exists $_->{inline} && $_->{inline} ) {

@@ -10,6 +10,7 @@
 	$id	=> undef
 	$class	=> undef
 	$status	=> undef
+	$toggle	=> undef
 	$params	=> undef
 
 </%args>
@@ -17,7 +18,8 @@
 
     my %result;
 
-    if ( $id && $id =~ /^\d+$/ && $class && $class =~ /::/ && defined $status ) {
+    if ( $id && $id =~ /^\d+$/ && $class && $class =~ /--/ && ($toggle || defined $status) ) {
+	$class =~ s/-/:/g;
 	my $section = $keeper->get_section_by_id( $s )	if $s;
 	my $document = $keeper->get_document_by_id( $id, class => $class );
 	my %filter;
@@ -35,9 +37,17 @@
 
 		# стандартная жопка таблицы...
 		push @columns, {attr => '_act_', rusname => 'Действия'};
-		
-		$document->status( $status );
-		$document->store;
+
+		if ( defined $status ) {
+			$document->status( $status );
+			$document->store;
+		} else {
+			my ($prop) = grep { $_->{attr} eq 'status' } $document->structure;
+			if ( ref $prop && exists $prop->{cases} && ref $prop->{cases} eq 'ARRAY' && scalar @{$prop->{cases}} == 2 ) {
+				$document->status( $prop->{cases}[0][0] == $document->status ? $prop->{cases}[1][0] : $prop->{cases}[0][0] );
+				$document->store;
+			}
+		}
 
 		my $html = $m->scomp('/contenido/components/section_browse_row.msn', no_tr => 1,
 				document => $document, columns => \@columns, section => $section,

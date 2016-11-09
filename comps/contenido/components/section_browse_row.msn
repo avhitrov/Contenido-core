@@ -161,11 +161,11 @@
  src="/contenido/i/actions/delete.gif" width="14" height="17" alt="Удалить документ" align="absmiddle" border="0" hspace="1"></a>\
 %				if ( $document->status != 0 ) {
 <a href="document.html?deactivate=1&id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>"
- class="context-menu-<% $class_name %>" title="Статус документа" data-id="<% $document->id %>"><img
+ class="context-menu-<% $class_name %>" id="status-set-<% $document->id %>" title="Статус документа" data-id="<% $document->id %>"><img
  src="/contenido/i/actions/activate.gif" width="14" height="17" alt="Документ активен" align="absmiddle" border="0" hspace="1"></a>\
 %				} else {
 <a href="document.html?activate=1&id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>"
- class="context-menu-<% $class_name %>" title="Статус документа" data-id="<% $document->id %>"><img
+ class="context-menu-<% $class_name %>" id="status-set-<% $document->id %>" title="Статус документа" data-id="<% $document->id %>"><img
  src="/contenido/i/actions/deactivate.gif" width="14" height="17" alt="Документ не активен" align="absmiddle" border="0" hspace="1"></a>\
 %				}
 <br>\

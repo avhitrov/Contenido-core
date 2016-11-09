@@ -70,9 +70,9 @@ var oMenus = {
 %	my $class_name = $class;
 %	$class_name =~ s/:/-/g;
 %	my ($prop) = grep { $_->{attr} eq 'status' } $class->new( $keeper )->structure;
-%	if ( ref $prop && exists $prop->{cases} && ref $prop->{cases} eq 'ARRAY' ) {
+%	if ( ref $prop && $prop->{type} eq 'status' ) {
 %		my @menu;
-%		foreach my $case ( @{$prop->{cases}} ) {
+%		foreach my $case ( @{ref $prop->{cases} eq 'ARRAY' ? $prop->{cases} : $keeper->default_status()} ) {
 %			my $name = $case->[1];
 %			$name =~ s/'/\\'/g;
 %			my $key = $case->[0];
@@ -177,8 +177,9 @@ $(document).ready(function(){
 %	my $class_name = $class;
 %	$class_name =~ s/:/-/g;
 %	my ($prop) = grep { $_->{attr} eq 'status' } $class->new( $keeper )->structure;
-%	if ( ref $prop && exists $prop->{cases} && ref $prop->{cases} eq 'ARRAY' ) {
-%		if ( scalar @{$prop->{cases}} > 2 ) {
+%	if ( ref $prop && $prop->{type} eq 'status' ) {
+%		my @cases = @{ref $prop->{cases} eq 'ARRAY' ? $prop->{cases} : $keeper->default_status()};
+%		if ( @cases > 2 ) {
 	set_status( '.context-menu-<% $class_name %>', '<% $class_name %>' );
 %		} else {
 	$('.context-menu-<% $class_name %>').on('click', function( ev ) {

@@ -150,7 +150,7 @@
 %
 %		} elsif ($attr eq '_act_') {
 %
-<td nowrap>\
+<td nowrap class="actions">\
 %			if ($document_access == 2) {
 %
 <a href="document.html?id=<% $document->id %>&class=<% $document->class %><% $params_unclassed ? '&'.$params_unclassed : '' %>" title="Редактировать документ"><img

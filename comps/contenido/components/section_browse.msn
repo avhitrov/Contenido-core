@@ -1,3 +1,8 @@
+<style>
+.section-content tr.disabled { background:#f0f0f0; }
+.section-content tr.disabled td.actions a { display:none; }
+
+</style>
 <script type="text/javascript">
 <!--
 function checkbox_common_toggle ( sClassSelector ) {
@@ -90,6 +95,7 @@ var oMenus = {
 
 function set_status_toggle( ev, nID, $class_name ) {
 	ev.preventDefault();
+	$('#row-' + nID).addClass('disabled');
 	$.ajax({
 		'url'	: '/contenido/ajax/document_status.html',
 		'data'	: { 'class' : $class_name, 'id' : nID, 'toggle' : 1, 's' : <% ref $section ? $section->id : 0 %>, 'params' : '<% $params %>' },
@@ -99,8 +105,8 @@ function set_status_toggle( ev, nID, $class_name ) {
 				alert( data.error );
 			}
 			if ( data.success ) {
-				$('#row-' + nID).html(data.html);
-				$('#status-set-'+ nID).on('click', function( ev ) {
+				$('.section-content').html(data.html);
+				$('.context-menu-'+ $class_name).on('click', function( ev ) {
 					set_status_toggle(ev, nID, $class_name)
 				});
 			}
@@ -115,6 +121,7 @@ function set_status( $selector, $class_name ) {
 		trigger: 'left',
 		callback: function(key, options) {
 			var nID = parseInt($(this).data('id'));
+			$('#row-' + nID).addClass('disabled');
 			if ( nID != key ) {
 				$.ajax({
 					'url'	: '/contenido/ajax/document_status.html',
@@ -125,8 +132,8 @@ function set_status( $selector, $class_name ) {
 							alert( data.error );
 						}
 						if ( data.success ) {
-							$('#row-' + nID).html(data.html);
-							set_status( '#status-set-'+ nID, $class_name);
+							$('.section-content').html(data.html);
+							set_status( '.context-menu-'+ $class_name, $class_name);
 						}
 					}
 				});
@@ -206,20 +213,19 @@ $(document).ready(function(){
 %	}
 %
 </tr>
+<tbody class="section-content">
 %
 %		unless (@$documents) {
 <tr><td align="center" colspan="<% scalar @$columns %>">Документы не найдены</td></tr>
 %		}
 %		foreach my $document (@$documents) {
-%
 %			next unless ref($document);
-%			my $document_access = $user->section_accesses($user, $document->section);
-%
 <& /contenido/components/section_browse_row.msn, document => $document, columns => $columns, section => $section,
 	toopi => $toopi, inline_status => $inline_status, lookup_elemets => \%lookup_elements,
 	filter => $filter, params_unsection => $params_unsection, params_unclassed => $params_unclassed
 &>
 %		} #- foreach @documents
+</tbody>
 </table>
 <input type="hidden" name="id" value="<% $section->id %>">
 %	if ( ref $filter eq 'HASH' ) {

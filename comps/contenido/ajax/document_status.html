@@ -22,22 +22,7 @@
 	$class =~ s/-/:/g;
 	my $section = $keeper->get_section_by_id( $s )	if $s;
 	my $document = $keeper->get_document_by_id( $id, class => $class );
-	my %filter;
-	map { if ( $_ =~ /(.+?)=(.*)/ ) { $filter{$1} = $2 } } split(/\&/, $params);
-	my $params_unclassed = join ('&', map { $_.'='.$filter{$_} } grep { $_ ne 'class' } keys %filter );
-	my $params_unsection = join ('&', map { $_.'='.$filter{$_} } grep { $_ ne 's' } keys %filter );
 	if ( ref $document ) {
-		# набор колонок таблицы документов...
-		my @columns = ref $section && $section->_sorted ? ({attr => '_sort_', name => 'N'}) : ();
-
-		# пытаемся найти колонки, которые документ сам пожелал показать (required_properties -> column)...
-		push @columns,
-			sort {$a->{column} <=> $b->{column}}
-			grep {$_->{column}} $document->structure;
-
-		# стандартная жопка таблицы...
-		push @columns, {attr => '_act_', rusname => 'Действия'};
-
 		if ( defined $status ) {
 			$document->status( $status );
 			$document->store;
@@ -48,13 +33,8 @@
 				$document->store;
 			}
 		}
-
-		my $html = $m->scomp('/contenido/components/section_browse_row.msn', no_tr => 1,
-				document => $document, columns => \@columns, section => $section,
-				lookup_elemets => {}, filter => \%filter, params_unsection => $params_unsection, params_unclassed => $params_unclassed
-			);
-		$result{success} = 1;
-		$result{html} = Encode::decode('utf-8', $html);
+		%result = $m->comp('/contenido/ajax/section_browse.html', return => 'hash', section => $section, params => $params );
+		delete $result{documents};
 	} else {
 		$result{error} = Encode::decode('utf-8', 'Документ не найден');
 	}

@@ -1,0 +1,248 @@
+<% $json %>
+<%once>
+
+    use JSON::XS;
+
+</%once>
+<%args>
+
+	$id	=> undef
+	$params	=> undef
+	$return	=> 'json'
+	$section	=> undef
+	$build_html	=> 1
+
+</%args>
+<%init>
+
+    my %result;
+
+    if ( ($return eq 'json' && $id && $id =~ /^\d+$/) || ($return eq 'hash' && ref $section) ) {
+	$section = $keeper->get_section_by_id( $id )	unless ref $section;
+	if ( ref $section ) {
+		my %params;
+		if ( ref $params eq 'HASH' ) {
+			%params = %$params;
+		} elsif ( ref $params eq 'ARRAY' ) {
+			map {
+				if ( ref $_ eq 'ARRAY' && scalar @$_ == 2 ) {
+					$params{$_->[0]} = $_->[1];
+				} elsif ( $_ =~ /(.+?)=(.*)/ ) {
+					$params{$1} = $2
+				} 
+			} @$params;
+		} elsif ( $params ) {
+			map { if ( $_ =~ /(.+?)=(.*)/ ) { $params{$1} = $2 } } split(/\&/, $params);
+		}
+		my $params_unclassed = join ('&', map { $_.'='.$params{$_} } grep { $_ ne 'class' } keys %params );
+		my $params_unsection = join ('&', map { $_.'='.$params{$_} } grep { $_ ne 's' } keys %params );
+
+		my %filter_params;
+		$filter_params{use_section} = $params{use_section}	if exists $params{use_section} && $params{use_section};
+		$filter_params{class} = $params{class}			if exists $params{class} && $params{class};
+		$filter_params{alpha} = $params{alpha}			if exists $params{alpha} && $params{alpha};
+		$filter_params{alpha_search} = $params{alpha_search}	if exists $params{alpha_search} && $params{alpha_search};
+		$filter_params{search_by} = $params{search_by}		if exists $params{search_by} && $params{search_by};
+		$filter_params{search} = $params{search}		if exists $params{search} && $params{search};
+		$filter_params{p} = $params{p}				if exists $params{p} && $params{p} > 1;
+		$filter_params{s} = $params{id}				if exists $params{id} && $params{id};
+		my $p = exists $params{p} && $params{p} ? $params{p} : 1;
+
+		# Фильтры работают в любом случае...
+		my $filter = $m->comp('/contenido/components/context.msn', name => 'filter');
+		my $profile = $m->comp('/contenido/components/context.msn', name => 'profile');
+
+		unless (defined $request->{section_accesses}->{$id}) {
+			$request->{section_accesses}->{$id} = $user->get_section_access($id);
+		}
+		my $section_access = $request->{section_accesses}->{$id};
+
+		my (@documents, $total);
+		my $s = $section->id;
+		my $sorted = $section->_sorted();
+		$s .= ",$filter"	if ($filter > 0);
+
+		my %filter;
+		my $nothing_found = 0;
+		my %order = (!(exists $params{class} && $params{class}) && $section->order_by) ? (order_by => $section->order_by) : (order => ['date','direct']);
+		if ( exists $params{alpha} and $params{alpha} ne '' ) {
+			$filter{ilike} = 1;
+			$filter{ $params{alpha_search} || 'name' } = $params{alpha}."%";
+			$order{order} = ['name','reverse'];
+			delete $order{order_by};
+		}
+
+		if ( exists $params{class} && $params{class} ) {
+			$filter{class} = $params{class};
+		} elsif ( $section->default_document_class ) {
+			$filter{class} = $section->default_document_class;
+		} elsif ( $section->default_table_class ) {
+			$filter{table} = $section->default_table_class;
+		}
+		$filter{s} = $s		unless exists $params{class} && $params{class} && !(exists $params{use_section} && $params{use_section});
+
+		if ( exists $params{search_by} && $params{search_by} && exists $params{search} && defined $params{search} ) {
+			my $doc_class = exists $params{class} && $params{class} ? $params{class} : $section->default_document_class;
+			my $search = $params{search};
+			my $search_by = $params{search_by};
+			if ( $doc_class ) {
+				my @props = $doc_class->new( $keeper )->structure();
+				my ($prop) = grep { $_->{attr} eq $search_by } @props   if @props;
+				if ( ref $prop && ($prop->{type} eq 'integer' || $prop->{type} eq 'checkbox' ||
+					(($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup' || $prop->{type} eq 'status') && $search =~ /^\d+$/) ||
+					(exists $prop->{db_type} && $prop->{db_type} =~ /integer\[\]/)    )) {
+					$filter{$search_by} = int($search);
+				} elsif ( ref $prop && $prop->{type} eq 'status' && $search =~ /\D/ ) {
+					my $str;
+					foreach my $pair ( @{$prop->{cases}} ) {
+						if ( lc(Encode::decode('utf-8', $pair->[1])) eq lc(Encode::decode('utf-8', $search)) || lc(Encode::decode('utf-8', $pair->[0])) eq lc(Encode::decode('utf-8', $search)) ) {
+							$str = $pair->[0];
+							last;
+						}
+					}
+					if ( $str ) {
+						$filter{$search_by} = $str;
+					}
+				} elsif ( ref $prop && ($prop->{type} eq 'pickup' || $prop->{type} eq 'lookup') && $search =~ /\D/ ) {
+					my $lookup_opts = $prop->{lookup_opts};
+					if ( ref $lookup_opts && (exists $lookup_opts->{class} || exists $lookup_opts->{table}) ) {
+						my $search_field = exists $lookup_opts->{search_by} ? $lookup_opts->{search_by} : 'name';
+						my @ids = $keeper->get_documents (
+								ids     => 1,
+								exists $lookup_opts->{class} ? (class => $lookup_opts->{class}) : (table => $lookup_opts->{table}),
+								ilike   => 1,
+								$search_field   => '%'.$search.'%',
+							);
+						if ( @ids ) {
+							$filter{$search_by} = \@ids;
+						} else {
+							$nothing_found = 1;
+						}
+					}
+				} else {
+					$filter{$search_by}='%'.$search.'%';
+					$filter{ilike} = 1;
+				}
+			} else {
+				$filter{$search_by}='%'.$search.'%';
+				$filter{ilike} = 1;
+			}
+		}
+
+		# Дополнительные фильтры раздела
+		if ($section->filters) {
+			no strict 'vars';
+			my $filters = eval($section->filters);
+			if ($@) {
+				warn "Bad filter: " . $section->filters . " in section " . $section->id;
+			} elsif (ref $filters eq 'HASH') {
+				while ( my ($key, $val) = each %$filters ) {
+					$filter{$key} = $val;
+				}
+			}
+		}
+
+		my $n = ref $section && $section->_page_size ? $section->_page_size : 40;
+		my $first = $n * ($p - 1);
+		($first,$p)=(0,0) if (!$section->no_count && $first>$total);
+
+		$total = $keeper->get_documents( %filter, count => 1 )      unless $section->no_count;
+		unless ( $nothing_found ) {
+			if ( exists $params{class} && $params{class} && !(exists $params{use_section} && $params{use_section}) ) {
+				@documents = $keeper->get_documents( %filter, %order, limit => $n, offset => $first );
+			} elsif ($sorted) {
+				@documents = $keeper->get_sorted_documents( %filter );
+			} else {
+				@documents = $keeper->get_documents( %filter, %order, limit => $n, offset => $first );
+			}
+		}
+
+		# набор колонок таблицы документов...
+		my @columns = $sorted ? ({attr => '_sort_', name => 'N'}) : ();
+
+		# пытаемся найти колонки, которые документ сам пожелал показать (required_properties -> column)...
+		if ($filter{class} or @documents and $documents[0]) {
+			push @columns,
+				sort {$a->{column} <=> $b->{column}}
+				grep {$_->{column}} ($filter{class} ? $filter{class}->new($keeper)->structure : $documents[0]->structure);
+		}
+
+		# стандартная жопка таблицы...
+		@columns = (@columns,
+			{attr => '_act_',       rusname => 'Действия'},
+		);
+
+		my $toopi = $project->documents();
+		my $inline_status = 0;
+		my $delete_status = 0;
+
+		my %lookup_elements;
+		my %document_classes;
+		my @inline_pickups = grep {
+			my $type = exists $_->{inline_type} ? $_->{inline_type} : $_->{type};
+			exists $_->{inline} && ($type eq 'pickup' || $type eq 'autocomplete')
+		} @columns;
+
+		map {
+			$_->{document_access} = $user->section_accesses($user, $_->section);
+			if ( $_->{document_access} == 2 ) {
+				$delete_status = 1;
+			}
+			$document_classes{$_->class} = 1;
+		} @documents;
+		map {
+			if ( exists $_->{inline} && $_->{inline} ) {
+				$inline_status = 1;
+			}
+		} @columns;
+
+		$result{success} = 1;
+		$result{total} = $total;
+		$result{page} = $p;
+		$result{nothing_found} = $nothing_found;
+		if ( $build_html ) {
+			my $html = '';
+			foreach my $document ( @documents ) {
+				next unless ref $document;
+				$html .= $m->scomp( '/contenido/components/section_browse_row.msn',
+						document	=> $document, 
+						columns		=> \@columns,
+						section		=> $section,
+						toopi		=> $toopi,
+						inline_status	=> $inline_status,
+						lookup_elemets	=> \%lookup_elements,
+						filter		=> \%filter_params,
+						params_unsection	=> $params_unsection,
+						params_unclassed	=> $params_unclassed
+				);
+			}
+			$result{html} = Encode::decode('utf-8', $html);
+		}
+		if ( $return eq 'hash' ) {
+			$result{inline_status} = $inline_status;
+			$result{delete_status} = $delete_status;
+			$result{columns} = \@columns;
+			$result{documents} = \@documents;
+			$result{lookup_elements} = \%lookup_elements;
+			$result{filter} = \%filter_params;
+			$result{toopi} = $toopi;
+			$result{params_unsection} = $params_unsection;
+			$result{params_unclassed} = $params_unclassed;
+		} else {
+			$result{columns} = scalar @columns;
+		}
+	} else {
+		$result{error} = $return eq 'hash' ? 'Секция не найдена' : Encode::decode('utf-8', 'Секция не найдена');
+	}
+    } else {
+	$result{error} = $return eq 'hash' ? 'Переданы неверные параметры' : Encode::decode('utf-8', 'Переданы неверные параметры');
+    }
+
+    my $json;
+    if ( $return eq 'hash' ) {
+	return %result;
+    } else {
+	$json = encode_json \%result;
+    }
+
+</%init>

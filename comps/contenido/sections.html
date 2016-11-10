@@ -218,18 +218,6 @@ function set_create_button( oSelect, sBtnID ) {
 	my $filter = $m->comp('/contenido/components/context.msn', name => 'filter');
 	my $profile = $m->comp('/contenido/components/context.msn', name => 'profile');
 
-	unless (defined $request->{section_accesses}->{$id})
-	{
-		$request->{section_accesses}->{$id} = $user->get_section_access($id);
-	}
-	my $section_access = $request->{section_accesses}->{$id};
-
-	my (@documents, $total);
-
-	my $s = $owner->id;
-	my $sorted = $owner->_sorted();
-	$s .= ",$filter"	if ($filter > 0);
-
 	if ($update) {
 		my $return_params = join ('&', map { $_.'='.$filter_params{$_} } grep { $_ ne 's' } keys %filter_params );
 		my %updated;
@@ -409,6 +397,17 @@ function set_create_button( oSelect, sBtnID ) {
 		}
 		$m->redirect("sections.html?id=".$id.($return_params ? '&'.$return_params : ''));
 	}
+
+	unless (defined $request->{section_accesses}->{$id}) {
+		$request->{section_accesses}->{$id} = $user->get_section_access($id);
+	}
+	my $section_access = $request->{section_accesses}->{$id};
+
+	my (@documents, $total);
+
+	my $s = $owner->id;
+	my $sorted = $owner->_sorted();
+	$s .= ",$filter"	if ($filter > 0);
 
 	my %filter=();
 	my $nothing_found = 0;

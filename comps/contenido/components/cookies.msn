@@ -1,3 +1,8 @@
+<%once>
+
+    use Apache::Cookie;
+
+</%once>
 <%args>
 	$name
 	$value => undef

@@ -107,6 +107,7 @@ function set_status_toggle( ev, nID, $class_name ) {
 			if ( data.success ) {
 				$('.section-content').html(data.html);
 				$('.context-menu-'+ $class_name).on('click', function( ev ) {
+					var nID = parseInt($(this).data('id'));
 					set_status_toggle(ev, nID, $class_name)
 				});
 			}

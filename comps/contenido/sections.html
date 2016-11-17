@@ -69,7 +69,7 @@ function set_create_button( oSelect, sBtnID ) {
  в разделе\
 %	}
 %	if (!$owner->no_count && $total > 0)	{
- (всего: <% $total %>, показано с <% $first + 1 %> по <% ($first + $n > $total) ? $total : $first + $n %>)
+ (всего: <% $total %>, показано с <% $first + 1 %> по <% $sorted ? $total : ($first + $n > $total) ? $total : $first + $n %>)
 %	} elsif ( $owner->no_count ) {
  (<span style="color:yellow">без пересчета</span>, показано с <% $first + 1 %> по <% $first + scalar @documents %>)
 %	}
@@ -133,6 +133,7 @@ function set_create_button( oSelect, sBtnID ) {
 <div style="height:5px"><spacer type="block" height="5"></div>
 % if ( $owner->no_count ) {
 <& /inc/pages_nocount.msn, p=>$p, n=>$n, found=> scalar @documents, href=>'sections.html', params=>\%ARGS, size => 15 &>
+% } elsif ( $sorted ) {
 % } else {
 <& /inc/pages_.msn, p=>$p, n=>$n, total=>$total, href=>'sections.html', params=>\%ARGS, &>
 % }
@@ -143,6 +144,7 @@ function set_create_button( oSelect, sBtnID ) {
 <div style="font-size:12px; font-family:Arial;">
 % if ( $owner->no_count ) {
 <& /inc/pages_nocount.msn, p=>$p, n=>$n, found=> scalar @documents, href=>'sections.html', params=>\%ARGS, size => 15 &>
+% } elsif ( $sorted ) {
 % } else {
 <& /inc/pages_.msn, p=>$p, n=>$n, total=>$total, href=>'sections.html', params=>\%ARGS, &>
 % }

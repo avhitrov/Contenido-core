@@ -278,9 +278,15 @@ project_install:: check_core_installed check_project
 	else 								\
 		if [ -d ${PROJ_USR}/${PROJECT} ]; then						\
 			rm -Rf    ${PROJ_USR}/${PROJECT};					\
-		fi;														\
-		cp -R ${PROJ_SRC}/${PROJECT} ${PROJ_USR}/${PROJECT}				\
+		fi;										\
+		mkdir ${PROJ_USR}/${PROJECT}							\
+		&& cp ${PROJ_SRC}/${PROJECT}/config.mk ${PROJ_USR}/${PROJECT}/			\
+		&& cp -R ${PROJ_SRC}/${PROJECT}/conf ${PROJ_USR}/${PROJECT}/			\
+		&& cp -R ${PROJ_SRC}/${PROJECT}/comps ${PROJ_USR}/${PROJECT}/			\
+		&& cp -R ${PROJ_SRC}/${PROJECT}/lib ${PROJ_USR}/${PROJECT}/			\
+		&& cp -R ${PROJ_SRC}/${PROJECT}/services ${PROJ_USR}/${PROJECT}/		\
 		&& find ${PROJ_USR}/${PROJECT}/ -depth -type d -name .svn -exec rm -Rf {} \;	\
+		&& find ${PROJ_USR}/${PROJECT}/ -depth -type d -name .git -exec rm -Rf {} \;	\
 		&& find ${PROJ_USR}/${PROJECT}/ -depth -type f -name '*.proto' -exec rm  -f {} \; ;	\
 	fi
 

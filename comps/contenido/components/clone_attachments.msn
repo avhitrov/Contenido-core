@@ -90,7 +90,7 @@
 						}
 					}
 				}
-				$object->$name( $object->_serialize($img) );
+				$object->$name( $img );
 				warn "\nClone img complete: ".Dumper($img)."\n"				if $DEBUG;
 			}
 		} elsif ( $prop->{type} eq 'images' ) {
@@ -150,7 +150,7 @@
 			}
 			if ( $attachment->{maxnumber} ) {
 				$PICTURE->{maxnumber} = $attachment->{maxnumber};
-				$object->$name( $object->_serialize($PICTURE) );
+				$object->$name( $PICTURE );
 			}
 			warn "\nClone pics complete: ".Dumper($PICTURE)."\n"				if $DEBUG;
 		} elsif ( $prop->{type} eq 'multimedia_new' ) {
@@ -167,7 +167,7 @@
 						atext	=> $attachment->{atext}
 						};
 				}
-				$object->$name( $object->_serialize($img) );
+				$object->$name( $img );
 				warn "\nClone binary complete: ".Dumper($img)."\n"				if $DEBUG;
 			}
 		}

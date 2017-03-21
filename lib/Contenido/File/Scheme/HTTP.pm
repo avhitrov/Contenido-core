@@ -12,7 +12,7 @@ use HTTP::Headers;
 use LWP::UserAgent;
 use File::Temp;
 
-my  %LWP_ARGS = (timeout => 10);
+my  %LWP_ARGS = (timeout => 180);
 
 sub fetch {
     my $path      = shift || return;
@@ -23,11 +23,12 @@ sub fetch {
         SUFFIX => '.dat'
     );
 
+    warn "HTTP fetch start\n"		if $DEBUG;
     my $ua = LWP::UserAgent->new(%LWP_ARGS);
 
     my $res = $ua->get(
         $path,
-        ':read_size_hint' => 10 * 1024,
+        ':read_size_hint' => 4 * 1024,
         ':content_cb'     => sub {
             $fh->write(shift());
         },
@@ -35,6 +36,7 @@ sub fetch {
 
     seek $fh, 0, 0;
 
+    warn "HTTP fetch end\n"		if $DEBUG;
     return $res->is_success() ? $fh : undef;
 }
 
@@ -120,21 +122,32 @@ sub listing {
 
 sub get_fh {
     my $path = shift;
-	my $fh;
-
     return unless Contenido::File::scheme($path) eq "http";
 
+    my $fh = File::Temp->new(
+        TEMPLATE => 'tempXXXXX',
+        DIR => $keeper->state()->{tmp_dir},
+        SUFFIX => '.dat'
+    );
+
+    warn "HTTP get_fh start\n"		if $DEBUG;
     my $ua = LWP::UserAgent->new(%LWP_ARGS);
+    my $response = $ua->get(
+        $path,
+        ':read_size_hint' => 4 * 1024,
+        ':content_cb'     => sub {
+            $fh->write(shift());
+        },
+    );
 
-    my $response = $ua->get($path);
-
-	if ($response->is_success()) {
-        $fh = IO::Scalar->new(\($response->content()));
-	} else {
-		warn  $response->status_line();
-	}
-
-	return $fh;
+    warn "HTTP get_fh end\n"		if $DEBUG;
+    if ($response->is_success()) {
+        seek $fh, 0, 0;
+    } else {
+        warn  $response->status_line();
+        undef $fh;
+    }
+    return $fh;
 }
 
 1;

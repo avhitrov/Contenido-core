@@ -185,6 +185,7 @@ sub store_image {
     my (%opts) = @_;
     my $object = delete $opts{object} || return;
     my $attr = delete $opts{attr};
+    my $no_rename = delete $opts{no_rename};
 
     my ($prop) = exists $opts{prop} && ref $opts{prop} ? ($opts{prop}) : $attr ? grep { $_->{attr} eq $attr } $object->structure : (undef);
     return	unless ref $prop;
@@ -193,6 +194,25 @@ sub store_image {
     my @shrinks = exists $prop->{'shrink'} && ref $prop->{'shrink'} eq 'ARRAY' ? @{$prop->{'shrink'}} : exists $prop->{'shrink'} && $prop->{'shrink'} ? ($prop->{'shrink'}) : ();
 
     my $filename = '/images/'.$object->get_file_name() || return;
+    if ( $no_rename ) {
+	my $orig_name = '';
+	if ( ref $input eq 'Apache::Upload' ) {
+		$orig_name = $input->filename();
+	} elsif ( !ref $input ) {
+		$orig_name = $input;
+	}
+	if ( $orig_name ) {
+		if ( $orig_name =~ /\\([^\\]+)$/ ) {
+			$orig_name = $1;
+		} elsif ( $orig_name =~ /\/([^\/]+)$/ ) {
+			$orig_name = $1;
+		}
+		$filename =~ s/\/([^\/]+)$//;
+		my $fname = $1;
+		$filename .= '/'.($orig_name || $fname);
+		$filename =~ s/\.([^\.]+)$//;
+	}
+    }
     my $filename_tmp = $state->{'tmp_dir'}.'/'.join('_', split('/', $filename));
 
     my $fh = get_fh($input);
@@ -202,34 +222,39 @@ sub store_image {
     my $size = 1073741824;
     if ( not ref $input ) {
 	$ext = $input =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
-	if ( scheme($input) eq 'file' ) {
-		$size = (stat $fh)[7];
-	}
     } elsif ( ref $input eq 'Apache::Upload' ) {
 	$ext = $input->filename() =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
-	$size = (stat $fh)[7];
     } elsif ( $opts{filename} ) {
 	$ext = $opts{filename} =~ /(jpe?g|gif|png)$/i ? lc $1 : 'bin';
     }
     if ( ref $fh eq 'IO::Scalar' ) {
 	$size = length("$fh");
+    } else {
+	$size = (stat $fh)[7];
     }
+    warn "Size calculated: $size\n"	if $DEBUG;
     $ext ||= 'bin';
 
     my $fh_tmp = IO::File->new('>'.$filename_tmp.'.'.$ext) || return;
     my $buffer;
-
-    $size = sysread $fh, $buffer, $size;
-    syswrite $fh_tmp, $buffer, $size;
+    my $read_count = 0;
+    while ( my $bytes_read = sysread( $fh, $buffer, 4096 ) ) {
+	$read_count += $bytes_read;
+	syswrite $fh_tmp, $buffer, $bytes_read;
+    }
+    $size = $read_count;
 
     undef $fh_tmp;
     undef $buffer;
+    undef $fh;
 
     my $image_info = image_info($filename_tmp.'.'.$ext);
     if ( !(ref $image_info && $image_info->{width} && $image_info->{height}) || (ref $image_info && $image_info->{error}) ) {
-	unlink $filename_tmp.'.'.$ext;
+	warn "$filename_tmp.$ext has error: ".$image_info->{error}."\n";
+#	unlink $filename_tmp.'.'.$ext;
 	return undef;
     }
+    warn "Got image info\n"		if $DEBUG;
     if ( $image_info->{file_ext} ne $ext ) {
 	rename $filename_tmp.'.'.$ext, $filename_tmp.'.'.$image_info->{file_ext};
 	$ext = $image_info->{file_ext};
@@ -242,6 +267,7 @@ sub store_image {
     }
     my $transformed;
     if ( exists $prop->{transform} && ref $prop->{transform} eq 'ARRAY' && scalar @{$prop->{transform}} == 2 && $prop->{transform}[0] =~ /(crop|resize|shrink)/ ) {
+	warn "Need transform\n"		if $DEBUG;
 	my $c_line;
 	if ( $prop->{transform}[0] eq 'resize' ) {
 		$c_line = $state->{'convert_binary'}.' -adaptive-resize \''.$prop->{transform}[1].'>\' -quality 100 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
@@ -276,39 +302,46 @@ sub store_image {
 	}
 	my $result = `$c_line`;
 	$transformed = 1;
+	warn "Transformed\n"		if $DEBUG;
 	unlink $filename_tmp.'.shaved.'.$ext      if -e $filename_tmp.'.shaved.'.$ext;
+	$size = -s $filename_tmp.'.transformed.'.$ext;
     }
 
     if ( exists $opts{watermark} && $opts{watermark} ) {
+	warn "Need watermark\n"		if $DEBUG;
 	my $gravity = delete $opts{gravity} || 'Center';
 	my $source = $transformed ? $filename_tmp.'.transformed.'.$ext : $filename_tmp.'.'.$ext;
 	my $target = $filename_tmp.'.transformed.'.$ext;
 	my $offset = delete $opts{offset} || '+0+0';
 	my $c_line = $state->{'composite_binary'}." -geometry $offset -gravity $gravity -quality 99 $opts{watermark} $source $target";
-	warn "Watermark: $c_line\n"     if $DEBUG;
+	warn "Watermark: $c_line\n"	if $DEBUG;
 	my $result = `$c_line`;
 	$transformed = 1;
+	warn "Watermarked\n"		if $DEBUG;
     }
 
     my $IMAGE;
     my $stored = $transformed ? store($filename.'.'.$ext, $filename_tmp.'.transformed.'.$ext) : store($filename.'.'.$ext, $filename_tmp.'.'.$ext);
     if ( $stored ) {
+	warn "Stored\n"		if $DEBUG;
 	$IMAGE = {};
 	# hashref slice assigning - жжесть
 	if ( $transformed && -e $filename_tmp.'.transformed.'.$ext ) {
 		my ($tw, $th) = Image::Size::imgsize($filename_tmp.'.transformed.'.$ext);
 		my ($w, $h) = Image::Size::imgsize($filename_tmp.'.'.$ext);
-		@{$IMAGE}{'filename', 't_width', 't_height', 'width', 'height'} = (
-			$filename.'.'.$ext, $tw, $th, $w, $h
+		@{$IMAGE}{'filename', 't_width', 't_height', 'width', 'height', 'size'} = (
+			$filename.'.'.$ext, $tw, $th, $w, $h, $size
 		);
 		unlink $filename_tmp.'.transformed.'.$ext;
 	} else {
-		@{$IMAGE}{'filename', 'width', 'height'} = (
+		@{$IMAGE}{'filename', 'size', 'width', 'height'} = (
 			$filename.'.'.$ext,
+			$size,
 			Image::Size::imgsize($filename_tmp.'.'.$ext),
 		);
 	}
 
+	warn "Thumbnail generator (preview)\n"		if $DEBUG;
 	foreach my $suffix (@preview) {
 		my $c_line = $state->{'convert_binary'}.' -resize \''.$suffix.'>\' -quality 90 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.'.$suffix.'.'.$ext;
 		my $result = `$c_line`;
@@ -317,8 +350,9 @@ sub store_image {
 			warn 'Contenido Error: При вызове "'.$c_line.'" произошла ошибка "'.$result.'" ('.$@.")\n";
 			return undef;
 		}
-		@{$IMAGE->{'mini'}{$suffix}}{'filename', 'width', 'height'} = (
+		@{$IMAGE->{'mini'}{$suffix}}{'filename', 'size', 'width', 'height'} = (
 			$filename.'.'.$suffix.'.'.$ext,
+			-s $filename_tmp.'.'.$suffix.'.'.$ext,
 			Image::Size::imgsize($filename_tmp.'.'.$suffix.'.'.$ext),
 		);
 		%{$IMAGE->{'resize'}{$suffix}} = %{$IMAGE->{'mini'}{$suffix}};
@@ -331,6 +365,7 @@ sub store_image {
 	}
 
 	########## CROPS
+	warn "Thumbnail generator (crop)\n"		if $DEBUG;
 	foreach my $suffix (@crops) {
 
 		my $shave_string;
@@ -363,8 +398,9 @@ sub store_image {
 			warn 'Contenido Error: При вызове "'.$c_line.'" произошла ошибка "'.$result.'" ('.$@.")\n";
 			return undef;
 		}
-		@{$IMAGE->{'mini'}{$suffix}}{'filename', 'width', 'height'} = (
+		@{$IMAGE->{'mini'}{$suffix}}{'filename', 'size', 'width', 'height'} = (
 			$filename.'.'.$suffix.'.'.$ext,
+			-s $filename_tmp.'.'.$suffix.'.'.$ext,
 			Image::Size::imgsize($filename_tmp.'.'.$suffix.'.'.$ext),
 		);
 		%{$IMAGE->{'crop'}{$suffix}} = %{$IMAGE->{'mini'}{$suffix}};
@@ -381,6 +417,7 @@ sub store_image {
 
 
 	########## SHRINKS
+	warn "Thumbnail generator (shrink)\n"		if $DEBUG;
 	foreach my $suffix (@shrinks) {
 
 		my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality 90 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.'.$suffix.'.'.$ext;
@@ -390,8 +427,9 @@ sub store_image {
 			warn 'Contenido Error: При вызове "'.$c_line.'" произошла ошибка "'.$result.'" ('.$@.")\n";
 			return undef;
 		}
-		@{$IMAGE->{'mini'}{$suffix}}{'filename', 'width', 'height'} = (
+		@{$IMAGE->{'mini'}{$suffix}}{'filename', 'size', 'width', 'height'} = (
 			$filename.'.'.$suffix.'.'.$ext,
+			-s $filename_tmp.'.'.$suffix.'.'.$ext,
 			Image::Size::imgsize($filename_tmp.'.'.$suffix.'.'.$ext),
 		);
 		%{$IMAGE->{'shrink'}{$suffix}} = %{$IMAGE->{'mini'}{$suffix}};
@@ -410,6 +448,7 @@ sub store_image {
 	$IMAGE->{height} = delete $IMAGE->{t_height}	if exists $IMAGE->{t_height};
     }
 
+    warn "That's all: ".Dumper($IMAGE)		if $DEBUG;
     return $IMAGE;
 }
 
@@ -434,9 +473,9 @@ sub store_binary {
     my $input = shift;
     my (%opts) = @_;
     my $object = delete $opts{object} || return;
-    my $attr = delete $opts{attr}  || return;
+    my $attr = delete $opts{attr};
 
-    my ($prop) = grep { $_->{attr} eq $attr } $object->structure;
+    my ($prop) = exists $opts{prop} && ref $opts{prop} ? ($opts{prop}) : $attr ? grep { $_->{attr} eq $attr } $object->structure : (undef);
     return	unless ref $prop;
 
     my $filename = '/binary/'.$object->get_file_name() || return;
@@ -482,9 +521,6 @@ sub store_binary {
     my $size = 1073741824;
     if ( not ref $input ) {
 	$ext = $input =~ /\.([^\.]+)$/ ? lc($1) : 'bin';
-	if ( scheme($input) eq 'file' ) {
-		$size = (stat $fh)[7];
-	}
     } elsif ( ref $input eq 'Apache::Upload' ) {
 	$ext = $input->filename() =~ /\.([^\.]+)$/ ? lc($1) : 'bin';
 	$size = (stat $fh)[7];
@@ -493,17 +529,23 @@ sub store_binary {
     }
     if ( ref $fh eq 'IO::Scalar' ) {
 	$size = length("$fh");
+    } else {
+	$size = (stat $fh)[7];
     }
     $ext ||= 'bin';
 
     my $fh_tmp = IO::File->new('>'.$filename_tmp.'.'.$ext) || return;
     my $buffer;
-
-    $size = sysread $fh, $buffer, $size;
-    syswrite $fh_tmp, $buffer, $size;
+    my $read_count = 0;
+    while ( my $bytes_read = sysread( $fh, $buffer, 4096 ) ) {
+        $read_count += $bytes_read;
+        syswrite $fh_tmp, $buffer, $bytes_read;
+    }
+    $size = $read_count;
 
     undef $fh_tmp;
     undef $buffer;
+    undef $fh;
 
     my $BINARY;
     if ( store($filename.'.'.$ext, $filename_tmp.'.'.$ext) ) {

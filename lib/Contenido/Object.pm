@@ -330,7 +330,6 @@ sub _create_extra_dump {
         if ($state->db_encode_data) {
             return Data::Dumper::Dumper({map { $_=> Encode::decode($state->db_encode_data, $self->{$_}, Encode::FB_HTMLCREF) } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields});
         } elsif ( $DBD::Pg::VERSION >= '3' ) {
-            warn "Store extras: ".Data::Dumper::Dumper({map { $_=>$self->{$_} } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields});
             return Encode::decode( 'utf-8', Data::Dumper::Dumper({map { $_=>$self->{$_} } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields}) );
         } else {
             return Data::Dumper::Dumper({map { $_=>$self->{$_} } grep { !$virtual_fields->{$_} && (defined $self->{$_}) } @$extra_fields});

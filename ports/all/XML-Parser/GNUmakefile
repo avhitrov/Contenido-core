@@ -1,9 +1,8 @@
 ##############################################################################
-# $HeadURL: http://svn.dev.rambler.ru/Contenido/branches/utf8/ports/all/XML-Parser/GNUmakefile $
-# $Id: GNUmakefile 175 2006-06-16 12:50:03Z lonerr $
+#
 ###############################################################################
 
-PORTVERSION =		2.34
+PORTVERSION =		2.44
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	XML
 PORT_DEPENDS =		expat

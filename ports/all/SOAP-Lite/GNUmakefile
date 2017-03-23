@@ -1,6 +1,5 @@
-##############################################################################
-# $HeadURL: svn://cvs1.rambler.ru/Contenido/trunk/ports/all/URI/GNUmakefile $
-# $Id: GNUmakefile 175 2006-06-16 12:50:03Z lonerr $
+###############################################################################
+#
 ###############################################################################
 
 include ../../etc/perl.mk
@@ -12,6 +11,7 @@ PORT_DEPENDS =          MIME-Lite					\
 			MIME-tools					\
 			Crypt-SSLeay					\
 			XML-Parser					\
+			XML-Parser-Lite					\
 			Task-Weaken					\
 			Class-Inspector
 

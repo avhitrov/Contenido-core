@@ -11,7 +11,7 @@
 <td style="font-size:110%;">
 <b><% (ref($object) && $object->id() ) ? 'Редактирование' : 'Создание' %> <% $PROTOS->{$proto}->[0] %> типа "<% $object->class_name() %>"</b>
 % if ( $object->get_url ) {
-<div style="margin-top:5px; font-size:85%;">Ссылка: <a href="<% $object->get_url %>"><% $object->get_url %></a></div>
+<div style="margin-top:5px; font-size:85%;">Ссылка: <a href="<% $object->get_url %>" target="_blank"><% $object->get_url %></a></div>
 % }
 </td>
 <td align="right">

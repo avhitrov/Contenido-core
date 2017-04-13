@@ -2,7 +2,7 @@
 #
 ###############################################################################
 
-PORTVERSION =		20150826
+PORTVERSION =		20160104
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	Mozilla
 

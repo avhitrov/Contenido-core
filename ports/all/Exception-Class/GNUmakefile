@@ -1,18 +1,11 @@
 ##############################################################################
-# $HeadURL: http://svn.dev.rambler.ru/Contenido/branches/utf8/ports/all/Exception-Class/GNUmakefile $
-# $Id: GNUmakefile 175 2006-06-16 12:50:03Z lonerr $
+#
 ###############################################################################
 
-#include ../../etc/perl.mk
-
-PORTVERSION =		1.23
+PORTVERSION =		1.42
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	Exception
 PORT_DEPENDS =		Devel-StackTrace 	\
 			Class-Data-Inheritable
-
-#ifeq (${shell perl -e 'print 1 if ${PERL_LEVEL}<500800'},1)
-#${call die,requires perl 5.8.0 or higher.};
-#endif
 
 include ../../etc/ports.mk

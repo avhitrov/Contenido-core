@@ -2,8 +2,8 @@
 #
 ###############################################################################
 
-PORTVERSION =		5.96
+PORTVERSION =		0.044
 PERL_MAKEMAKER =	yes
-MASTER_CPAN_SUBDIR =	Digest
+MASTER_CPAN_SUBDIR =	../../authors/id/M/MI/MIK
 
 include ../../etc/ports.mk

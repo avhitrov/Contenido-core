@@ -6,7 +6,7 @@
 include ../../etc/perl.mk
 
 
-PORTVERSION =		2.35
+PORTVERSION =		2.53
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	GD
 PORT_DEPENDS =		libgd

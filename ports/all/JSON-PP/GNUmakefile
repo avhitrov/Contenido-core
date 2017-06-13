@@ -2,8 +2,10 @@
 #
 ###############################################################################
 
-PORTVERSION =		5.96
-PERL_MAKEMAKER =	yes
-MASTER_CPAN_SUBDIR =	Digest
+include ../../etc/perl.mk
+
+PORTVERSION =           2.27400
+PERL_MAKEMAKER =        yes
+MASTER_CPAN_SUBDIR =   	JSON
 
 include ../../etc/ports.mk

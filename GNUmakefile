@@ -65,16 +65,29 @@ endif
 			core_status			cst				\
 			core_update			cup				\
 			core_commit			cci				\
+			core_checkout			cco				\
+			core_push			cpush				\
+			core_pull			cpull				\
+			core_branch			cbranch				\
+			core_merge			cmerge				\
 			core_install			cin				\
 			core_info			cinfo				\
 			core_rsync			crs				\
 											\
+			project_assets			assets				\
+			project_assets_dev		assdev				\
 			project_status			pst				\
 			project_update			pup				\
 			project_commit			pci				\
+			project_checkout		pco				\
+			project_push			ppush		push		\
+			project_pull			ppull		pull		\
+			project_branch			pbranch		branch		\
+			project_merge			pmerge		merge		\
 			project_install			pin				\
 			project_conf			conf				\
 			project_rsync			prs				\
+			project_assets_rsync		ars				\
 			project_start			start				\
 			project_stop			stop				\
 			project_create			create				\
@@ -91,6 +104,11 @@ endif
 											\
 			plugin_create			plc				\
 			plugins_commit			plci				\
+			plugins_checkout		plco				\
+			plugins_push			plpush				\
+			plugins_pull			plpull				\
+			plugins_branch			plbranch			\
+			plugins_merge			plmerge				\
 			plugins_install			plin				\
 			plugins_status			plst				\
 			plugins_update			plup				\
@@ -158,25 +176,40 @@ preview: local_preview ;
 # check core sources via repository
 cst: core_status ;
 core_status: check_user
+ifeq (${VCS_TYPE},git)
+	@echo ${PROJ_SRC}/${PROJECT}
+	@cd ${CORE_SRC} && git status
+else
 	@svn st -u ${CORE_SRC}
+endif
 	@echo $@ done
 
 # update core sources from repository
 cup: core_update ;
 core_update: check_user
-ifdef REV
-	@svn up -r ${REV} ${CORE_SRC}
+ifeq (${VCS_TYPE},git)
+	@cd ${CORE_SRC}									\
+	&& echo ">>>> core git pull"							\
+	&& git pull;
 else
-	@svn up ${CORE_SRC}
+	@if [ -n "${REV}" ]; then							\
+		svn up -r ${REV} ${CORE_SRC};						\
+	else										\
+		svn up ${CORE_SRC};							\
+	fi;
 endif
 	@echo $@ done
 
 # commit core changes to repository
 cci: core_commit ;
 core_commit: check_user
+ifeq (${VCS_TYPE},git)
+	@cd ${CORE_SRC} && git commit -a
+else
 	@svn ci ${CORE_SRC}
+endif
 	@echo $@ done
-	#
+
 # pretty formatted core info
 cinfo: core_info ;
 core_info:
@@ -189,6 +222,66 @@ core_info:
 		$${DEBUG} ${HTTPD_PORT}
 	@echo $@ done
 
+
+# core git checkout and branch switcher
+cco: core_checkout ;
+core_checkout:
+	@cd ${PROJ_SRC}/${PROJECT}							\
+	&& echo ">>>> git checkout ${BRANCH}"						\
+	&& git checkout ${BRANCH};
+	@echo $@ done
+
+# core git branch workaround.
+# Uses NAME as branch name for creation, FROM for branch source and DELETE=1 for branch delete
+cbranch: core_branch ;
+core_branch:
+	@if [ -n "${NAME}" -a -n "${FROM}" ]; then					\
+		cd ${CORE_SRC}								\
+		&& echo ">>>> git checkout -b ${NAME} ${FROM}"				\
+		&& git checkout -b ${NAME} ${FROM};					\
+	elif [ -n "${NAME}" -a -n "${DELETE}" ]; then					\
+		cd ${CORE_SRC}								\
+		&& echo ">>>> git branch -d ${NAME}"					\
+		&& git branch -d ${NAME};						\
+	elif [ -n "${NAME}" ]; then							\
+		cd ${CORE_SRC}								\
+		&& echo ">>>> git checkout -b ${NAME}"					\
+		&& git checkout -b ${NAME};						\
+	else										\
+		cd ${CORE_SRC}								\
+		&& git branch -v;							\
+	fi;
+	@echo $@ done
+
+# core git merge
+cmerge: core_merge ;
+core_merge:
+	@if [ -n "${BRANCH}" ]; then							\
+		cd ${CORE_SRC}								\
+		&& echo ">>>> git merge --no-ff ${BRANCH}"				\
+		&& git merge --no-ff ${BRANCH};						\
+	else										\
+		echo "Don't know what branch merge to current. Usage: make merge BRANCH=branch-to-merge-with";		\
+	fi;
+	@echo $@ done
+
+# core git push
+cush: core_push ;
+cpush: core_push ;
+core_push:
+	@cd ${CORE_SRC}									\
+	&& echo ">>>> git push"								\
+	&& git push;
+	@echo $@ done
+
+# core git pull
+cull: core_pull ;
+cpull: core_pull ;
+core_pull:
+	cd ${CORE_SRC}									\
+	&& echo ">>>> git pull"								\
+	&& git pull;
+	@echo $@ done
 
 # install core into work directory
 cin: core_install ;
@@ -233,10 +326,14 @@ endif
 # check project sources via repository
 pst: project_status ;
 project_status:: check_project
+ifeq (${VCS_TYPE},git)
+	@cd ${PROJ_SRC}/${PROJECT} && git status
+else
 	@svn st -u ${PROJ_SRC}/${PROJECT}
+endif
 	@echo $@ done
 
-# pretty formatted project info
+# pretty formatted project info (svn only)
 pinfo: project_info ;
 project_info:: check_project
 	@REPOS=`svn info ${PROJ_SRC}/${PROJECT} | grep -E '^URL' | sed -E 's/URL: //'`;	\
@@ -248,17 +345,97 @@ project_info:: check_project
 # update project sources from repository
 pup: project_update ;
 project_update:: check_project
-ifdef REV
-	@svn up -r ${REV} ${PROJ_SRC}/${PROJECT}
+ifeq (${VCS_TYPE},git)
+	@if [ -d ${PROJ_USR}/${PROJECT} ]; then						\
+		cd ${PROJ_SRC}/${PROJECT}						\
+		&& echo ">>>> git pull"							\
+		&& git pull;								\
+	fi;
 else
-	@svn up ${PROJ_SRC}/${PROJECT}
+	@if [ -n "${REV}" ]; then							\
+		svn up -r ${REV} ${PROJ_SRC}/${PROJECT};				\
+	else										\
+		svn up ${PROJ_SRC}/${PROJECT};						\
+	fi;
 endif
 	@echo $@ done
 
 # commit project changes to repository
 pci: project_commit ;
 project_commit:: check_project
+ifeq (${VCS_TYPE},git)
+	@cd ${PROJ_SRC}/${PROJECT} && git commit -a
+else
 	@svn ci ${PROJ_SRC}/${PROJECT}
+endif
+	@echo $@ done
+
+# project git checkout and branch switcher
+pco: project_checkout ;
+project_checkout:: check_project
+	@if [ -d ${PROJ_USR}/${PROJECT} ]; then						\
+		cd ${PROJ_SRC}/${PROJECT}						\
+		&& echo ">>>> git checkout ${BRANCH}"					\
+		&& git checkout ${BRANCH};						\
+	fi;
+	@echo $@ done
+
+# project git branch workaround. 
+# Uses NAME as branch name for creation, FROM for branch source and DELETE=1 for branch delete
+branch: project_branch ;
+pbranch: project_branch ;
+project_branch:: check_project
+	@if [ -n "${NAME}" -a -n "${FROM}" ]; then					\
+		cd ${PROJ_SRC}/${PROJECT}						\
+		&& echo ">>>> git checkout -b ${NAME} ${FROM}"				\
+		&& git checkout -b ${NAME} ${FROM};					\
+	elif [ -n "${NAME}" -a -n "${DELETE}" ]; then					\
+		cd ${PROJ_SRC}/${PROJECT}						\
+		&& echo ">>>> git branch -d ${NAME}"					\
+		&& git branch -d ${NAME};						\
+	elif [ -n "${NAME}" ]; then							\
+		cd ${PROJ_SRC}/${PROJECT}						\
+		&& echo ">>>> git checkout -b ${NAME}"					\
+		&& git checkout -b ${NAME};						\
+	else										\
+		cd ${PROJ_SRC}/${PROJECT}						\
+		&& git branch -v;							\
+	fi;
+	@echo $@ done
+
+# project git merge
+merge: project_merge ;
+pmerge: project_merge ;
+project_merge:: check_project
+	@if [ -d ${PROJ_USR}/${PROJECT} -a -n "${BRANCH}" ]; then			\
+		cd ${PROJ_SRC}/${PROJECT}						\
+		&& echo ">>>> git merge --no-ff ${BRANCH}"				\
+		&& git merge --no-ff ${BRANCH};						\
+	else										\
+		echo "Don't know what branch merge to current. Usage: make merge BRANCH=branch-to-merge";			\
+	fi;
+	@echo $@ done
+
+# project git push
+push: project_push ;
+ppush: project_push ;
+project_push:: check_project
+	@if [ -d ${PROJ_USR}/${PROJECT} ]; then						\
+		cd ${PROJ_SRC}/${PROJECT}						\
+		&& echo ">>>> git push"							\
+		&& git push;								\
+	fi;
+	@echo $@ done
+
+# project git pull
+pull: project_pull ;
+ppull: project_pull ;
+project_pull:: check_project
+	@if [ -d ${PROJ_USR}/${PROJECT} ]; then						\
+		cd ${PROJ_SRC}/${PROJECT}						\
+		&& echo ">>>> git pull"							\
+		&& git pull;								\
+	fi;
 	@echo $@ done
 
 # install project into work directory
@@ -276,17 +453,16 @@ project_install:: check_core_installed check_project
 	@if [ -n "${RSYNC_COMMAND}" ]; then	\
 		${RSYNC_COMMAND} -a --delete --delete-excluded --include='tags' --include '*.exe' --cvs-exclude --exclude '*.proto' ${PROJ_SRC}/${PROJECT}/* ${PROJ_USR}/${PROJECT};	\
 	else 								\
-		if [ -d ${PROJ_USR}/${PROJECT} ]; then						\
-			rm -Rf    ${PROJ_USR}/${PROJECT};					\
-		fi;										\
-		mkdir ${PROJ_USR}/${PROJECT}							\
-		&& cp ${PROJ_SRC}/${PROJECT}/config.mk ${PROJ_USR}/${PROJECT}/			\
-		&& cp -R ${PROJ_SRC}/${PROJECT}/conf ${PROJ_USR}/${PROJECT}/			\
-		&& cp -R ${PROJ_SRC}/${PROJECT}/comps ${PROJ_USR}/${PROJECT}/			\
-		&& cp -R ${PROJ_SRC}/${PROJECT}/lib ${PROJ_USR}/${PROJECT}/			\
-		&& cp -R ${PROJ_SRC}/${PROJECT}/services ${PROJ_USR}/${PROJECT}/		\
-		&& find ${PROJ_USR}/${PROJECT}/ -depth -type d -name .svn -exec rm -Rf {} \;	\
-		&& find ${PROJ_USR}/${PROJECT}/ -depth -type d -name .git -exec rm -Rf {} \;	\
+		if [ -d ${PROJ_USR}/${PROJECT} ]; then							\
+			rm -Rf    ${PROJ_USR}/${PROJECT};						\
+		fi;											\
+		mkdir ${PROJ_USR}/${PROJECT}								\
+		&& cp ${PROJ_SRC}/${PROJECT}/config.mk ${PROJ_USR}/${PROJECT}/				\
+		&& cp -R ${PROJ_SRC}/${PROJECT}/comps ${PROJ_USR}/${PROJECT}/				\
+		&& cp -R ${PROJ_SRC}/${PROJECT}/conf ${PROJ_USR}/${PROJECT}/				\
+		&& cp -R ${PROJ_SRC}/${PROJECT}/lib ${PROJ_USR}/${PROJECT}/				\
+		&& cp -R ${PROJ_SRC}/${PROJECT}/services ${PROJ_USR}/${PROJECT}/			\
+		&& find ${PROJ_USR}/${PROJECT}/ -depth -type d -name .svn -exec rm -Rf {} \;		\
 		&& find ${PROJ_USR}/${PROJECT}/ -depth -type f -name '*.proto' -exec rm  -f {} \; ;	\
 	fi
 
@@ -301,7 +477,7 @@ project_install:: check_core_installed check_project
 	@if [ \! -e ${CORE_USR}/lib/${PROJECT} ]; then					\
 		chmod    u+w ${CORE_USR}/lib						\
 		&& ln -s ${PROJ_USR}/${PROJECT}/lib/${PROJECT}				\
-		         ${CORE_USR}/lib/${PROJECT}					\
+			${CORE_USR}/lib/${PROJECT}					\
 		&& chmod u-w ${CORE_USR}/lib;						\
 	fi;
 
@@ -345,7 +521,11 @@ endif
 
 # commit plugin changes
 plugin_commit_%:
+ifeq (${VCS_TYPE},git)
+	@cd ${PLUG_SRC}/${*} && git commit -a
+else
 	@svn ci ${PLUG_SRC}/${*}
+endif
 	@echo $@ done
 
 # status of plugins sources via repository
@@ -362,7 +542,11 @@ endif
 
 # status of plugin sources from repository
 plugin_status_%:
+ifeq (${VCS_TYPE},git)
+	@cd ${PLUG_SRC}/${*} && git status
+else
 	@svn st -u ${PLUG_SRC}/${*}
+endif
 	@echo $@ done
 
 # update plugins sources from repository
@@ -379,8 +563,112 @@ endif
 
 # update plugin sources from repository
 plugin_update_%:
+ifeq (${VCS_TYPE},git)
+	@cd ${PLUG_SRC}/${*} && git pull
+else
 	@svn up ${PLUG_SRC}/${*}
+endif
 	@echo $@ done
+
+# plugins git checkout and branch switcher
+plco: plugins_checkout ;
+plugins_checkout:
+ifdef PLUGIN
+	@${MAKE} -s plugin_checkout_${PLUGIN}
+else
+	@for P in ${PLUGINS}; do							\
+		${MAKE} -s plugin_checkout_$${P};					\
+	done;
+endif
+	@echo $@ done
+
+# plugin git checkout and branch switcher
+plugin_checkout_%:
+	@cd ${PLUG_SRC}/${*} && git checkout ${BRANCH};
+	@echo $@ done
+
+# plugins git branch workaround
+plbranch: plugins_branch ;
+plugins_branch:
+ifdef PLUGIN
+	@${MAKE} -s plugin_branch_${PLUGIN}
+else
+	@for P in ${PLUGINS}; do							\
+		${MAKE} -s plugin_branch_$${P};						\
+	done;
+endif
+	@echo $@ done
+
+# plugin git checkout and branch switcher
+plugin_branch_%:
+	@if [ -n "${NAME}" -a -n "${FROM}" ]; then					\
+		cd ${PLUG_SRC}/${*}							\
+		&& git checkout -b ${NAME} ${FROM};					\
+	elif [ -n "${NAME}" -a -n "${DELETE}" ]; then					\
+		cd ${PLUG_SRC}/${*}							\
+		&& git branch -d ${NAME};						\
+	elif [ -n "${NAME}" ]; then							\
+		cd ${PLUG_SRC}/${*}							\
+		&& git checkout -b ${NAME};						\
+	else										\
+		cd ${PLUG_SRC}/${*}							\
+		&& git branch -v;							\
+	fi;
+	@echo $@ done
+
+# plugins git merge
+plmerge: plugins_merge ;
+plugins_merge:
+ifdef PLUGIN
+	@${MAKE} -s plugin_merge_${PLUGIN}
+else
+	@for P in ${PLUGINS}; do							\
+		${MAKE} -s plugin_merge_$${P};						\
+	done;
+endif
+	@echo $@ done
+
+# plugin git checkout and branch switcher
+plugin_merge_%:
+	@cd ${PLUG_SRC}/${*} && git merge --no-ff ${BRANCH};
+	@echo $@ done
+
+# plugins git push
+plush: plugins_push ;
+plpush: plugins_push ;
+plugins_push:
+ifdef PLUGIN
+	@${MAKE} -s plugin_push_${PLUGIN}
+else
+	@for P in ${PLUGINS}; do							\
+		${MAKE} -s plugin_push_$${P};						\
+	done;
+endif
+	@echo $@ done
+
+# plugin git checkout and branch switcher
+plugin_push_%:
+	@cd ${PLUG_SRC}/${*} && git push;
+	@echo $@ done
+
+# plugins git pull
+plull: plugins_pull ;
+plpull: plugins_pull ;
+plugins_pull:
+ifdef PLUGIN
+	@${MAKE} -s plugin_pull_${PLUGIN}
+else
+	@for P in ${PLUGINS}; do							\
+		${MAKE} -s plugin_pull_$${P};						\
+	done;
+endif
+	@echo $@ done
+
+# plugin git checkout and branch switcher
+plugin_pull_%:
+	@cd ${PLUG_SRC}/${*} && git pull;
+	@echo $@ done
+
 
 # install plugins into work directory
 plin: plugins_install ;
@@ -449,7 +737,7 @@ plugin_create: check_user
 		exit 1;									\
 	fi;
 
-	@mkdir -p ${PLUG_SRC}                                               \
+	@mkdir -p ${PLUG_SRC}								\
 	&& cp -Rp ${CORE_SRC}/skel/plugin ${PLUG_SRC}/${NAME}				\
 	&& find ${PLUG_SRC}/${NAME}/ -depth -type d -name .svn -exec rm -Rf {} \;	\
 	&& find ${PLUG_SRC}/${NAME}/ -depth -type f -name '*.proto' -and		\
@@ -552,7 +840,7 @@ endif
 
 
 ifeq (${DISABLE},YES)
-	@crontab -l | sed 's/^#*/#/' | crontab -;                                       \
+	@crontab -l | sed 's/^#*/#/' | crontab -;					\
 	echo "Disabled crontab"
 else
 	@if [ -f ${PROJ_USR}/${PROJECT}/conf/etc/crontab ]; then			\
@@ -1329,6 +1617,7 @@ REWRITE +=										\
 		STATIC_SOURCE_ENABLE							\
 		STATIC_SOURCE_TOUCH_FILE						\
 		STORE_METHOD								\
+		VCS_TYPE								\
 
 #TODO: ElTexto compatibility only
 REWRITE +=										\

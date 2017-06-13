@@ -35,6 +35,7 @@ MASTER_BASE_USER ?=		${BASE_USER}
 # additional ports if any
 PROJECT_REQUIRED ?=
 SERIALIZE_WITH ?=
+VCS_TYPE ?=			svn
 
 # defaults
 PRELOADS ?=

@@ -52,10 +52,10 @@
 		my $filter = $m->comp('/contenido/components/context.msn', name => 'filter');
 		my $profile = $m->comp('/contenido/components/context.msn', name => 'profile');
 
-		unless (defined $request->{section_accesses}->{$id}) {
-			$request->{section_accesses}->{$id} = $user->get_section_access($id);
+		unless (defined $request->{section_accesses}->{$section->id}) {
+			$request->{section_accesses}->{$section->id} = $user->get_section_access($section->id);
 		}
-		my $section_access = $request->{section_accesses}->{$id};
+		my $section_access = $request->{section_accesses}->{$section->id};
 
 		my (@documents, $total);
 		my $s = $section->id;

@@ -1,10 +1,9 @@
 ##############################################################################
-# $HeadURL: 
-# $Id:
+#
 ###############################################################################
 
-PORTVERSION =		0.58
-PERL_MAKEMAKER =	yes
-MASTER_CPAN_SUBDIR =	Crypt
+PORTVERSION =           0.58
+PERL_MAKEMAKER =        yes
+MASTER_CPAN_SUBDIR =    Crypt
 
 include ../../etc/ports.mk

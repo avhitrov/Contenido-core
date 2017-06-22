@@ -2,7 +2,7 @@
 
 use strict;
 
-my ($module, $version) = @ARGV;
+my ($module, $version, $mode) = @ARGV;
 $module =~ s/-/::/g;
 my $installed;
 
@@ -23,7 +23,7 @@ $installed->{version} = join(".", $parts[0], join("", @parts[1 .. $#parts]) || (
 (my $path=$module)    =~ s/::/\//g;
 $installed->{path}    = $INC{$path.".pm"};
 
-if ($installed->{version} >= $version) {
+if ($installed->{version} >= $version || $mode eq 'pass') {
 	unless ($ENV{DRY_RUN}||'' eq 'yes') {
 		print STDERR "##############################################################################\n";
 		print STDERR "# Found installed module: $module\n";

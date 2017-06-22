@@ -1,6 +1,6 @@
 ##############################################################################
-# $HeadURL: http://svn.dev.rambler.ru/Contenido/branches/utf8/ports/etc/ports.mk $
-# $Id: ports.mk 1526 2010-03-29 11:11:10Z ahitrov $
+# $HeadURL: svn+ssh://svn@vcs.dev.rambler.ru/Contenido/branches/utf8/ports/etc/ports.mk $
+# $Id: ports.mk 1777 2017-06-22 14:12:52Z ahitrov $
 ###############################################################################
 
 PREFIX ?=			${error PREFIX must be defined}
@@ -66,6 +66,7 @@ BUILD_ENV ?=			PERL5LIB='${PERL_LIBCOL}' MAKE=${MAKE}
 INSTALL_ENV ?=			PERL5LIB='${PERL_LIBCOL}' MAKE=${MAKE} OPSYS=${OPSYS}
 
 PERL_CHECK ?=			yes
+PERL_CHECK_MODE ?=		interactive
 PERL_CHECK_MODULE ?=		${PORTNAME}
 PERL_CHECK_VERSION ?=		${PORTVERSION}
 endif
@@ -333,7 +334,7 @@ else
 	@echo "NOT FOUND: ${PORTNAME}"
 endif
 else
-	@`${PORTSDIR}/etc/chkmod ${PERL_CHECK_MODULE} ${PERL_CHECK_VERSION}` && ${MAKE_RECURSIVE_PERL} $@
+	@`${PORTSDIR}/etc/chkmod ${PERL_CHECK_MODULE} ${PERL_CHECK_VERSION} ${PERL_CHECK_MODE}` && ${MAKE_RECURSIVE_PERL} $@
 endif
 endif
 endif

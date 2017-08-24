@@ -1111,6 +1111,7 @@ project_user: check_core_installed pgsql_template
 apache_start: check_conf_installed
 	@${call is_alive,${PROJ_VAR}/${PROJECT}/run/httpd.pid};				\
 	FLAGS=`perl -e 'print " -DDEVELOPMENT" if lc "${DEVELOPMENT}" eq "yes";'`;	\
+	FLAGS=$$FLAGS`perl -e 'print " -F" if lc "${FOREGROUND}" eq "yes";'`;	\
 	FLAGS=$$FLAGS`perl -e '								\
 		if    (lc "${RSYSLOG_ENABLE}"  eq "yes") { print " -DRSYSLOG";  }	\
 		elsif (lc "${CRONOLOG_ENABLE}" eq "yes") { print " -DCRONOLOG"; }	\

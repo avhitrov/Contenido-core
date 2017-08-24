@@ -12,8 +12,8 @@ endif
 
 PERL_MAKEMAKER =	yes
 MASTER_CPAN_SUBDIR =	Apache
-PORT_DEPENDS =		mod_perl
-#			Apache-Test
+PORT_DEPENDS =		mod_perl		\
+			Apache-Test
 
 CONFIGURE_POSTCMD =	${MAKE_RECURSIVE} post-configure
 

@@ -192,6 +192,7 @@ sub store_image {
     my @preview = exists $prop->{'preview'} && ref $prop->{'preview'} eq 'ARRAY' ? @{$prop->{'preview'}} : exists $prop->{'preview'} && $prop->{'preview'} ? ($prop->{'preview'}) : ();
     my @crops = exists $prop->{'crop'} && ref $prop->{'crop'} eq 'ARRAY' ? @{$prop->{'crop'}} : exists $prop->{'crop'} && $prop->{'crop'} ? ($prop->{'crop'}) : ();
     my @shrinks = exists $prop->{'shrink'} && ref $prop->{'shrink'} eq 'ARRAY' ? @{$prop->{'shrink'}} : exists $prop->{'shrink'} && $prop->{'shrink'} ? ($prop->{'shrink'}) : ();
+    my $quality = exists $prop->{quality} && $prop->{quality} =~ /^\d+$/ ? $prop->{quality} : 95;
 
     my $filename = '/images/'.$object->get_file_name() || return;
     if ( $no_rename ) {
@@ -269,42 +270,44 @@ sub store_image {
     if ( exists $prop->{transform} && ref $prop->{transform} eq 'ARRAY' && scalar @{$prop->{transform}} == 2 && $prop->{transform}[0] =~ /(crop|resize|shrink)/ ) {
 	warn "Need transform\n"		if $DEBUG;
 	my $c_line;
-	if ( $prop->{transform}[0] eq 'resize' ) {
-		$c_line = $state->{'convert_binary'}.' -adaptive-resize \''.$prop->{transform}[1].'>\' -quality 100 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
-	} elsif ( $prop->{transform}[0] eq 'crop' ) {
-		my $shave_string;
-		my ($nwidth, $nheight) = $prop->{transform}[1] =~ /(\d+)x(\d+)/i ? ($1, $2) : (0, 0);
-		if ( ($image_info->{width} / $image_info->{height}) > ($nwidth / $nheight) ) {
-			my $shave_pixels = (($image_info->{width} / $image_info->{height}) - ($nwidth / $nheight)) * $image_info->{height};
-			$shave_string = ' -shave '.int($shave_pixels / 2).'x0';
-		} elsif ( ($image_info->{height} / $image_info->{width}) > ($nheight / $nwidth) ) {
-			my $shave_pixels = (($image_info->{height} / $image_info->{width}) - ($nheight / $nwidth)) * $image_info->{width};
-			$shave_string = ' -shave 0x'.int($shave_pixels / 2);
-		}
-		if ( $shave_string ) {
-			my $c_line = $state->{"convert_binary"}." $shave_string $filename_tmp.$ext $filename_tmp.shaved.$ext";
-			my $result = `$c_line`;
-			if (length $result  > 0) {
-				print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";
-				return undef;
+	my ($nwidth, $nheight) = $prop->{transform}[1] =~ /(\d+)x(\d+)/i ? ($1, $2) : (0, 0);
+	unless ( $nwidth && $nheight && $image_info->{width} == $nwidth && $image_info->{height} == $nheight ) {
+		if ( $prop->{transform}[0] eq 'resize' ) {
+			$c_line = $state->{'convert_binary'}.' -adaptive-resize \''.$prop->{transform}[1].'>\' -quality '.$quality.' '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
+		} elsif ( $prop->{transform}[0] eq 'crop' ) {
+			my $shave_string;
+			if ( ($image_info->{width} / $image_info->{height}) > ($nwidth / $nheight) ) {
+				my $shave_pixels = (($image_info->{width} / $image_info->{height}) - ($nwidth / $nheight)) * $image_info->{height};
+				$shave_string = ' -shave '.int($shave_pixels / 2).'x0';
+			} elsif ( ($image_info->{height} / $image_info->{width}) > ($nheight / $nwidth) ) {
+				my $shave_pixels = (($image_info->{height} / $image_info->{width}) - ($nheight / $nwidth)) * $image_info->{width};
+				$shave_string = ' -shave 0x'.int($shave_pixels / 2);
 			}
-		} else {
-			my $c_line = "cp $filename_tmp.$ext $filename_tmp.shaved.$ext";
-			my $result = `$c_line`;
-			if (length $result  > 0) {
-				print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";
-				return undef;
+			if ( $shave_string ) {
+				my $c_line = $state->{"convert_binary"}." $shave_string $filename_tmp.$ext $filename_tmp.shaved.$ext";
+				my $result = `$c_line`;
+				if (length $result  > 0) {
+					print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";
+					return undef;
+				}
+			} else {
+				my $c_line = "cp $filename_tmp.$ext $filename_tmp.shaved.$ext";
+				my $result = `$c_line`;
+				if (length $result  > 0) {
+					print "Contenido Error: При вызове '$c_line' произошла ошибка '$result' ($@)\n";
+					return undef;
+				}
 			}
+			$c_line = $state->{'convert_binary'}.' -adaptive-resize \''.$prop->{transform}[1].'!\' -quality '.$quality.' '.$filename_tmp.'.shaved.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
+		} elsif ( $prop->{transform}[0] eq 'shrink' ) {
+			$c_line = $state->{'convert_binary'}.' -adaptive-resize \''.$prop->{transform}[1].'!\' -quality '.$quality.' '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
 		}
-		$c_line = $state->{'convert_binary'}.' -adaptive-resize \''.$prop->{transform}[1].'!\' -quality 100 '.$filename_tmp.'.shaved.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
-	} elsif ( $prop->{transform}[0] eq 'shrink' ) {
-		$c_line = $state->{'convert_binary'}.' -adaptive-resize \''.$prop->{transform}[1].'!\' -quality 100 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.transformed.'.$ext;
+		my $result = `$c_line`;
+		$transformed = 1;
+		warn "Transformed\n"		if $DEBUG;
+		unlink $filename_tmp.'.shaved.'.$ext      if -e $filename_tmp.'.shaved.'.$ext;
+		$size = -s $filename_tmp.'.transformed.'.$ext;
 	}
-	my $result = `$c_line`;
-	$transformed = 1;
-	warn "Transformed\n"		if $DEBUG;
-	unlink $filename_tmp.'.shaved.'.$ext      if -e $filename_tmp.'.shaved.'.$ext;
-	$size = -s $filename_tmp.'.transformed.'.$ext;
     }
 
     if ( exists $opts{watermark} && $opts{watermark} ) {
@@ -343,7 +346,7 @@ sub store_image {
 
 	warn "Thumbnail generator (preview)\n"		if $DEBUG;
 	foreach my $suffix (@preview) {
-		my $c_line = $state->{'convert_binary'}.' -resize \''.$suffix.'>\' -quality 90 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.'.$suffix.'.'.$ext;
+		my $c_line = $state->{'convert_binary'}.' -resize \''.$suffix.'>\' -quality '.$quality.' '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.'.$suffix.'.'.$ext;
 		my $result = `$c_line`;
 
 		if (length $result > 0) {
@@ -391,7 +394,7 @@ sub store_image {
 			}
 		}
 
-		my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality 90 '.$filename_tmp.'.shaved.'.$ext.' '.$filename_tmp.'.'.$suffix.'.'.$ext;
+		my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality '.$quality.' '.$filename_tmp.'.shaved.'.$ext.' '.$filename_tmp.'.'.$suffix.'.'.$ext;
 		my $result = `$c_line`;
 
 		if (length $result > 0) {
@@ -420,7 +423,7 @@ sub store_image {
 	warn "Thumbnail generator (shrink)\n"		if $DEBUG;
 	foreach my $suffix (@shrinks) {
 
-		my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality 90 '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.'.$suffix.'.'.$ext;
+		my $c_line = $state->{'convert_binary'}.' -geometry \''.$suffix.'!\' -quality '.$quality.' '.$filename_tmp.'.'.$ext.' '.$filename_tmp.'.'.$suffix.'.'.$ext;
 		my $result = `$c_line`;
 
 		if (length $result > 0) {

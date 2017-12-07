@@ -151,30 +151,32 @@ sub _previous_time_filter {
 
 sub _prev_to_filter {
 	my ($self, %opts)=@_;
-	return undef unless ( exists $opts{prevto} );
+	return undef unless ( exists $opts{prevto} || exists $opts{prev_to} );
+	my $prevto = exists $opts{prevto} ? 'prevto' : 'prev_to';
 	my ($wheres, $values) = ([],[]);
 	my $field = exists $opts{use_id} ? 'id' : exists $opts{use_ctime} ? 'ctime' : exists $opts{use_mtime} ? 'mtime' : 'dtime';
 	push @$wheres, " d.$field < ? ";
-	if ( ref $opts{prevto} ) {
-		my $ctime = $opts{prevto};
+	if ( ref $opts{$prevto} ) {
+		my $ctime = $opts{$prevto};
 		push @$values, $ctime->ymd('-').' '.$ctime->hms.'.'.$ctime->nanosecond;
 	} else {
-		push @$values, $opts{prevto};
+		push @$values, $opts{$prevto};
 	}
 	return ($wheres, $values);
 }
 
 sub _next_to_filter {
 	my ($self, %opts)=@_;
-	return undef unless ( exists $opts{nextto} );
+	return undef unless ( exists $opts{nextto} || exists $opts{next_to} );
+	my $nextto = exists $opts{nextto} ? 'nextto' : 'next_to';
 	my ($wheres, $values) = ([],[]);
 	my $field = exists $opts{use_id} ? 'id' : exists $opts{use_ctime} ? 'ctime' : exists $opts{use_mtime} ? 'mtime' : 'dtime';
 	push @$wheres, " d.$field > ? ";
-	if ( ref $opts{nextto} ) {
-		my $ctime = $opts{nextto};
+	if ( ref $opts{$nextto} ) {
+		my $ctime = $opts{$nextto};
 		push @$values, $ctime->ymd('-').' '.$ctime->hms.'.'.$ctime->nanosecond;
 	} else {
-		push @$values, $opts{nextto};
+		push @$values, $opts{$nextto};
 	}
 	return ($wheres, $values);
 }

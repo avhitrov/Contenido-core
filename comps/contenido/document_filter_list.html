@@ -18,7 +18,7 @@
 <table width="100%" border="0" cellpadding="4" cellspacing="0" class="tlistdocs">
 <tr bgcolor="#efefef">
 %	foreach my $prop (@props) {
-<th><% $prop->{rusname} %></th>
+<th><% exists $prop->{shortname} ? $prop->{shortname} : $prop->{rusname} %></th>
 %	}
 <th>&nbsp;</th>
 </tr>

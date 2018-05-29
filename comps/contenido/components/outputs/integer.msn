@@ -8,6 +8,10 @@
     return undef unless ref $SETS;
     return undef unless $name;
 
+    for ( $SETS->{$name} ) {
+	s/^\s+//;
+	s/\s+$//;
+    }
     return undef if $SETS->{$name} eq '';
     return undef if $SETS->{$name} =~ /\D/;
     return $SETS->{$name};
